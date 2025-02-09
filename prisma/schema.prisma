@@ -1,0 +1,179 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model User {
+  id                  String              @id @default(uuid())
+  username            String              @unique
+  email               String              @unique
+  password            String
+  leetcodeUsername    String?           
+  codeforcesUsername  String?         
+  section            String
+  enrollmentNum      String              @unique
+  profileUrl         String?
+  groupId            String?
+  group              Group?              @relation(fields: [groupId], references: [id])
+  submissions        Submission[]
+  individualPoints   Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  applications  GroupApplication[] @relation("GroupApplications")
+  coordinatedGroup   Group?              @relation("GroupCoordinator") 
+  
+  @@index([groupId]) 
+}
+
+
+
+model Group {
+  id                String              @id @default(uuid())
+  name              String              @unique
+  coordinator       User                @relation("GroupCoordinator", fields: [coordinatorId], references: [id])
+  coordinatorId     String              @unique
+  members           User[]
+  contestsAttempted GroupOnContest[]
+  groupPoints       Int                 @default(0)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  applications      GroupApplication[]  @relation("GroupApplications")
+
+  @@index([coordinatorId])
+}
+
+
+model Contest {
+  id                Int                 @id @default(autoincrement())
+  startTime         DateTime
+  endTime           DateTime            
+  status            ContestStatus       @default(UPCOMING) 
+  questions         QuestionOnContest[]
+  submissions       Submission[]
+  attemptedGroups   GroupOnContest[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([status, startTime]) 
+}
+
+enum ContestStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+}
+
+model GroupOnContest {
+  id                String              @id @default(uuid())
+  groupId           String
+  contestId         Int
+  contest           Contest             @relation(fields: [contestId], references: [id])
+  group             Group               @relation(fields: [groupId], references: [id])
+  score             Int                 @default(0)
+  rank              Int?                
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@unique([groupId, contestId])
+  @@index([contestId, score]) 
+}
+
+model Question {
+  id                String              @id @default(uuid())
+  leetcodeUrl       String?         
+  codeforcesUrl     String?          
+  difficulty        Difficulty       
+  points            Int
+  questionTags      QuestionTag[]     
+  slug              String              @unique
+  contests          QuestionOnContest[]
+  submissions       Submission[]        
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+}
+
+model QuestionTag {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  questions   Question[]
+  createdAt   DateTime  @default(now())
+}
+
+enum QuestionPlatform {
+  LEETCODE
+  CODEFORCES
+}
+
+enum Difficulty {
+  BEGINNER
+  EASY
+  MEDIUM
+  HARD
+  VERYHARD
+}
+
+model QuestionOnContest {
+  id                String              @id @default(uuid())
+  contestId         Int
+  questionId        String
+  contest           Contest             @relation(fields: [contestId], references: [id])
+  question          Question            @relation(fields: [questionId], references: [id])
+  createdAt         DateTime            @default(now())
+
+  @@unique([contestId, questionId])
+}
+
+model Submission {
+  id                String              @id @default(uuid())
+  userId            String
+  questionId        String             
+  contestId         Int
+  score             Int                 @default(0)
+  status            SubmissionStatus   
+  user              User                @relation(fields: [userId], references: [id])
+  question          Question            @relation(fields: [questionId], references: [id])
+  contest           Contest             @relation(fields: [contestId], references: [id])
+  createdAt         DateTime            @default(now())
+
+  @@index([userId, contestId]) 
+  @@index([contestId, score]) 
+}
+
+enum SubmissionStatus {
+  PENDING
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT_EXCEEDED
+  MEMORY_LIMIT_EXCEEDED
+  RUNTIME_ERROR
+  COMPILATION_ERROR
+}
+
+model GroupApplication {
+  id            String          @id @default(uuid())
+  status        ApplicationStatus @default(PENDING)
+  applicantId   String
+  groupId       String
+  applicant     User            @relation("GroupApplications", fields: [applicantId], references: [id])
+  group         Group           @relation("GroupApplications", fields: [groupId], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([applicantId, groupId])
+  @@index([groupId, status])
+  @@index([applicantId, status])
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
