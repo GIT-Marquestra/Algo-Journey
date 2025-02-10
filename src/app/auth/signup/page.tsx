@@ -1,9 +1,12 @@
 import Signup from "@/components/Signup";
+import { Suspense } from "react";
 
 export default function Home() {
   return (
     <div>
-      <Signup/>
+     <Suspense fallback={<p>Loading...</p>}>
+      <Signup />
+    </Suspense>
     </div>
   );
 }
