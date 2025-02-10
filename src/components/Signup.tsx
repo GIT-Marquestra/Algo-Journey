@@ -30,7 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 // Validation schema
 const signupSchema = z.object({
@@ -53,10 +54,12 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function Signup() {
+  const { data: session } = useSession()
+  const Router = useRouter()
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form with react-hook-form and zod
+  
   const form = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -71,8 +74,13 @@ export default function Signup() {
   });
 
   const onSubmit = async (data: SignupFormData) => {
+    
     setIsSubmitting(true);
     try {
+      const res = await signIn("google", { callbackUrl: "/auth/signup" });
+      if(res) {
+        toast.success('Verified')
+      }
       const response = await axios.post("/api/auth/signup", data, {
         headers: { "Content-Type": "application/json" }
       });
@@ -91,15 +99,13 @@ export default function Signup() {
     }
   };
 
-  const handleVerify = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    const res = await signIn("google", { callbackUrl: "/auth/signup" });
-    if(res?.ok){
-      toast.success('Verified')
-    } else {
-      toast.error('Please enter a valid email!')
-    }
+  if(session) {
+    Router.push('/user/dashboard')
   }
+
+  // const handleVerify = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    
+  // }
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -147,7 +153,7 @@ export default function Signup() {
                       />
                     </FormControl>
                     <FormMessage />
-                    <Button onClick={(e)=>handleVerify(e)}>Verify Google Account</Button>
+                    {/* <Button onClick={(e)=>handleVerify(e)}>Verify Google Account</Button> */}
                   </FormItem>
                 )}
               />
