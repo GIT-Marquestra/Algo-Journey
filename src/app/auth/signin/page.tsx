@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Lock, User } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-import Link from 'next/link';
 
 export default function SignIn() {
   const [username, setUsername] = useState('');
