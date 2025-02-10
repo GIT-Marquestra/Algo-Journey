@@ -39,7 +39,7 @@ const HeroSection = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             {!session && <Button size="lg" className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300" asChild>
-              <Link href="/auth/signup">
+              <Link href="/auth/signin">
                 Get Started <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>}
@@ -148,7 +148,7 @@ const HeroSection = () => {
             Join our community of competitive programmers and start improving your skills today.
           </p>
           {!session && <Button size="lg" className="relative bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl transition-all duration-300" asChild>
-            <Link href="/auth/signup">
+            <Link href="/auth/signin">
               Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>}

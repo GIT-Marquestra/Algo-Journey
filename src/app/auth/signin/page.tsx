@@ -7,10 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Lock, User } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function SignIn() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const Router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,11 +23,18 @@ export default function SignIn() {
         redirect: true,
         callbackUrl: '/user/dashboard'
       });
+      console.log(result)
       if(result?.status === 302){
         toast.error('Sign in Failed, check your credentials')
-      } else {
+      } 
+      else if(result?.status === 302){
+        toast.success('Signed in with status 200')
+        Router.push('/user/dashboard')
+      }
+      else {
         console.log(result)
         toast.success('Signed In')
+        Router.push('/user/dashboard')
       }
     } catch (error) {
       console.log(error)
@@ -70,7 +79,15 @@ export default function SignIn() {
               Sign In if already Signed Up
             </Button>
             <div className='flex justify-center'>OR</div>       
-            <Button className="w-full" onClick={()=>signIn('google')}>
+            <Button className="w-full" onClick={ async ()=>{
+              try {
+              await signIn('google')
+              } catch (error) {
+                console.log(error)
+                toast.error('SignIn with google failed, Try again!')  
+              }
+
+            }}>
               SignUp/SignIn with Google
             </Button>      
           </form>
