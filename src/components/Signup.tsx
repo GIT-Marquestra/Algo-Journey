@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
+import { signIn } from "next-auth/react";
 
 // Validation schema
 const signupSchema = z.object({
@@ -90,6 +91,15 @@ export default function Signup() {
     }
   };
 
+  const handleVerify = async () => {
+    const res = await signIn("google", { callbackUrl: "/auth/signup" });
+    if(res?.ok){
+      toast.success('Verified')
+    } else {
+      toast.error('Please enter a valid email!')
+    }
+  }
+
   return (
     <div className="flex items-center justify-center min-h-screen">
       <Card className="w-full max-w-md">
@@ -124,6 +134,7 @@ export default function Signup() {
 
               <FormField
                 control={form.control}
+
                 name="email"
                 render={({ field }) => (
                   <FormItem>
@@ -135,6 +146,7 @@ export default function Signup() {
                       />
                     </FormControl>
                     <FormMessage />
+                    <Button onClick={handleVerify}>Verify Google Account</Button>
                   </FormItem>
                 )}
               />

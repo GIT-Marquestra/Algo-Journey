@@ -60,9 +60,11 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 w-full h-16 z-50 flex items-center justify-between px-4 md:px-8 border-b shadow-lg bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center space-x-4">
+        <Link href={'/'}>
         <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
           AlgoJourney
         </span>
+        </Link>
       </div>
 
       {status === 'authenticated' ? (

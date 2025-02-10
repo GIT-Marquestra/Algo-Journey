@@ -1,11 +1,22 @@
-
 import prisma from "@/lib/prisma";
 import { AuthOptions } from "next-auth";
-import bcrypt from "bcrypt";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
+import bcrypt from "bcrypt";
 
 export const authOptions: AuthOptions = {
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      async profile(profile) {
+        return { 
+          id: profile.sub, 
+          email: profile.email, 
+          name: profile.name 
+        };
+      }
+    }),
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -15,13 +26,12 @@ export const authOptions: AuthOptions = {
       async authorize(credentials) {
         if (!credentials) return null;
 
-        // Find user by username
         const user = await prisma.user.findFirst({
           where: { username: credentials.username }
         });
 
         if (!user) return null;
-        // Compare password with hashed password in DB
+
         const passwordMatch = await bcrypt.compare(credentials.password, user.password);
         if (!passwordMatch) return null;
         return user;
@@ -33,18 +43,17 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async session({ session }) {
-      // Attach userId to session
       const dbUser = await prisma.user.findUnique({
         where: { username: session.user?.name || "" }
       });
 
       if (dbUser) {
-        //@ts-expect-error : it important here
-        session.user.id = dbUser.id; // Store userId in session
+        //@ts-expect-error: it is important here
+        session.user.id = dbUser.id;
       }
 
       return session;
     }
   },
-  secret: process.env.NEXTAUTH_SECRET // Ensure you have this in .env
+  secret: process.env.NEXTAUTH_SECRET
 };

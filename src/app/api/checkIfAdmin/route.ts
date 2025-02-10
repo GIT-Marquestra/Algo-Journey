@@ -30,8 +30,7 @@ export async function POST() {
     const isAdmin = admins.includes(user.username);
 
 
-    console.log(1)
-    console.log(isAdmin)
+    
     return NextResponse.json({ isAdmin }, { status: 200 });
   } catch (error) {
     console.error('Error checking admin status:', error);
