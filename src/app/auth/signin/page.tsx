@@ -27,12 +27,11 @@ export default function SignIn() {
       if(result?.status === 302){
         toast.error('Sign in Failed, check your credentials')
       } 
-      else if(result?.status === 302){
+      else if(result?.status === 200){
         toast.success('Signed in with status 200')
         Router.push('/user/dashboard')
       }
       else {
-        console.log(result)
         toast.success('Signed In')
         Router.push('/user/dashboard')
       }
