@@ -240,19 +240,19 @@ const QuestionSolving = () => {
       const response = await axios.post('/api/questions');
       const responseCodeforcesUsername = await axios.post('/api/user/codeforces/username')
       const responseLeetcodeUsername = await axios.post('/api/user/leetcode/username')
-      console.log(responseCodeforcesUsername, responseLeetcodeUsername)
+      // console.log(responseCodeforcesUsername, responseLeetcodeUsername)
       setCUsername(responseCodeforcesUsername.data.codeforcesUsername)
       setLUsername(responseLeetcodeUsername.data.leetcodeUsername)
       setQuestions(response.data.questions);
       console.log(response.data.questions)
       setScore(response.data.individualPoints)
-      const resLeet = await fetchLatestSubmissionsLeetCode('Abhi_Verma2678')
+      const resLeet = await fetchLatestSubmissionsLeetCode(lUsername)
         if(!resLeet) return 
         if(!(resLeet.recentSubmissionList)) return
         const leetTime = resLeet?.recentSubmissionList[0].timestamp
         if(leetTime) setResLeet(leetTime)
         
-        const resCodef = await fetchLatestSubmissionsCodeForces('Abhi_Verma2678')
+        const resCodef = await fetchLatestSubmissionsCodeForces(cUsername)
         if(!resCodef) return
         const codefTime = resCodef[0].creationTimeSeconds
         setResCodef(codefTime)

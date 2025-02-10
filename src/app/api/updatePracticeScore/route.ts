@@ -49,7 +49,6 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log('hi there')
 
     const res = await prisma.submission.create({
       data: {
