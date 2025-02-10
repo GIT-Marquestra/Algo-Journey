@@ -68,11 +68,12 @@ export default function SignIn() {
               />
             </div>
             <Button type="submit" className="w-full">
-              Sign In
+              Sign In if already Signed Up
             </Button>
+            <div className='flex justify-center'>OR</div>       
             <Button className="w-full" onClick={()=>signIn('google')}>
-              Sign In with Google
-            </Button>              
+              Sign Up with Google
+            </Button>       
             <Link href='/auth/signup' className='flex justify-center'>
               Not Signed Up yet? Sign Up        
             </Link>
