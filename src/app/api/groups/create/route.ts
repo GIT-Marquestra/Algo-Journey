@@ -23,6 +23,7 @@ export async function POST(req: Request) {
     }
 
     const admins = ["Abhishek Verma", "Taj", "Kunal", "Sai"];
+    if(!user.username) return 
     if (!admins.includes(user.username)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
