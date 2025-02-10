@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
 // Validation schema
@@ -54,8 +54,8 @@ const signupSchema = z.object({
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function Signup() {
-  const { data: session } = useSession()
   const Router = useRouter()
+  const { data:session } = useSession()
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -74,26 +74,49 @@ export default function Signup() {
   });
 
   const onSubmit = async (data: SignupFormData) => {
-    
     setIsSubmitting(true);
+  
     try {
-      const res = await signIn("google", { callbackUrl: "/auth/signup" });
-      if(res) {
-        toast.success('Verified')
-      }
-      const response = await axios.post("/api/auth/signup", data, {
+
+      const signupResponse = await axios.post("/api/auth/signup", data, {
         headers: { "Content-Type": "application/json" }
       });
-
-      if (response.status === 200) {
-        // Using a more modern notification approach
-        // In a real app, replace with a proper toast library
-        form.reset();
-        toast.success("Signup successful!");
+  
+      if (signupResponse.status !== 200) {
+        toast.error("Failed to create account. Please try again.");
+        return;
       }
+  
+
+      await signIn("google", {
+        redirect: false,
+        callbackUrl: '/user/dashboard'
+      });
+  
+
+      const session = await getSession();
+      
+      if (!session?.user?.email || session.user.email.toLowerCase() !== data.email.toLowerCase()) {
+
+        await signOut({ redirect: false });
+        await axios.delete("/api/auth/cleanup-user", { 
+          data: { email: data.email } 
+        });
+        toast.error("Please sign in with the same Google account as your registration email");
+        return;
+      }
+  
+
+      toast.success("Signup successful!");
+      Router.push('/user/dashboard');
+  
     } catch (error) {
       console.error("Signup Error:", error);
-      toast.error("Signup failed. Please try again.");
+
+      await axios.delete("/api/auth/cleanup-user", { 
+        data: { email: data.email } 
+      });
+      toast.error("An error occurred during signup");
     } finally {
       setIsSubmitting(false);
     }
@@ -102,10 +125,7 @@ export default function Signup() {
   if(session) {
     Router.push('/user/dashboard')
   }
-
-  // const handleVerify = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    
-  // }
+  
 
   return (
     <div className="flex items-center justify-center min-h-screen">
@@ -147,7 +167,7 @@ export default function Signup() {
                   <FormItem>
                     <FormLabel>College Email</FormLabel>
                     <FormControl>
-                      <Input 
+                      <Input
                         placeholder="your_name@nst.rishihood.edu.in" 
                         {...field} 
                       />

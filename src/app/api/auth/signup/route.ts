@@ -10,9 +10,7 @@ export async function POST(req: Request) {
   if(!(request.username)){
     return NextResponse.json({ error: "User creation failed" }, { status: 400 });
   }
-  console.log(12)
-
-  console.log(request.username, request.email, hashedPssword, request.leetcodeUsername, request.codeforcesUsername, request.section)
+  console.log(request)
 
   try {
     const user = await prisma.user.create({

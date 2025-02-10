@@ -9,11 +9,11 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      async profile(profile) {
-        return { 
-          id: profile.sub, 
-          email: profile.email, 
-          name: profile.name 
+      profile(profile) {
+        return {
+          id: profile.sub,
+          email: profile.email,
+          name: profile.name
         };
       }
     }),
@@ -42,18 +42,64 @@ export const authOptions: AuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async session({ session }) {
-      const dbUser = await prisma.user.findUnique({
-        where: { username: session.user?.name || "" }
+    async signIn({ user, account, profile }) {
+      console.log("SignIn Callback Started", {
+        userEmail: user.email,
+        provider: account?.provider
       });
 
-      if (dbUser) {
-        //@ts-expect-error: it is important here
-        session.user.id = dbUser.id;
-      }
+      if (account?.provider === "google") {
+        try {
+          const existingUser = await prisma.user.findFirst({
+            where: {
+              email: {
+                equals: user.email!,
+                mode: 'insensitive'  // Make the search case insensitive
+              }
+            }
+          });
 
+          console.log("Database search result:", existingUser);
+
+          if (!existingUser) {
+            console.log("No user found in database");
+            return false;
+          }
+
+          console.log("User found, allowing sign in");
+          return true;
+        } catch (error) {
+          console.error("Error during sign in check:", error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async session({ session }) {
+      if (session.user) {
+        const dbUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: session.user.email || "" },
+              { username: session.user.name || "" }
+            ]
+          }
+        });
+
+        console.log("Session Callback - DB User:", dbUser);
+
+        if (dbUser) {
+          // Use your database values instead of Google's
+          session.user.name = dbUser.username;
+          session.user.email = dbUser.email;
+        }
+      }
       return session;
     }
+  },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   secret: process.env.NEXTAUTH_SECRET
 };
