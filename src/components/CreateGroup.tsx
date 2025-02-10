@@ -58,27 +58,7 @@ const GroupManagement = () => {
   
 
 
-  const handleApply = async (groupId: string) => {
-    try {
-      const response = await axios.post('/api/groups/apply', {
-        groupId,
-        userEmail: session?.user?.email,
-      });
-      console.log('Response: ', response);
-      if (response.data.status === 400) {
-        toast.error('You have already applied!');
-      }
-      if (response.status === 201) {
-        toast.success('Application submitted successfully!');
-      }
-      if (response.data.status === 410) {
-        toast.error('You are already part of this Group!');
-      }
-    } catch (err) {
-      const error = err as Error;
-      toast.error(error.message);
-    }
-  };
+  
 
   const handleLeaveGroup = async (groupId: string) => {
     try {

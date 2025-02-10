@@ -65,8 +65,8 @@ export async function POST(req: Request) {
     if(!res) return NextResponse.json({ message: "Submission not created" });
 
     return NextResponse.json({ message: "Score updated and submission recorded successfully" });
-  } catch (error: any) {
-    console.error("Error updating scores and recording submission:", error.message);
+  } catch (error) {
+    console.error("Error updating scores and recording submission:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
