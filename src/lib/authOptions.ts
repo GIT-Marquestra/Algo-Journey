@@ -42,7 +42,7 @@ export const authOptions: AuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account }) {
       console.log("SignIn Callback Started", {
         userEmail: user.email,
         provider: account?.provider
