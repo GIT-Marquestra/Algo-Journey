@@ -73,10 +73,7 @@ export default function SignIn() {
             <div className='flex justify-center'>OR</div>       
             <Button className="w-full" onClick={()=>signIn('google')}>
               Sign Up with Google
-            </Button>       
-            <Link href='/auth/signup' className='flex justify-center'>
-              Not Signed Up yet? Sign Up        
-            </Link>
+            </Button>      
           </form>
         </CardContent>
       </Card>
