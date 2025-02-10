@@ -91,7 +91,8 @@ export default function Signup() {
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerify = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
     const res = await signIn("google", { callbackUrl: "/auth/signup" });
     if(res?.ok){
       toast.success('Verified')
@@ -146,7 +147,7 @@ export default function Signup() {
                       />
                     </FormControl>
                     <FormMessage />
-                    <Button onClick={handleVerify}>Verify Google Account</Button>
+                    <Button onClick={(e)=>handleVerify(e)}>Verify Google Account</Button>
                   </FormItem>
                 )}
               />
