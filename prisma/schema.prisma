@@ -12,14 +12,14 @@ datasource db {
 
 model User {
   id                  String              @id @default(uuid())
-  username            String?              @unique
-  isComplete          Boolean 
+  username            String              @unique
   email               String              @unique
-  password            String?
-  leetcodeUsername    String?           
-  codeforcesUsername  String?         
-  section            String?
-  enrollmentNum      String?              @unique
+  password            String
+  leetcodeUsername    String      
+  isComplete          Boolean     
+  codeforcesUsername  String         
+  section            String
+  enrollmentNum      String              @unique
   profileUrl         String?
   groupId            String?
   group              Group?              @relation(fields: [groupId], references: [id])
