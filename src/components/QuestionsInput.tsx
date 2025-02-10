@@ -97,7 +97,7 @@ export default function QuestionForm() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(questions),
+        body: questions,
       });
 
       if (response.status === 200) {

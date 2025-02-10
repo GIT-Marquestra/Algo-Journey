@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import { Difficulty } from "@prisma/client";
-import axios from "axios";
 import { NextResponse } from "next/server";
 
 interface QuestionInput {
@@ -15,11 +14,12 @@ interface QuestionInput {
 
 export async function POST(req: Request) {
     try {
-        const isAdmin = await axios.post('/api/checkIfAdmin');
+        // const isAdmin = await axios.post('/api/checkIfAdmin');
 
-        if (!isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 430 });
+        // if (!isAdmin) return NextResponse.json({ error: 'Unauthorized' }, { status: 430 });
 
-        const data: QuestionInput[] = await req.json();
+        const request = await req.json();
+        const data: QuestionInput[] = request.body
         console.log("Data: ", data);
 
         // Extract all unique tags
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         );
 
         // Create questions
-        const res = await prisma.question.createMany({
+        await prisma.question.createMany({
             data: data.map((q) => ({
                 leetcodeUrl: q.platform === "Leetcode" ? q.leetcodeUrl : null,
                 codeforcesUrl: q.platform === "Codeforces" ? q.codeforcesUrl : null,
@@ -48,7 +48,6 @@ export async function POST(req: Request) {
             skipDuplicates: true
         });
 
-        console.log(res);
 
         // Link tags to the questions
         for (const question of data) {
