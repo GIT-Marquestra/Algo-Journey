@@ -23,11 +23,11 @@ interface Question {
 }
 
 const difficultyPoints = {
-  BEGINNER: 20,
-  EASY: 40,
-  MEDIUM: 80,
-  HARD: 120,
-  VERYHARD: 140,
+  BEGINNER: 2,
+  EASY: 4,
+  MEDIUM: 6,
+  HARD: 8,
+  VERYHARD: 10,
 };
 
 const availableTags = [

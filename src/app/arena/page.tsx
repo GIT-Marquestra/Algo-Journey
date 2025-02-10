@@ -416,7 +416,7 @@ const QuestionSolving = () => {
                       onClick={() => handleVerify(
                         q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces',
                         q.question.slug,
-                        q.id,
+                        q.question.id,
                         q.contestId,
                         q.question.points
                       )}
