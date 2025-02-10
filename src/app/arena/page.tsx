@@ -259,7 +259,7 @@ const QuestionSolving = () => {
         if(resCodef) setResCodef(resCodef)
     };
     func();
-  }, []);
+  }, [lUsername, cUsername]);
 
   useEffect(() => {
     let filtered = questions;

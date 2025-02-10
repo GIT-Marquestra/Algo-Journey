@@ -166,7 +166,7 @@ const ContestQuest: React.FC = () => {
     } finally {
       setIsVerifying({ ...isVerifying, [questionId]: false });
     }
-  }, []);
+  }, [cusername, lusername, isVerifying, resCodef, resLeet, score, verifiedProblems]);
 
   const handleEndTest = useCallback(async (): Promise<void> => {
     setIsEndingTest(true);

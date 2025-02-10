@@ -50,7 +50,7 @@ export const authOptions: AuthOptions = {
   
       if (account?.provider === "google") {
         try {
-          let existingUser = await prisma.user.findUnique({
+          const existingUser = await prisma.user.findUnique({
             where: { email: user.email! }
           });
   
