@@ -32,6 +32,8 @@ export const authOptions: AuthOptions = {
 
         if (!user) return null;
 
+        if(!user.password) return null
+
         const passwordMatch = await bcrypt.compare(credentials.password, user.password);
         if (!passwordMatch) return null;
         return user;
@@ -43,63 +45,50 @@ export const authOptions: AuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      console.log("SignIn Callback Started", {
-        userEmail: user.email,
-        provider: account?.provider
-      });
-
+      console.log("User trying to sign in:", user);
+      console.log("Account type:", account?.provider);
+  
       if (account?.provider === "google") {
         try {
-          const existingUser = await prisma.user.findFirst({
-            where: {
-              email: {
-                equals: user.email!,
-                mode: 'insensitive'  // Make the search case insensitive
-              }
-            }
+          let existingUser = await prisma.user.findUnique({
+            where: { email: user.email! }
           });
-
-          console.log("Database search result:", existingUser);
-
-          if (!existingUser) {
-            console.log("No user found in database");
-            return false;
+  
+          if (!existingUser?.isComplete) {
+            console.log("Redirecting user to complete signup...");
+            return `/auth/signup?email=${encodeURIComponent(user.email!)}`;
           }
-
-          console.log("User found, allowing sign in");
+  
+          console.log("User successfully signed in.");
           return true;
         } catch (error) {
-          console.error("Error during sign in check:", error);
-          return false;
+          console.error("Error during Google sign-in:", error);
+          return false; 
         }
       }
+  
       return true;
     },
+  
     async session({ session }) {
-      if (session.user) {
-        const dbUser = await prisma.user.findFirst({
-          where: {
-            OR: [
-              { email: session.user.email || "" },
-              { username: session.user.name || "" }
-            ]
-          }
-        });
+    if (session.user) {
+      const dbUser = await prisma.user.findUnique({
+        where: { email: session.user.email || "" },
+      });
 
-        console.log("Session Callback - DB User:", dbUser);
-
-        if (dbUser) {
-          // Use your database values instead of Google's
-          session.user.name = dbUser.username;
-          session.user.email = dbUser.email;
-        }
+      if (dbUser) {
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            id: dbUser.id,
+            isComplete: dbUser.isComplete, 
+          },
+        };
       }
-      return session;
     }
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    return session;
+  }
   },
   secret: process.env.NEXTAUTH_SECRET
 };

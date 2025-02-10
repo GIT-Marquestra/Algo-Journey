@@ -54,7 +54,6 @@ export default function SignIn() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Enter username"
-                required 
               />
             </div>
             <div>
@@ -66,12 +65,14 @@ export default function SignIn() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
-                required 
               />
             </div>
             <Button type="submit" className="w-full">
               Sign In
             </Button>
+            <Button className="w-full" onClick={()=>signIn('google')}>
+              Sign In with Google
+            </Button>              
             <Link href='/auth/signup' className='flex justify-center'>
               Not Signed Up yet? Sign Up        
             </Link>

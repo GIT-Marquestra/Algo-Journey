@@ -6,6 +6,7 @@ import Navbar from "@/components/Navbar";
 import { ThemeProvider } from "@/components/theme-provider"
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { QueryProvider } from '@/components/QueryWrapper';
+import SessionRedirect from '@/components/SessionRedirect';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,7 +46,7 @@ export default function RootLayout({
         <main className="w-full flex justify-center min-h-screen overflow-hidden">
           {/* <SessionProvider> */}
           <div className="w-[95%] max-w-7xl">
-            
+            <SessionRedirect/>
               {children}
         <Toaster/>
           </div>

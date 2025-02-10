@@ -30,8 +30,8 @@ import {
 } from "@/components/ui/select";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
-import { getSession, signIn, signOut, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Validation schema
 const signupSchema = z.object({
@@ -56,6 +56,8 @@ type SignupFormData = z.infer<typeof signupSchema>;
 export default function Signup() {
   const Router = useRouter()
   const { data:session } = useSession()
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -64,7 +66,7 @@ export default function Signup() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
       username: "",
-      email: "",
+      email: email ?? '',
       password: "",
       leetcodeUsername: "",
       codeforcesUsername: "",
@@ -78,6 +80,8 @@ export default function Signup() {
   
     try {
 
+      if(!data.email.endsWith('@nst.rishihood.edu.in')) return 
+
       const signupResponse = await axios.post("/api/auth/signup", data, {
         headers: { "Content-Type": "application/json" }
       });
@@ -88,34 +92,13 @@ export default function Signup() {
       }
   
 
-      await signIn("google", {
-        redirect: false,
-        callbackUrl: '/user/dashboard'
-      });
-  
-
-      const session = await getSession();
-      
-      if (!session?.user?.email || session.user.email.toLowerCase() !== data.email.toLowerCase()) {
-
-        await signOut({ redirect: false });
-        await axios.delete("/api/auth/cleanup-user", { 
-          data: { email: data.email } 
-        });
-        toast.error("Please sign in with the same Google account as your registration email");
-        return;
-      }
-  
 
       toast.success("Signup successful!");
-      Router.push('/user/dashboard');
+      Router.push('/auth/signin');
   
     } catch (error) {
       console.error("Signup Error:", error);
 
-      await axios.delete("/api/auth/cleanup-user", { 
-        data: { email: data.email } 
-      });
       toast.error("An error occurred during signup");
     } finally {
       setIsSubmitting(false);
@@ -163,13 +146,13 @@ export default function Signup() {
                 control={form.control}
 
                 name="email"
+                
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>College Email</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="your_name@nst.rishihood.edu.in" 
-                        {...field} 
+                        {...field} disabled
                       />
                     </FormControl>
                     <FormMessage />
