@@ -44,7 +44,7 @@ const SearchInput = <T extends Record<string>>({
     const firstItem = items[0];
     
     return Object.entries(firstItem)
-      .filter(([_, value]) => {
+      .filter(([_, value]) => { // eslint-disable-line @typescript-eslint/no-unused-vars
         return (
           typeof value === 'string' ||
           typeof value === 'number' ||

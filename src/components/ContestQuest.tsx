@@ -197,7 +197,7 @@ const ContestQuest: React.FC = () => {
       setIsEndingTest(false);
       toast.dismiss(loader)
     }
-  }, [handleVerify])
+  }, [handleVerify, id, questions, router, score, session?.user?.email, verifiedProblems]);
 
 
   useEffect(() => {
