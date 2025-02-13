@@ -380,7 +380,7 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false)
     }
-  }, [setContests, setGroups, setUsers, setNumbers])
+  }, [setContests, setGroups, setUsers, setNumbers, Router, contests, filteredContests, groups, users])
 
     
 

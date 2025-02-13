@@ -109,7 +109,7 @@ const getNestedValue = (obj: NestedObject, path: string): Primitive | undefined 
         return false;
       });
     });
-  }, [items, searchTerm, defaultSearchFields]);
+  }, [items, searchTerm, defaultSearchFields, getNestedValue]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
