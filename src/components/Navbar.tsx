@@ -22,6 +22,7 @@ import {
   LogOut, 
   UserCircle,
   ShieldCheck,
+  ChartNoAxesColumnIcon,
   UserCog 
 } from 'lucide-react';
 
@@ -112,12 +113,20 @@ const Navbar = () => {
                 </div>
 
                 {isAdmin && (
+                  <>
                   <Link href="/admin/dashboard">
                     <DropdownMenuItem>
                       <ShieldCheck className="mr-2 h-4 w-4" />
                       <span>Admin Dashboard</span>
                     </DropdownMenuItem>
                   </Link>
+                  <Link href="/admin/Stats">
+                    <DropdownMenuItem>
+                      <ChartNoAxesColumnIcon className="mr-2 h-4 w-4" />
+                      <span>Stats</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  </>
                 )}
                 
                 <DropdownMenuItem onClick={() => signOut()}>

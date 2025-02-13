@@ -37,7 +37,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email").refine(
-    (email) => email.endsWith("@nst.rishihood.edu.in"), 
+    (email) => email.endsWith("@nst.rishihood.edu.in" || '@newtonschool.co'), 
     "Must use college email"
   ),
   password: z.string()
@@ -79,8 +79,6 @@ export default function Signup() {
     setIsSubmitting(true);
   
     try {
-
-      if(!data.email.endsWith('@nst.rishihood.edu.in')) return 
 
       const signupResponse = await axios.post("/api/auth/signup", data, {
         headers: { "Content-Type": "application/json" }

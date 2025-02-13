@@ -59,7 +59,7 @@ export default function QuestionForm() {
         leetcodeUrl: "",
         codeforcesUrl: "",
         difficulty: "BEGINNER",
-        points: 20,
+        points: 2,
         tags: [],
         platform: "Leetcode",
       },

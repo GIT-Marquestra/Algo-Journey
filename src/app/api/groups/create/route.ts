@@ -5,18 +5,18 @@ import prisma from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
     const request = await req.json();
-    console.log("Incoming request:", request);
-
+    
     const session = await getServerSession();
     if (!session || !session.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
+    
     const userEmail = session.user.email;
-
+    
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
     });
+    
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -28,45 +28,98 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const { name, users, coordinator } = request;
+    const { name, users, coordinator, newGroupName } = request;
 
-    const coordinatorUser = await prisma.user.findUnique({
-      where: { id: coordinator },
-    });
+  
+    if (coordinator) {
+      const coordinatorUser = await prisma.user.findUnique({
+        where: { id: coordinator },
+      });
 
-    if (!coordinatorUser) {
-      return NextResponse.json({ error: "Coordinator not found" }, { status: 404 });
+      if (!coordinatorUser) {
+        return NextResponse.json({ error: "Coordinator not found" }, { status: 404 });
+      }
     }
 
-    // Check if the group already exists
     const existingGroup = await prisma.group.findUnique({
       where: { name },
       include: { members: true },
     });
 
     if (existingGroup) {
-      // If the group exists, update its details
+  
+      const currentMemberIds = existingGroup.members.map(member => member.id);
+
+      let allUserIds = [...currentMemberIds];
+      
+      
+      
       const updatedGroup = await prisma.$transaction(async (tx) => {
+        
+        const updateData: any = {
+          members: {
+            set: allUserIds.map(id => ({ id }))
+          }
+        };
+        
+
+        
+        if (newGroupName) {
+          updateData.name = newGroupName;
+        }
+
+
+        if (coordinator) {
+          updateData.coordinator = { connect: { id: coordinator } };
+        }
+
+
         const updatedGroup = await tx.group.update({
           where: { id: existingGroup.id },
-          data: {
-            coordinator: { connect: { id: coordinator } },
-            members: { connect: users.map((id: string) => ({ id })) },
+          data: updateData,
+          include: { 
+            members: true,
+            coordinator: true  
           },
         });
 
-        // Update users' groupId to match the existing group
-        await tx.user.updateMany({
-          where: { id: { in: users } },
-          data: { groupId: existingGroup.id },
-        });
+        if(users){
+          const newUserIds = users.filter((id: string) => !currentMemberIds.includes(id));
+          allUserIds = [...newUserIds];
+          
+          if (newUserIds.length > 0) {
+            await tx.user.updateMany({
+              where: { id: { in: newUserIds } },
+              data: { groupId: existingGroup.id },
+            });
+          }
+        } 
+
+
 
         return updatedGroup;
-      });
+      },
+      { timeout: 30000 });
 
-      return NextResponse.json({ group: updatedGroup, message: "Group updated successfully" }, { status: 200 });
+
+      let updateMessage = "Group updated successfully:";
+      if (coordinator) updateMessage += " Coordinator updated.";
+      if (newGroupName) updateMessage += " Name updated.";
+
+      return NextResponse.json({ 
+        group: updatedGroup, 
+        message: updateMessage,
+        updates: {
+          nameUpdated: !!newGroupName,
+          coordinatorUpdated: !!coordinator
+        }
+      }, { status: 200 });
     } else {
-      // If the group doesn't exist, create it as before
+   
+      if (!coordinator) {
+        return NextResponse.json({ error: "Coordinator is required for new group creation" }, { status: 400 });
+      }
+
       const group = await prisma.$transaction(
         async (tx) => {
           const newGroup = await tx.group.create({
@@ -75,6 +128,10 @@ export async function POST(req: Request) {
               coordinator: { connect: { id: coordinator } },
               members: { connect: users.map((id: string) => ({ id })) },
             },
+            include: {
+              members: true,
+              coordinator: true
+            }
           });
 
           await tx.user.updateMany({
@@ -84,10 +141,18 @@ export async function POST(req: Request) {
 
           return newGroup;
         },
-        { timeout: 30000 } // ⬅ Increase timeout to 30 seconds
+        { timeout: 30000 }
       );
 
-      return NextResponse.json({ group, message: "Group created successfully" }, { status: 200 });
+      return NextResponse.json({ 
+        group, 
+        message: "Group created successfully",
+        updates: {
+          membersAdded: users.length,
+          nameUpdated: true,
+          coordinatorUpdated: true
+        }
+      }, { status: 200 });
     }
   } catch (error) {
     console.error("Error creating/updating group:", error);

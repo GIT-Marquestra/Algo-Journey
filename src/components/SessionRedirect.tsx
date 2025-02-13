@@ -6,13 +6,15 @@ import { useRouter } from "next/navigation";
 
 export default function SessionRedirect() {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const Router = useRouter();
 
   useEffect(() => {
     if (status === "authenticated" && session?.user?.isComplete === false) {
-      router.replace("/auth/signup"); 
+      Router.replace("/auth/signup"); 
+    } else if(status === "authenticated" && session?.user?.isComplete === false) {
+      Router.push('/user/dashboard')
     }
-  }, [session, status, router]);
+  }, [session, status, Router]);
 
   return null;
 }

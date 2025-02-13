@@ -27,6 +27,7 @@ const AdminGroupCreator = () => {
   const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [newGroupName, setNewGroupName] = useState('');
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -72,14 +73,14 @@ const AdminGroupCreator = () => {
       setError('Please enter a group name');
       return;
     }
-    if (selectedUsers.length === 0) {
-      setError('Please select at least one user');
-      return;
-    }
-    if (!coordinator) {
-      setError('Please select a coordinator');
-      return;
-    }
+    // if (selectedUsers.length === 0) {
+    //   setError('Please select at least one user');
+    //   return;
+    // }
+    // if (!coordinator) {
+    //   setError('Please select a coordinator');
+    //   return;
+    // }
 
     setIsSubmitting(true);
     setError('');
@@ -89,6 +90,7 @@ const AdminGroupCreator = () => {
       await axios.post('/api/groups/create', {
         name: groupName.trim(),
         users: selectedUsers,
+        newGroupName: newGroupName.trim(),
         coordinator
       });
       toast.success('Group created')
@@ -151,6 +153,11 @@ const AdminGroupCreator = () => {
             value={groupName}
             onChange={(e) => setGroupName(e.target.value)}
           />
+          <Input
+            placeholder="Enter new group name (optional)"
+            value={newGroupName}
+            onChange={(e) => setNewGroupName(e.target.value)}
+          />
         </div>
         
         <div className="space-y-2">
@@ -208,7 +215,7 @@ const AdminGroupCreator = () => {
           disabled={isSubmitting}
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create Group
+          Create / Update Group
         </Button>
       </CardFooter>
     </Card>

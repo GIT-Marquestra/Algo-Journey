@@ -22,7 +22,6 @@ export async function GET() {
       },
     });
 
-
     console.log(userEmail)
 
     if (!user) {
