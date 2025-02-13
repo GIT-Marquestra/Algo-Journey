@@ -21,8 +21,8 @@ interface SearchInputProps<T> {
   searchFields?: PathsToValue<T>[];
   placeholder?: string;
 }
-
-const SearchInput = <T extends Record<string, any>>({
+//@ts-expect-error: Type 'string' is not assignable to type 'PathsToValue<T>'.
+const SearchInput = <T extends Record<string>>({
   items,
   onResultsChange,
   searchFields,

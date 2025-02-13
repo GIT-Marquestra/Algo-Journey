@@ -65,13 +65,7 @@ interface CodeForcesSubmission {
   creationTimeSeconds: number;
 }
 
-interface ApiResponse {
-  status: number;
-  questions?: Question[];
-  message?: string;
-  remainingTime?: number
-  expiryTime?: number
-}
+
 
 const ContestQuest: React.FC = () => {
   const router = useRouter();
