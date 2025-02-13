@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1 second
+const RETRY_DELAY = 1000; 
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
