@@ -37,7 +37,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 const signupSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email").refine(
-    (email) => email.endsWith("@nst.rishihood.edu.in" || '@newtonschool.co'), 
+    (email) => email.endsWith("@nst.rishihood.edu.in") || email.endsWith('@newtonschool.co'),
     "Must use college email"
   ),
   password: z.string()
