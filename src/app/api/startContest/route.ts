@@ -14,7 +14,7 @@ export async function POST() {
         const session = await getServerSession()
         const userEmail = session?.user?.email
 
-        if(!userEmail) return NextResponse.json({ error: "UnAuthorized" }, { status: 401 });
+        if(!userEmail) return NextResponse.json({ message: "UnAuthorized" }, { status: 401 });
 
         const user = await prisma.user.findUnique({
             where:{
@@ -23,7 +23,7 @@ export async function POST() {
         })
         
         if (!user) {
-            return NextResponse.json({ error: "User not provided" }, { status: 400 });
+            return NextResponse.json({ message: "User not provided" }, { status: 400 });
         }
 
         
@@ -63,12 +63,12 @@ export async function POST() {
         
         if (existingSubmission) {
             return NextResponse.json({
-                error: "User has already participated in this contest"
+                message: "User has already participated in this contest"
             }, { status: 403 });
         }
 
         if (!contest) {
-            return NextResponse.json({ error: "No contest found" }, { status: 404 });
+            return NextResponse.json({ message: "No contest found" }, { status: 404 });
         }
 
         // Get user's group
@@ -83,7 +83,7 @@ export async function POST() {
         });
 
         if (!userGroup) {
-            return NextResponse.json({ error: "User not part of any group" }, { status: 404 });
+            return NextResponse.json({ message: "User not part of any group" }, { status: 404 });
         }
 
         // Time calculations
@@ -98,21 +98,21 @@ export async function POST() {
         // Time validation checks
         if (currentTimeIST < contestStart) {
             return NextResponse.json({ 
-                error: "Contest hasn't started yet",
+                message: "Contest hasn't started yet",
                 startTime: contestStart
             }, { status: 403 });
         }
 
         if (currentTimeIST > contestEnd) {
             return NextResponse.json({ 
-                error: "Contest has ended",
+                message: "Contest has ended",
                 endTime: contestEnd
             }, { status: 420 });
         }
 
         if (currentTimeIST > joiningWindowEnd) {
             return NextResponse.json({ 
-                error: "Contest joining window has closed",
+                message: "Contest joizning window has closed",
                 joiningWindowEnd
             }, { status: 403 });
         }
@@ -139,7 +139,7 @@ export async function POST() {
 
         const duration = getDurationUlt(contest.startTime, contest.endTime);
         if (!duration) {
-            return NextResponse.json({ error: "Invalid contest duration" }, { status: 400 });
+            return NextResponse.json({ message: "Invalid contest duration" }, { status: 400 });
         }
 
         const expiryTime = new Date(contestStart.getTime() + (duration * 60 * 60 * 1000)); // Convert hours to milliseconds

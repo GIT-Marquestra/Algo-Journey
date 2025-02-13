@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
-import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider"
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { QueryProvider } from '@/components/QueryWrapper';
@@ -30,7 +29,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -46,13 +44,11 @@ export default function RootLayout({
         <SessionProviderWrapper>
         <header className="absolute w-full"><Navbar/></header>
         <main className="w-full flex justify-center min-h-screen overflow-hidden">
-          {/* <SessionProvider> */}
           <div className="w-[95%] max-w-7xl">
             <SessionRedirect/>
               {children}
         <Toaster/>
           </div>
-          {/* </SessionProvider> */}
         </main>
         </SessionProviderWrapper>
         </QueryProvider>
@@ -61,7 +57,6 @@ export default function RootLayout({
       </body>
       
     </html>
-    </ClerkProvider>
 
   );
 }

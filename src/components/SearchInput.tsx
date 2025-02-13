@@ -54,9 +54,17 @@ const SearchInput = <T extends Record<string, any>>({
       .map(([key]) => key as PathsToValue<T>);
   }, [items, searchFields]);
 
-  const getNestedValue = (obj: any, path: string): Primitive | undefined => {
+  type Primitive = string | number | boolean | Date | null | undefined;
+
+type NestedObject = {
+  [key: string]: NestedValue;
+};
+
+type NestedValue = Primitive | NestedObject | NestedValue[];
+
+const getNestedValue = (obj: NestedObject, path: string): Primitive | undefined => {
     const parts = path.split('.');
-    let current = obj;
+    let current: NestedValue = obj;
     
     for (const part of parts) {
       if (current === null || current === undefined) return undefined;
@@ -69,14 +77,14 @@ const SearchInput = <T extends Record<string, any>>({
         )) {
           return current.join(' ');
         }
-        current = current.map(item => getNestedValue(item, part)).filter(Boolean).join(' ');
+        current = current.map(item => getNestedValue(item as NestedObject, part)).filter(Boolean).join(' ');
       } else {
-        current = current[part];
+        current = (current as NestedObject)[part];
       }
     }
     
-    return current;
-  };
+    return current as Primitive;
+};
 
   const filteredItems = useMemo(() => {
     if (!searchTerm.trim() || !items) {

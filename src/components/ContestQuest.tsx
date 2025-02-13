@@ -84,7 +84,7 @@ const ContestQuest: React.FC = () => {
   const [resLeet, setResLeet] = useState<string>();
   const [resCodef, setResCodef] = useState<string>();
   const [score, setScore] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState<number>(0); // 2 hours in seconds
+  const [timeLeft, setTimeLeft] = useState<number>(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [verifiedProblems, setVerifiedProblems] = useState<Set<string>>(new Set());
   const [isScoreUpdating, setIsScoreUpdating] = useState<boolean>(false);
@@ -96,7 +96,7 @@ const ContestQuest: React.FC = () => {
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
     let current = oldScore;
-    const step = Math.ceil((newScore - oldScore) / 20); // Divide animation into 20 steps
+    const step = Math.ceil((newScore - oldScore) / 20); 
     
     const animate = () => {
       if (current < newScore) {
@@ -314,54 +314,60 @@ const ContestQuest: React.FC = () => {
   const handleStartTest = async (): Promise<void> => {
     try {
       setloadingStartTest(true)
-      const response = await axios.post<ApiResponse>('/api/startContest', {
-        headers: { "Content-Type": "application/json" },
-        body: { user: session?.user, contestId: id }
-      });
+      const response = await axios.post('/api/startContest', 
+        { user: session?.user, contestId: id },
+        { 
+          headers: { "Content-Type": "application/json" },
+          validateStatus: (status) => status < 500 
+        }
+      );
 
+      if (response.status === 200) {
+        setTimeLeft(response.data.remainingTime + 10)
+        if (response.data.questions) {
+          setShow(true);
+          setQuestions(response.data.questions);
+        }
+        toast.success('Test Started')
+      }  
+      else {
+        const errorMessages: Record<number, string> = {
+          420: 'Test Entry Closed!',
+          403: 'Contest joining window has closed',
+          407: 'Already attempted the test',
+          404: 'To attempt Tests become member of a Group',
+          400: 'Not Authenticated, Please SignIn',
+          401: 'Not Authenticated, Please SignIn'
+        };
+        
+        toast.error(errorMessages[response.status] || "Unknown Error");
+        setTimeout(() => router.push('/user/dashboard'), 2000);
+        
+       
+      }
 
-      
-      
       const resLeet = await fetchLatestSubmissionsLeetCode(lusername)
       if(!resLeet) return 
       if(!(resLeet.recentSubmissionList)) return
       const leetTime = resLeet?.recentSubmissionList[0].timestamp
       if(leetTime) setResLeet(leetTime)
+      
       const resCodef = await fetchLatestSubmissionsCodeForces(cusername)
       if(!resCodef) return
-      console.log(response)
       const codefTime = resCodef[0].creationTimeSeconds
       setResCodef(codefTime)
       if(resCodef) setResCodef(resCodef) 
-      //@ts-expect-error : it important here
-      setTimeLeft(response.data.remainingTime + 60)
-        
-      console.log(response.status)
-        
-      if (response.data.questions) {
-        setShow(true);
-        setQuestions(response.data.questions);
-      }
-      if (response.data.status === 200) {
-        toast.success('Test Started')
-      } else {
-        const errorMessages: Record<number, string> = {
-        420: 'Test Entry Closed!',
-        404: 'To attempt Tests become member of a Group',
-        400: 'Not Authenticated, Please SignIn',
-      };
-      toast.error(errorMessages[response.data.status] || "Unknown Error");
-      if (response.data.status === 404) {
-        setTimeout(() => router.push('/user/dashboard'), 2000);
-      }
-      }
+
+      // Handle all status codes
+      
     } catch (error) {
+      // This will now only catch network errors or 500+ status codes
       console.error('Start test error:', error);
+      toast.error('Server error occurred');
     } finally {
       setloadingStartTest(false)
     }
-  };
-
+};
   return (
     <div className="min-h-screen bg-background">
       {!show ? (

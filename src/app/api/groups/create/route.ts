@@ -2,43 +2,42 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
 
+interface Data {
+  name?: string;
+  members?: { set: { id: string }[] };
+  coordinator?: { connect: { id: string } };
+}
+
 export async function POST(req: Request) {
   try {
     const request = await req.json();
-    
     const session = await getServerSession();
-    if (!session || !session.user?.email) {
+    
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const userEmail = session.user.email;
-    
     const user = await prisma.user.findUnique({
-      where: { email: userEmail },
+      where: { email: session.user.email },
     });
     
-
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const admins = ["Abhishek Verma", "Taj", "Kunal", "Sai"];
-    if(!user.username) return 
-    if (!admins.includes(user.username)) {
+    if (!user.username || !admins.includes(user.username)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const { name, users, coordinator, newGroupName } = request;
 
-  
-    if (coordinator) {
-      const coordinatorUser = await prisma.user.findUnique({
-        where: { id: coordinator },
-      });
+    if (!name) {
+      return NextResponse.json({ error: "Group name is required" }, { status: 400 });
+    }
 
-      if (!coordinatorUser) {
-        return NextResponse.json({ error: "Coordinator not found" }, { status: 404 });
-      }
+    if (!users || users.length === 0) {
+      return NextResponse.json({ error: "At least one user is required" }, { status: 400 });
     }
 
     const existingGroup = await prisma.group.findUnique({
@@ -47,62 +46,57 @@ export async function POST(req: Request) {
     });
 
     if (existingGroup) {
-  
       const currentMemberIds = existingGroup.members.map(member => member.id);
-
       let allUserIds = [...currentMemberIds];
-      
-      
-      
+
       const updatedGroup = await prisma.$transaction(async (tx) => {
-        
-        const updateData: any = {
+        const updateData: Data = {
           members: {
             set: allUserIds.map(id => ({ id }))
           }
         };
-        
 
-        
         if (newGroupName) {
           updateData.name = newGroupName;
         }
 
-
         if (coordinator) {
-          updateData.coordinator = { connect: { id: coordinator } };
+          const coordinatorExists = await tx.user.findUnique({
+            where: { id: coordinator }
+          });
+          if (coordinatorExists) {
+            updateData.coordinator = { connect: { id: coordinator } };
+          }
         }
 
-
-        const updatedGroup = await tx.group.update({
-          where: { id: existingGroup.id },
-          data: updateData,
-          include: { 
-            members: true,
-            coordinator: true  
-          },
-        });
-
-        if(users){
+        if (users && users.length > 0) {
           const newUserIds = users.filter((id: string) => !currentMemberIds.includes(id));
-          allUserIds = [...newUserIds];
+          allUserIds = [...currentMemberIds, ...newUserIds];
           
+          updateData.members = {
+            set: allUserIds.map(id => ({ id }))
+          };
+
           if (newUserIds.length > 0) {
             await tx.user.updateMany({
               where: { id: { in: newUserIds } },
               data: { groupId: existingGroup.id },
             });
           }
-        } 
+        }
 
-
-
-        return updatedGroup;
-      },
-      { timeout: 30000 });
-
+        return await tx.group.update({
+          where: { id: existingGroup.id },
+          data: updateData,
+          include: { 
+            members: true,
+            coordinator: true,
+          },
+        });
+      }, { timeout: 30000 });
 
       let updateMessage = "Group updated successfully:";
+      if (users) updateMessage += ` ${users.length} members processed.`;
       if (coordinator) updateMessage += " Coordinator updated.";
       if (newGroupName) updateMessage += " Name updated.";
 
@@ -110,39 +104,47 @@ export async function POST(req: Request) {
         group: updatedGroup, 
         message: updateMessage,
         updates: {
+          membersProcessed: users?.length || 0,
           nameUpdated: !!newGroupName,
           coordinatorUpdated: !!coordinator
         }
       }, { status: 200 });
     } else {
-   
+      // Require coordinator for new group creation
       if (!coordinator) {
         return NextResponse.json({ error: "Coordinator is required for new group creation" }, { status: 400 });
       }
 
-      const group = await prisma.$transaction(
-        async (tx) => {
-          const newGroup = await tx.group.create({
-            data: {
-              name,
-              coordinator: { connect: { id: coordinator } },
-              members: { connect: users.map((id: string) => ({ id })) },
-            },
-            include: {
-              members: true,
-              coordinator: true
-            }
-          });
+      // Verify coordinator exists
+      const coordinatorExists = await prisma.user.findUnique({
+        where: { id: coordinator }
+      });
 
-          await tx.user.updateMany({
-            where: { id: { in: users } },
-            data: { groupId: newGroup.id },
-          });
+      if (!coordinatorExists) {
+        return NextResponse.json({ error: "Coordinator not found" }, { status: 404 });
+      }
 
-          return newGroup;
-        },
-        { timeout: 30000 }
-      );
+      // Create new group
+      const group = await prisma.$transaction(async (tx) => {
+        const newGroup = await tx.group.create({
+          data: {
+            name,
+            coordinator: { connect: { id: coordinator } },
+            members: { connect: users.map((id: string) => ({ id })) }
+          },
+          include: {
+            members: true,
+            coordinator: true,
+          },
+        });
+
+        await tx.user.updateMany({
+          where: { id: { in: users } },
+          data: { groupId: newGroup.id },
+        });
+
+        return newGroup;
+      }, { timeout: 30000 });
 
       return NextResponse.json({ 
         group, 

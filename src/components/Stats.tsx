@@ -210,7 +210,7 @@ const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
 
   return (
     <div className="space-y-4">
-      {users ? users.map((u) => (<Card className="p-4 hover:bg-accent transition-colors cursor-pointer">
+      {users ? users.map((u) => (<Card key={u.id} className="p-4 hover:bg-accent transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="space-y-1">
@@ -263,7 +263,7 @@ const GroupList = ({ loading, groups }: { loading: boolean, groups: Group[] }) =
 
   return (
     <div className="space-y-4">
-      {groups ? groups.map((g: Group) => (<Card className="p-4 hover:bg-accent transition-colors cursor-pointer">
+      {groups ? groups.map((g: Group) => (<Card key={g.id} className="p-4 hover:bg-accent transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">{g.name}</h4>
@@ -315,7 +315,7 @@ const ContestList = ({ loading, contests }: { loading: boolean, contests: Contes
 
   return (
     <div className="space-y-4">
-      {contests ? contests.map((g: Contest) => (<Card className="p-4 hover:bg-accent transition-colors cursor-pointer">
+      {contests ? contests.map((g: Contest) => (<Card key={g.id} className="p-4 hover:bg-accent transition-colors cursor-pointer">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">Contest: {g.id}</h4>
@@ -370,6 +370,7 @@ const AdminDashboard = () => {
       setFilteredContests(response.data.contestsArray)
       setFilteredGroups(response.data.groupsArray)
       setFilteredUsers(response.data.usersArray)
+      console.log(filteredContests)
       setGroups(response.data.groupsArray)
       setContests(response.data.contestsArray)
       console.log(users, groups, contests)
