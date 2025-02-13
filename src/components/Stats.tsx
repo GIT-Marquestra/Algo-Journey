@@ -373,7 +373,6 @@ const AdminDashboard = () => {
       console.log(filteredContests)
       setGroups(response.data.groupsArray)
       setContests(response.data.contestsArray)
-      console.log(users, groups, contests)
     } catch (error) {
         console.log(error)
         toast.error('Some error occured')
