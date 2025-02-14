@@ -64,7 +64,7 @@ export async function POST() {
         if (existingSubmission) {
             return NextResponse.json({
                 message: "User has already participated in this contest"
-            }, { status: 403 });
+            }, { status: 430 });
         }
 
         if (!contest) {
@@ -100,7 +100,7 @@ export async function POST() {
             return NextResponse.json({ 
                 message: "Contest hasn't started yet",
                 startTime: contestStart
-            }, { status: 403 });
+            }, { status: 440 });
         }
 
         if (currentTimeIST > contestEnd) {

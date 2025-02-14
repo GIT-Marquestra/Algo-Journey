@@ -121,14 +121,22 @@ const ContestQuest: React.FC = () => {
         
         const res = await fetchLatestSubmissionsLeetCode(lusername);
 
+
+        console.log(resLeet)
+
+        if(!resLeet) {
+          toast.error('Unable to fetch Timestamp')
+          return 
+        }
+
         
-        if(!resLeet) return 
         if (res?.recentSubmissionList) {
           const solved = res.recentSubmissionList.find(
             (p: LeetCodeSubmission) => p.titleSlug === problemName && p.statusDisplay === 'Accepted' && parseInt(p.timestamp) > parseInt(resLeet)
           );
-          console.log(solved)
+          console.log('2')
           if (solved) {
+            console.log(3)
             setVerifiedProblems(prev => new Set([...prev, questionId]));
             animateScoreUpdate(score, score + points);
             toast.success(`Problem verified! +${points} points`);
@@ -160,7 +168,7 @@ const ContestQuest: React.FC = () => {
     } finally {
       setIsVerifying({ ...isVerifying, [questionId]: false });
     }
-  }, [cusername, lusername, isVerifying, resCodef, resLeet, score, verifiedProblems]);
+  }, [cusername, lusername, isVerifying, setIsVerifying, setVerifiedProblems, resCodef, resLeet, score, verifiedProblems]);
 
   const handleEndTest = useCallback(async (): Promise<void> => {
     setIsEndingTest(true);
@@ -222,7 +230,7 @@ const ContestQuest: React.FC = () => {
      
     const handleBack = () => {
       setShowModal(true);
-      window.history.pushState(null, "", window.location.pathname); // Prevents actual back
+      window.history.pushState(null, "", window.location.pathname); 
     };
 
     window.addEventListener("popstate", handleBack);
@@ -254,7 +262,7 @@ const ContestQuest: React.FC = () => {
 
   const confirmExit = () => {
     setShowModal(false);
-    router.back(); // Allow the back navigation
+    router.back();
   };
 
 
@@ -307,6 +315,10 @@ const ContestQuest: React.FC = () => {
 
   const handleStartTest = async (): Promise<void> => {
     try {
+      if (!lusername || !cusername) {
+        toast.error('Please wait while we load your profile data');
+        return;
+      }
       setloadingStartTest(true)
       const response = await axios.post('/api/startContest', 
         { user: session?.user, contestId: id },
@@ -315,10 +327,31 @@ const ContestQuest: React.FC = () => {
           validateStatus: (status) => status < 500 
         }
       );
+      console.log(-3)
+      const resLeet = await fetchLatestSubmissionsLeetCode(lusername)
+      console.log(resLeet)
+      if(!resLeet) return 
+      if(!(resLeet.recentSubmissionList)) return
+      const leetTime = resLeet?.recentSubmissionList[0].timestamp
+      console.log(-2)
+      if(leetTime) setResLeet(leetTime)
+      const resCodef = await fetchLatestSubmissionsCodeForces(cusername)
+      console.log(-1)
+      if(!resCodef) return
+      const codefTime = resCodef[0].creationTimeSeconds
+      console.log(-0.5)
+      setResCodef(codefTime)
+      if(resCodef) setResCodef(resCodef) 
+      console.log(0)
+      
+      console.log(response.status)
+      console.log(1)
 
       if (response.status === 200) {
-        setTimeLeft(response.data.remainingTime + 10)
+        setTimeLeft(response.data.remainingTime + 30)
+        
         if (response.data.questions) {
+          console.log(2)
           setShow(true);
           setQuestions(response.data.questions);
         }
@@ -329,6 +362,8 @@ const ContestQuest: React.FC = () => {
           420: 'Test Entry Closed!',
           403: 'Contest joining window has closed',
           407: 'Already attempted the test',
+          440: 'Contest has not started yet!',
+          430: 'User has already participated in the contest',
           404: 'To attempt Tests become member of a Group',
           400: 'Not Authenticated, Please SignIn',
           401: 'Not Authenticated, Please SignIn'
@@ -340,17 +375,7 @@ const ContestQuest: React.FC = () => {
        
       }
 
-      const resLeet = await fetchLatestSubmissionsLeetCode(lusername)
-      if(!resLeet) return 
-      if(!(resLeet.recentSubmissionList)) return
-      const leetTime = resLeet?.recentSubmissionList[0].timestamp
-      if(leetTime) setResLeet(leetTime)
       
-      const resCodef = await fetchLatestSubmissionsCodeForces(cusername)
-      if(!resCodef) return
-      const codefTime = resCodef[0].creationTimeSeconds
-      setResCodef(codefTime)
-      if(resCodef) setResCodef(resCodef) 
 
       // Handle all status codes
       

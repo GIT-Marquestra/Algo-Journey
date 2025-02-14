@@ -31,9 +31,9 @@ const difficultyPoints = {
 };
 
 const availableTags = [
-  "PrefixSum", "TwoPointers", "1D Arrays", "Graph", "2D Arrays",
-  "Time complexity", "Basic Maths", "Space complexity", "BinarySearch",
-  "DP", "Sorting", "Linear search", "Exponentiation", "Recursion"
+  "Prefix-Sum", "TwoPointers", "1D-Arrays", "Graph", "2D-Arrays",
+  "Time-Complexity", "BasicMaths", "Space-Complexity", "Binary-Search",
+  "DP", "Sorting", "Linear-Search", "Exponentiation", "Recursion"
 ];
 
 const getDifficultyColor = (difficulty: string) => {

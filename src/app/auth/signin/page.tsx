@@ -1,14 +1,20 @@
 'use client'
 import SignIn from '@/components/SignIn'
 import { useSession } from 'next-auth/react'
-import React from 'react'
+import { useRouter } from 'next/navigation'
+import React, { useEffect } from 'react'
 
 function SignInPage() {
   const { data: session } = useSession()
-
+  const Router = useRouter()
+  useEffect(() => {
+    if (session?.user?.email) {
+      Router.push('/user/dashboard')
+    }
+  }, [session])
   return (
     <div>
-      {!session?.user?.email && <SignIn/>}
+      {!session?.user?.email && <SignIn/> }
       
     </div>
   )

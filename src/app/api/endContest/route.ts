@@ -16,6 +16,8 @@ export async function POST(req: NextRequest) {
 
         const contestID = parseInt(contestId);
 
+        console.log(finalScore)
+
         const user = await prisma.user.findUnique({
             where: { email: userEmail },
             include: { group: { include: { members: true } } },
@@ -38,7 +40,6 @@ export async function POST(req: NextRequest) {
                         throw new Error(`Invalid questionId: ${questionId}`);
                     }
 
-                    console.log("Found question ID:", question.question.id);
 
                     await prisma.submission.create({
                         data: {
@@ -58,6 +59,7 @@ export async function POST(req: NextRequest) {
             });
 
             const totalUserPoints = userSubmissions.reduce((acc, curr) => acc + (curr.score || 0), 0);
+            console.log(totalUserPoints);
             await prisma.user.update({
                 where: { id: user.id },
                 data: { individualPoints: totalUserPoints },

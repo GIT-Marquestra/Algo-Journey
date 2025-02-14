@@ -2,8 +2,13 @@ import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
+
+    const request = await req.json()
+    const arr = request.topic
+    console.log(arr)
+    const topic = arr[0]
     const session = await getServerSession();
 
     if (!session?.user?.email) {
@@ -65,11 +70,20 @@ export async function POST() {
 
     if (latestContest && istTime > latestContest.endTime) {
        questions = await prisma.questionOnContest.findMany({
+        where:{
+          question:{
+            questionTags:{
+              some:{
+                name:topic
+              }
+            }
+          }
+        },
         select: {
           id: true,
           contestId: true,
-          questionId: true, // Ensure this is selected
-          createdAt: true,  // Ensure this is selected
+          questionId: true, 
+          createdAt: true,  
           question: {
             select: {
               id: true,
@@ -99,7 +113,7 @@ export async function POST() {
       });
     } else if (latestContest) {
       questions = await prisma.questionOnContest.findMany({
-        where: { contestId: { not: latestContest.id } },
+        where: { contestId: { not: latestContest.id }, question: { questionTags: { some: { name: topic } } } },
         select: {
           id: true,
           contestId: true,
@@ -133,6 +147,8 @@ export async function POST() {
         orderBy: { contest: { startTime: 'desc' } },
       });
     }
+
+    console.log(questions)
 
     return NextResponse.json(
       { questions, individualPoints: user.individualPoints, submissions: userSubmissions },
