@@ -78,7 +78,7 @@ const TopicGrid: React.FC = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {topics.map((topic) => (
-          <Link href={`/topicwiseQuestions/${topic}`} target='_blank' rel="noopener noreferrer">
+          <Link key={Math.random()} href={`/topicwiseQuestions/${topic}`} target='_blank' rel="noopener noreferrer">
           <Card 
             key={topic}
             className={`

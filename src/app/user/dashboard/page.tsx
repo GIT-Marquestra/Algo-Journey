@@ -70,6 +70,7 @@ export default function Dashboard() {
           groupMembers: contestsResponse.data.user.group?.members
         });
       } catch (error) {
+        console.log(error)
         toast.error('Unable to fetch dashboard data');
       } finally {
         setLoading(false);
