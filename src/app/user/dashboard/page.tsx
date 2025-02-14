@@ -166,17 +166,17 @@ export default function Dashboard() {
                 {latestContests?.map((contest) => (
                   <div key={contest.startTime} className="space-y-6 mt-2">
                     <div className="grid md:grid-cols-3 gap-4">
-                      <div className="p-4 rounded-lg bg-purple-50/50">
+                      <div className="p-4 rounded-lg bg-purple-100/50">
                         <p className="text-sm">Date</p>
-                        <p className="text-lg font-medium text-purple-900">{contest.startTime.split('T')[0]}</p>
+                        <p className="text-lg font-medium">{contest.startTime.split('T')[0]}</p>
                       </div>
-                      <div className="p-4 rounded-lg bg-green-50/50">
-                        <p className="text-sm text-green-600">Duration</p>
-                        <p className="text-lg font-medium text-green-900">{getDuration(contest.startTime, contest.endTime)}</p>
+                      <div className="p-4 rounded-lg bg-slate-200/50">
+                        <p className="text-sm">Duration</p>
+                        <p className="text-lg font-medium">{getDuration(contest.startTime, contest.endTime)}</p>
                       </div>
-                      <div className="p-4 rounded-lg bg-indigo-50/50">
-                        <p className="text-sm text-indigo-600">Status</p>
-                        <p className="text-lg font-medium text-indigo-900">{contest.status}</p>
+                      <div className="p-4 rounded-lg bg-green-100/50">
+                        <p className="text-sm">Status</p>
+                        <p className="text-lg font-medium">{contest.status}</p>
                       </div>
                     </div>
                   </div>

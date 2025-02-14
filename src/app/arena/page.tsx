@@ -83,6 +83,12 @@ const TopicGrid: React.FC = () => {
             key={topic}
             className={`
               cursor-pointer 
+              w-96
+              h-40
+              flex
+              justify-center
+              align-center
+              flex-col
               transition-all 
               duration-200 
               hover:shadow-lg 
