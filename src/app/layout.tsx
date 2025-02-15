@@ -33,6 +33,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        
       <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -44,7 +45,7 @@ export default function RootLayout({
         <SessionProviderWrapper>
         <header className="absolute w-full"><Navbar/></header>
         <main className="w-full flex justify-center min-h-screen overflow-hidden">
-          <div className="w-[95%] max-w-7xl">
+          <div className="w-full">
             <SessionRedirect/>
               {children}
         <Toaster/>

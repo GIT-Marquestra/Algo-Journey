@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Lock, User } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import img3 from '@/images/signin.png'
+import Image from 'next/image'
 
 export default function SignIn() {
   const [username, setUsername] = useState('');
@@ -42,8 +44,16 @@ export default function SignIn() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center mx-6 min-h-screen p-10">
+      <div>
+          <Image
+              src={img3}
+              alt="Login Page"
+              width={700}
+              height={700}
+          />
+        </div>
+      <Card className="w-full max-w-md mx-16">
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Lock className="w-6 h-6" />

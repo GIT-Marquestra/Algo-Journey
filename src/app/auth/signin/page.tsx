@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import React, { useEffect } from 'react'
 
+
 function SignInPage() {
   const { data: session } = useSession()
   const Router = useRouter()

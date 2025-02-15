@@ -20,7 +20,7 @@ export async function POST(req: Request) {
             email: true,
             section: true,
             group: {
-              select: { name: true }
+              select: { name: true } 
             },
             leetcodeUsername: true,
             codeforcesUsername: true,
@@ -29,6 +29,7 @@ export async function POST(req: Request) {
             updatedAt: true
           }
         },
+
         coordinator: {
           select: {
             id: true,
@@ -37,8 +38,10 @@ export async function POST(req: Request) {
             section: true
           }
         }
-      }
+      },
     });
+
+    
 
 
     if (!group) {

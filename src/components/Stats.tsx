@@ -49,7 +49,7 @@ interface Group {
   name: string;
   members: User[];
   coordinator: User;
-  points: number;
+  groupPoints: number;
 }
 
 interface Contest {
@@ -102,7 +102,7 @@ const GroupData = ({ group }: {group: Group | null}) => {
     <div className="py-4">
       {group ? <div className="space-y-2">
         <p><strong>Name:</strong> {group.name}</p>
-        <p><strong>Points:</strong> {group.points}</p>
+        <p><strong>Points:</strong> {group.groupPoints}</p>
         <p><strong>Corrdinator:</strong> {group.coordinator.username}</p>
         {group.members.map((m) => (<p key={m.username}><strong>Member:</strong> {m.username}</p>))}
       </div> : <div>No user found</div>}
@@ -268,7 +268,7 @@ const GroupList = ({ loading, groups }: { loading: boolean, groups: Group[] }) =
           <div className="space-y-1">
             <h4 className="text-sm font-semibold">{g.name}</h4>
             <p className="text-sm text-muted-foreground">Coordinator: {g.coordinator.username}</p>
-            <p className="text-sm text-muted-foreground">Members: {g.members.length} • Points: {g.points}</p>
+            <p className="text-sm text-muted-foreground">Members: {g.members.length} • Points: {g.groupPoints}</p>
           </div>
           <Modal
           trigger={<Button variant="outline" size="sm" onClick={() => handleViewDetails(g.id)}>
