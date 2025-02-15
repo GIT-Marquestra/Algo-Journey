@@ -15,6 +15,8 @@ export async function fetchLatestSubmissionsLeetCode(username: string){
     }
 
 } 
+
+
 export async function fetchLatestSubmissionsCodeForces(username: string){
     
     if(process.env.CODEFORCES_API_KEY && process.env.CODEFORCES_SECRET){
@@ -36,3 +38,5 @@ export async function fetchLatestSubmissionsCodeForces(username: string){
     }
 
 } 
+
+
