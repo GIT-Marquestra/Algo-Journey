@@ -34,12 +34,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         
-      <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
+
             <QueryProvider>
       
         <SessionProviderWrapper>
@@ -54,7 +49,6 @@ export default function RootLayout({
         </SessionProviderWrapper>
         </QueryProvider>
       <footer></footer>
-      </ThemeProvider>
       </body>
       
     </html>

@@ -2,7 +2,6 @@
 'use client'
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ModeToggle } from '@/components/ui/ModeToggle';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import axios from 'axios';
@@ -82,8 +81,6 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-
-          <ModeToggle />
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
