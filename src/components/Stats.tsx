@@ -407,9 +407,9 @@ const AdminDashboard = () => {
           loading={loading}
         />
         <StatsCard
-          title="Active Contests"
+          title="All Contests"
           value={numbers.activeContests.toString()}
-          description="Ongoing contests"
+          description="Contests"
           loading={loading}
         />
       </div>

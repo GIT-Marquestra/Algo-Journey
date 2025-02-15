@@ -44,6 +44,7 @@ interface Contest {
 
 export default function Dashboard() {
   const [latestContests, setLatestContests] = useState<Contest[] | null>(null);
+  const [username, setUsername] = useState<string>('');
   const [latestContest, setLatestContest] = useState<Contest | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [userStats, setUserStats] = useState<UserStats>({
@@ -59,6 +60,8 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const res = await axios.post('/api/getUsername')
+        setUsername(res.data.username)
         const contestsResponse = await axios.get('/api/getData');
         setLatestContests(contestsResponse.data.latestContests);
         setLatestContest(contestsResponse.data.latestContests[0]);
@@ -103,6 +106,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
+            <div className='text-pretty text-2xl font-sans'>Hi, {username}</div>
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="bg-white/60 backdrop-blur-sm border-purple-100 hover:border-purple-200 transition-colors">
                 <CardHeader>
