@@ -54,9 +54,7 @@ const HeroSection = () => {
         />
       </div>
 
-      <div className='m-9'>
-        <TextGenerateEffect words={sentence}/>
-      </div>
+     
 
       {/* Key Features Section */}
       <div className="max-w-6xl w-full px-4 md:px-8 py-16">
@@ -96,7 +94,7 @@ const HeroSection = () => {
             On Algojourney
           </h2>
           <p className="text-gray-400 text-lg md:text-2xl lg:text-3xl mt-2">
-            We are dedicated to providing an exceptional learning experience.
+          <TextGenerateEffect words={sentence}/>
           </p>
         </div>
       </div>
