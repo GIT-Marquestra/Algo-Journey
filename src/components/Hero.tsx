@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import img1 from '@/images/landing.png'
-import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin } from "lucide-react";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -20,7 +20,7 @@ const HeroSection = () => {
 
   return (
     <div className="bg-white relative w-screen h-auto flex flex-col items-center">
-      {/* Hero Section */}
+      {/* Previous sections remain unchanged */}
       <h1 className="text-black text-6xl md:text-8xl lg:text-9xl font-mono text-center pt-32 md:pt-56">
         Welcome
       </h1>
@@ -28,7 +28,6 @@ const HeroSection = () => {
         to AlgoJourney
       </h1>
 
-      {/* Get Started Button */}
       <div className="flex w-full justify-center pt-10">
         {!session && (
           <Button
@@ -43,7 +42,6 @@ const HeroSection = () => {
         )}
       </div>
 
-      {/* Hero Image */}
       <div className="w-full flex justify-center pt-10">
         <Image
           src={img1}
@@ -54,9 +52,6 @@ const HeroSection = () => {
         />
       </div>
 
-     
-
-      {/* Key Features Section */}
       <div className="max-w-6xl w-full px-4 md:px-8 py-16">
         <h1 className="text-black font-bold text-3xl md:text-4xl text-center mb-10">
           Key Features
@@ -88,18 +83,16 @@ const HeroSection = () => {
           ))}
         </div>
 
-        {/* AlgoJourney Statement */}
         <div className="text-center mt-32 md:mt-48">
           <h2 className="text-gray-600 text-4xl md:text-5xl lg:text-6xl font-semibold">
             On Algojourney
           </h2>
           <p className="text-gray-400 text-lg md:text-2xl lg:text-3xl mt-2">
-          <TextGenerateEffect words={sentence}/>
+            <TextGenerateEffect words={sentence}/>
           </p>
         </div>
       </div>
 
-      {/* Footer with Contributors Toggle */}
       <footer className="bg-gray-900 text-white py-6 w-full">
         <div className="max-w-6xl mx-auto px-4">
           <Collapsible
@@ -135,13 +128,22 @@ const HeroSection = () => {
                       <span>Backend Architecture</span>
                     </div>
                   </div>
-                  <a
-                    href="https://github.com/GIT-Marquestra"
-                    target="_blank"
-                    className="inline-flex items-center mt-4 text-blue-400 hover:text-blue-300"
-                  >
-                    <Code className="h-4 w-4 mr-2" /> GitHub
-                  </a>
+                  <div className="flex items-center gap-4 mt-4">
+                    <a
+                      href="https://github.com/GIT-Marquestra"
+                      target="_blank"
+                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
+                    >
+                      <Code className="h-4 w-4 mr-2" /> GitHub
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/in/abhishek-verma-6803b1309/"
+                      target="_blank"
+                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
+                    >
+                      <Linkedin className="h-4 w-4 mr-2" /> LinkedIn
+                    </a>
+                  </div>
                 </div>
 
                 <div className="bg-gray-800 p-6 rounded-lg">
@@ -157,13 +159,22 @@ const HeroSection = () => {
                       <span>Frontend Implementation</span>
                     </div>
                   </div>
-                  <a
-                    href="https://github.com/taj"
-                    target="_blank"
-                    className="inline-flex items-center mt-4 text-blue-400 hover:text-blue-300"
-                  >
-                    <Code className="h-4 w-4 mr-2" /> GitHub
-                  </a>
+                  <div className="flex items-center gap-4 mt-4">
+                    <a
+                      href="https://github.com/Taj-786"
+                      target="_blank"
+                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
+                    >
+                      <Code className="h-4 w-4 mr-2" /> GitHub
+                    </a>
+                    <a
+                      href="https://www.linkedin.com/in/tajuddinshaik786/"
+                      target="_blank"
+                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
+                    >
+                      <Linkedin className="h-4 w-4 mr-2" /> LinkedIn
+                    </a>
+                  </div>
                 </div>
               </div>
 
