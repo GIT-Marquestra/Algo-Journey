@@ -173,7 +173,7 @@ const HeroSection = () => {
                 <h3 className="text-xl font-bold mb-3">Tech Stack</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">Frontend:</span>
+                    <span className="font-semibold">Frontend and Backend:</span>
                     <span className="text-gray-300">Next.js</span>
                   </div>
                   <div className="flex items-center gap-2">
