@@ -114,89 +114,76 @@ const HeroSection = () => {
             </div>
             
             <CollapsibleContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-gray-800 p-6 rounded-lg">
-                  <h3 className="text-xl font-bold text-blue-400">Abhishek</h3>
-                  <p className="text-gray-300 mt-2">Full Stack Developer</p>
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Layout className="h-4 w-4 text-gray-400" />
-                      <span>Frontend Development</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Contributor Cards */}
+                {[
+                  {
+                    name: "Abhishek",
+                    role: "Full Stack Developer",
+                    skills: [
+                      { icon: <Layout className="h-4 w-4 text-gray-400" />, text: "Frontend Development" },
+                      { icon: <Database className="h-4 w-4 text-gray-400" />, text: "Backend Architecture" }
+                    ],
+                    github: "https://github.com/GIT-Marquestra",
+                    linkedin: "https://www.linkedin.com/in/abhishek-verma-6803b1309/"
+                  },
+                  {
+                    name: "Taj",
+                    role: "Frontend Developer",
+                    skills: [
+                      { icon: <Layout className="h-4 w-4 text-gray-400" />, text: "UI/UX Design" },
+                      { icon: <Code className="h-4 w-4 text-gray-400" />, text: "Frontend Implementation" }
+                    ],
+                    github: "https://github.com/Taj-786",
+                    linkedin: "https://www.linkedin.com/in/tajuddinshaik786/"
+                  }
+                ].map((contributor, index) => (
+                  <div key={index} className="bg-gray-800 p-4 md:p-6 rounded-lg">
+                    <h3 className="text-xl font-bold text-blue-400">{contributor.name}</h3>
+                    <p className="text-gray-300 mt-2">{contributor.role}</p>
+                    <div className="mt-3 space-y-2">
+                      {contributor.skills.map((skill, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-sm md:text-base">
+                          {skill.icon}
+                          <span>{skill.text}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-gray-400" />
-                      <span>Backend Architecture</span>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-4">
+                      <a
+                        href={contributor.github}
+                        target="_blank"
+                        className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        <Code className="h-4 w-4 mr-1" /> GitHub
+                      </a>
+                      <a
+                        href={contributor.linkedin}
+                        target="_blank"
+                        className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
+                      </a>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 mt-4">
-                    <a
-                      href="https://github.com/GIT-Marquestra"
-                      target="_blank"
-                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
-                    >
-                      <Code className="h-4 w-4 mr-2" /> GitHub
-                    </a>
-                    <a
-                      href="https://www.linkedin.com/in/abhishek-verma-6803b1309/"
-                      target="_blank"
-                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
-                    >
-                      <Linkedin className="h-4 w-4 mr-2" /> LinkedIn
-                    </a>
-                  </div>
-                </div>
-
-                <div className="bg-gray-800 p-6 rounded-lg">
-                  <h3 className="text-xl font-bold text-blue-400">Taj</h3>
-                  <p className="text-gray-300 mt-2">Frontend Developer</p>
-                  <div className="mt-3 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Layout className="h-4 w-4 text-gray-400" />
-                      <span>UI/UX Design</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Code className="h-4 w-4 text-gray-400" />
-                      <span>Frontend Implementation</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 mt-4">
-                    <a
-                      href="https://github.com/Taj-786"
-                      target="_blank"
-                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
-                    >
-                      <Code className="h-4 w-4 mr-2" /> GitHub
-                    </a>
-                    <a
-                      href="https://www.linkedin.com/in/tajuddinshaik786/"
-                      target="_blank"
-                      className="inline-flex items-center text-blue-400 hover:text-blue-300"
-                    >
-                      <Linkedin className="h-4 w-4 mr-2" /> LinkedIn
-                    </a>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <div className="bg-gray-800 p-6 rounded-lg mt-4">
+              {/* Tech Stack Section */}
+              <div className="bg-gray-800 p-4 md:p-6 rounded-lg">
                 <h3 className="text-xl font-bold mb-3">Tech Stack</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Frontend and Backend:</span>
-                    <span className="text-gray-300">Next.js</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Database:</span>
-                    <span className="text-gray-300">PostgreSQL</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">ORM:</span>
-                    <span className="text-gray-300">Prisma</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Auth:</span>
-                    <span className="text-gray-300">NextAuth</span>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                  {[
+                    { label: "Frontend and Backend", value: "Next.js" },
+                    { label: "Database", value: "PostgreSQL" },
+                    { label: "ORM", value: "Prisma" },
+                    { label: "Auth", value: "NextAuth" }
+                  ].map((tech, index) => (
+                    <div key={index} className="flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                      <span className="font-semibold text-sm">{tech.label}:</span>
+                      <span className="text-gray-300 text-sm">{tech.value}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CollapsibleContent>
