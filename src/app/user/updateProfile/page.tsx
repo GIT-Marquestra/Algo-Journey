@@ -20,12 +20,13 @@ type UserProfile = {
   enrollmentNum: string;
   profileUrl: string | null;
   individualPoints: number;
+  oldPassword?: string;
+  newPassword?: string;
 };
 
 const ProfilePage = () => {
-  // Mock initial data - replace with actual user data fetch
   const [profile, setProfile] = useState<UserProfile>({
-    username: "john_doe",  // Example data
+    username: "john_doe",
     email: "john@example.com",
     leetcodeUsername: "leetcoder123",
     codeforcesUsername: "coder456",
@@ -37,20 +38,18 @@ const ProfilePage = () => {
 
   const getInitialDetails = useCallback(async() => {
     const res = await axios.get('/api/user/getDetails')
-    console.log(res)
     if(!res.data.user) return 
     setProfile(res.data.user)
   }, [])
 
   useEffect(() => {
-
     getInitialDetails()
-
   }, [getInitialDetails])
 
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,24 +64,44 @@ const ProfilePage = () => {
     setIsSaving(true);
     
     try {
+      const dataToSend = { ...profile };
+      
+     
+      if (profile.oldPassword && profile.newPassword) {
+        dataToSend.oldPassword = profile.oldPassword;
+        dataToSend.newPassword = profile.newPassword;
+      } else {
+        
+        delete dataToSend.oldPassword;
+        delete dataToSend.newPassword;
+      }
+
       const res = await axios.patch('/api/user/updateProfile', {
-        profile
-      })
-      console.log(res)
+        profile: dataToSend
+      });
+
       if(res.status === 200){
         toast.success('Changes Saved, LogIn again!')
       }
       setSuccessMessage("Profile updated successfully!");
       setIsEditing(false);
+      setShowPasswordFields(false);
+      
+      
+      setProfile(prev => ({
+        ...prev,
+        oldPassword: '',
+        newPassword: ''
+      }));
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error('Some Error Occured')
+      toast.error('Some Error Occurred')
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Current Details View Component
+
   const CurrentDetailsView = () => (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
@@ -247,6 +266,44 @@ const ProfilePage = () => {
                     className="bg-muted"
                   />
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    onClick={() => setShowPasswordFields(!showPasswordFields)}
+                  >
+                    {showPasswordFields ? "Hide Password Fields" : "Change Password"}
+                  </Button>
+                </div>
+
+                {showPasswordFields && (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="oldPassword">Current Password</Label>
+                      <Input
+                        id="oldPassword"
+                        name="oldPassword"
+                        type="password"
+                        value={profile.oldPassword || ""}
+                        onChange={handleInputChange}
+                        placeholder="Enter your current password"
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="newPassword">New Password</Label>
+                      <Input
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        value={profile.newPassword || ""}
+                        onChange={handleInputChange}
+                        placeholder="Enter your new password"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="flex justify-end space-x-4">
@@ -256,6 +313,12 @@ const ProfilePage = () => {
                   onClick={() => {
                     setIsEditing(false);
                     setSuccessMessage("");
+                    setShowPasswordFields(false);
+                    setProfile(prev => ({
+                      ...prev,
+                      oldPassword: '',
+                      newPassword: ''
+                    }));
                   }}
                 >
                   Cancel
