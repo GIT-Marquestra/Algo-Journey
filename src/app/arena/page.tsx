@@ -5,8 +5,6 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 
-
-
 const topics = [
   "PrefixSum", "TwoPointers", "1D Arrays", "Graph", "2D Arrays",
   "Time complexity", "Basic Maths", "Space complexity", "BinarySearch",
@@ -69,51 +67,60 @@ const TopicGrid: React.FC = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen mt-16">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen mt-16">
       {loading && (
         <div className="fixed top-0 left-0 w-full z-50">
           <Progress value={progress} className="w-full" />
         </div>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {topics.map((topic) => (
-          <Link key={Math.random()} href={`/topicwiseQuestions/${topic}`} target='_blank' rel="noopener noreferrer">
-          <Card 
-            key={topic}
-            className={`
-              cursor-pointer 
-              w-96
-              h-40
-              flex
-              justify-center
-              align-center
-              flex-col
-              transition-all 
-              duration-200 
-              hover:shadow-lg 
-              hover:scale-105
-              ${loading && currentTopic === topic ? 'bg-blue-50' : 'bg-white'}
-            `}
-            onClick={() => handleTopicClick(topic)}
+          <Link 
+            key={topic} 
+            href={`/topicwiseQuestions/${topic}`} 
+            target='_blank' 
+            rel="noopener noreferrer"
+            className="block"
           >
-            <CardHeader className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800 text-center">
-                {topic}
-              </h3>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Progress 
-                  value={topicProgress[topic]?.percentage || 0} 
-                  className="h-2"
-                />
-                <p className="text-sm text-gray-600 text-center">
-                  {topicProgress[topic]?.solved || 0}/{topicProgress[topic]?.total || 0} solved
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+            <Card 
+              className={`
+                h-40
+                transform
+                transition-all 
+                duration-300 
+                hover:shadow-lg 
+                hover:scale-102
+                hover:bg-gray-50
+                border border-gray-200
+                rounded-lg
+                overflow-hidden
+                ${loading && currentTopic === topic ? 'bg-blue-50' : 'bg-white'}
+              `}
+              onClick={() => handleTopicClick(topic)}
+            >
+              <CardHeader className="p-4 pb-2">
+                <h3 className="text-lg font-semibold text-gray-800 text-center">
+                  {topic}
+                </h3>
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Progress 
+                      value={topicProgress[topic]?.percentage || 0} 
+                      className="h-2 rounded-full bg-gray-100"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <span>Progress</span>
+                    <span>
+                      {topicProgress[topic]?.solved || 0}/{topicProgress[topic]?.total || 0}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </Link>
         ))}
       </div>
