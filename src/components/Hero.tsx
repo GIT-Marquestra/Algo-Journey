@@ -138,7 +138,8 @@ const HeroSection = () => {
                     linkedin: "https://www.linkedin.com/in/tajuddinshaik786/"
                   }
                 ].map((contributor, index) => (
-                  <div key={index} className="bg-gray-800 p-4 md:p-6 rounded-lg">
+                  <div key={index} className="relative bg-gray-800 p-4 md:p-6 rounded-lg">
+                    <div className="absolute inset-0 rounded-lg border-2 border-transparent animate-borderMove"></div>
                     <h3 className="text-xl font-bold text-blue-400">{contributor.name}</h3>
                     <p className="text-gray-300 mt-2">{contributor.role}</p>
                     <div className="mt-3 space-y-2">
@@ -170,7 +171,8 @@ const HeroSection = () => {
               </div>
 
               {/* Tech Stack Section */}
-              <div className="bg-gray-800 p-4 md:p-6 rounded-lg">
+              <div className="relative bg-gray-800 p-4 md:p-6 rounded-lg">
+              <div className="absolute inset-0 rounded-lg border-2 border-transparent animate-borderMove"></div>
                 <h3 className="text-xl font-bold mb-3">Tech Stack</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
