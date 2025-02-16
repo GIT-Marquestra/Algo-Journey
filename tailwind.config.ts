@@ -9,6 +9,16 @@ export default {
   ],
   theme: {
   	extend: {
+		keyframes: {
+			buttonPulse: {
+			  '0%': { transform: 'scale(1)' },
+			  '50%': { transform: 'scale(1.1)', boxShadow: '0 0 15px black' },
+			  '100%': { transform: 'scale(1)' },
+			},
+		  },
+		  animation: {
+			buttonPulse: 'buttonPulse 60s infinite',
+		  },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
