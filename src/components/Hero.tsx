@@ -1,7 +1,7 @@
 'use client'
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import img1 from '@/images/landing.png'
+import img1 from '@/images/landing.jpg'
 import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin } from "lucide-react";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
@@ -31,10 +31,10 @@ const HeroSection = () => {
       <div className="flex w-full justify-center pt-10">
         {!session && (
           <Button
-            size="lg"
-            className="animate-buttonPulse w-40 md:w-48 bg-gradient-to-r from-black to-slate-300 hover:from-black hover:to-gray-400 shadow-lg hover:shadow-xl transition-all duration-300"
-            asChild
-          >
+          size="lg"
+          className="animate-[buttonPulse_360s_infinite_linear] w-40 md:w-48 bg-gradient-to-r from-black to-slate-300 hover:from-black hover:to-gray-400 shadow-lg hover:shadow-xl transition-all duration-300"
+          asChild
+        >
             <Link href="/auth/signin" className="text-white flex items-center">
               Get Started Now <ArrowRight className="ml-2 h-5 w-5 text-white" />
             </Link>
@@ -138,7 +138,8 @@ const HeroSection = () => {
                     linkedin: "https://www.linkedin.com/in/tajuddinshaik786/"
                   }
                 ].map((contributor, index) => (
-                  <div key={index} className="bg-gray-800 p-4 md:p-6 rounded-lg">
+                  <div key={index} className="relative bg-gray-800 p-4 md:p-6 rounded-lg">
+                    <div className="absolute inset-0 rounded-lg border-2 border-transparent animate-borderMove"></div>
                     <h3 className="text-xl font-bold text-blue-400">{contributor.name}</h3>
                     <p className="text-gray-300 mt-2">{contributor.role}</p>
                     <div className="mt-3 space-y-2">
@@ -170,7 +171,8 @@ const HeroSection = () => {
               </div>
 
               {/* Tech Stack Section */}
-              <div className="bg-gray-800 p-4 md:p-6 rounded-lg">
+              <div className="relative bg-gray-800 p-4 md:p-6 rounded-lg">
+              <div className="absolute inset-0 rounded-lg border-2 border-transparent animate-borderMove"></div>
                 <h3 className="text-xl font-bold mb-3">Tech Stack</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[

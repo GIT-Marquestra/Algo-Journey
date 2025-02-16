@@ -12,7 +12,6 @@ export async function POST(req: Request) {
     const lastContest = await prisma.contest.findFirst({
       orderBy: { id: 'desc' } 
     });
-    console.log("Here: ", lastContest)
     if(lastContest){
       contestId = lastContest.id + 1
     } else {

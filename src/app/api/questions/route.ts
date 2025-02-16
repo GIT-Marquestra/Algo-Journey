@@ -4,18 +4,16 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   try {
+    const request = await req.json();
+    const arr: string[] = request.topic;
+    const topic: string = arr[0];
 
-    const request = await req.json()
-    const arr = request.topic
-    console.log(arr)
-    const topic = arr[0]
     const session = await getServerSession();
-
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    const userEmail = session.user.email;
+    
+    const userEmail: string = session.user.email;
 
     // Get current time in IST
     const now = new Date();
@@ -59,9 +57,6 @@ export async function POST(req: Request) {
       orderBy: { createdAt: 'desc' },
     });
 
-    console.log(userSubmissions);
-
-    // Define the type explicitly
     type QuestionOnContestWithDetails = Awaited<
       ReturnType<typeof prisma.questionOnContest.findMany>
     >;
@@ -69,55 +64,16 @@ export async function POST(req: Request) {
     let questions: QuestionOnContestWithDetails = [];
 
     if (latestContest && istTime > latestContest.endTime) {
-       questions = await prisma.questionOnContest.findMany({
-        where:{
-          question:{
-            questionTags:{
-              some:{
-                name:topic
-              }
-            }
-          }
-        },
-        select: {
-          id: true,
-          contestId: true,
-          questionId: true, 
-          createdAt: true,  
+      questions = await prisma.questionOnContest.findMany({
+        where: {
           question: {
-            select: {
-              id: true,
-              leetcodeUrl: true,
-              codeforcesUrl: true,
-              difficulty: true,
-              points: true,
-              slug: true,
-              questionTags: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
-              submissions: {
-                where: { userId: user.id },
-                select: {
-                  status: true,
-                  score: true,
-                  createdAt: true,
-                },
-              },
-            },
+            questionTags: { some: { name: topic } },
           },
         },
-        orderBy: { contest: { startTime: 'desc' } },
-      });
-    } else if (latestContest) {
-      questions = await prisma.questionOnContest.findMany({
-        where: { contestId: { not: latestContest.id }, question: { questionTags: { some: { name: topic } } } },
         select: {
           id: true,
           contestId: true,
-          questionId: true, // Include questionId
+          questionId: true,
           createdAt: true,
           question: {
             select: {
@@ -127,19 +83,39 @@ export async function POST(req: Request) {
               difficulty: true,
               points: true,
               slug: true,
-              questionTags: {
-                select: {
-                  id: true,
-                  name: true,
-                },
-              },
+              questionTags: { select: { id: true, name: true } },
               submissions: {
                 where: { userId: user.id },
-                select: {
-                  status: true,
-                  score: true,
-                  createdAt: true,
-                },
+                select: { status: true, score: true, createdAt: true },
+              },
+            },
+          },
+        },
+        orderBy: { contest: { startTime: 'desc' } },
+      });
+    } else if (latestContest) {
+      questions = await prisma.questionOnContest.findMany({
+        where: {
+          contestId: { not: latestContest.id },
+          question: { questionTags: { some: { name: topic } } },
+        },
+        select: {
+          id: true,
+          contestId: true,
+          questionId: true,
+          createdAt: true,
+          question: {
+            select: {
+              id: true,
+              leetcodeUrl: true,
+              codeforcesUrl: true,
+              difficulty: true,
+              points: true,
+              slug: true,
+              questionTags: { select: { id: true, name: true } },
+              submissions: {
+                where: { userId: user.id },
+                select: { status: true, score: true, createdAt: true },
               },
             },
           },
@@ -148,10 +124,21 @@ export async function POST(req: Request) {
       });
     }
 
-    console.log(questions)
+    // **Filter out duplicate questions based on `slug`**
+    const uniqueQuestions: QuestionOnContestWithDetails = [];
+    const seenSlugs = new Set<string>();
+
+    for (const q of questions) {
+      //@ts-expect-error: `q.question` is not `undefined`
+      const slug = q.question.slug;
+      if (!seenSlugs.has(slug)) {
+        seenSlugs.add(slug);
+        uniqueQuestions.push(q);
+      }
+    }
 
     return NextResponse.json(
-      { questions, individualPoints: user.individualPoints, submissions: userSubmissions },
+      { questions: uniqueQuestions, individualPoints: user.individualPoints, submissions: userSubmissions },
       { status: 200 }
     );
   } catch (error) {

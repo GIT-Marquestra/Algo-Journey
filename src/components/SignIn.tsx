@@ -80,7 +80,7 @@ export default function SignIn() {
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Lock className="w-6 h-6" />
-            Sign In
+            Enter & Explore
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -114,7 +114,7 @@ export default function SignIn() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In if already Signed Up'}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             <div className='flex justify-center'>OR</div>       
             <Button 

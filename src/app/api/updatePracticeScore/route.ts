@@ -12,7 +12,6 @@ export async function POST(req: Request) {
     const userEmail = session.user.email;
     const { contestId, questionId, score } = await req.json();
 
-    console.log('teri', questionId)
 
 
     if (!contestId || !questionId || score === undefined) {

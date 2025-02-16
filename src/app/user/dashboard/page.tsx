@@ -168,15 +168,19 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 {latestContests?.map((contest) => (
-                  <div key={contest.startTime} className="space-y-6 mt-2">
-                    <div className="grid md:grid-cols-3 gap-4">
+                  <div key={contest.startTime} className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
+                    <div className="grid md:grid-cols-4 gap-4">
+                      <div className="p-4 rounded-lg bg-purple-100/50">
+                        <p className="text-sm">Contest</p>
+                        <p className="text-lg font-medium">{contest.id}</p>
+                      </div>
                       <div className="p-4 rounded-lg bg-purple-100/50">
                         <p className="text-sm">Date</p>
                         <p className="text-lg font-medium">{contest.startTime.split('T')[0]}</p>
                       </div>
                       <div className="p-4 rounded-lg bg-slate-200/50">
-                        <p className="text-sm">Duration</p>
-                        <p className="text-lg font-medium">{getDuration(contest.startTime, contest.endTime)}</p>
+                        <p className="text-sm">Time</p>
+                        <p className="text-lg font-medium">{contest.startTime.split('T')[1]}</p>
                       </div>
                       <div className="p-4 rounded-lg bg-green-100/50">
                         <p className="text-sm">Status</p>
@@ -186,19 +190,21 @@ export default function Dashboard() {
                   </div>
                 ))}
               </CardContent>
-              {latestContest?.status === 'ACTIVE' && (
-                <CardFooter>
-                  <Button 
-                    size="lg" 
-                    className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
-                    asChild
-                  >
-                    <Link href={`/contest/${latestContest.id}`}>
-                      Attempt Contest <ChevronRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              )}
+              {latestContests?.map((contest) => (
+                contest.status === 'ACTIVE' && (
+                  <CardFooter key={contest.id}>
+                    <Button 
+                      size="lg" 
+                      className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
+                      asChild
+                    >
+                      <Link href={`/contest/${contest.id}`}>
+                        Attempt Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </CardFooter>
+                )
+                ))}
             </Card>
 
             {userStats.groupName ? (

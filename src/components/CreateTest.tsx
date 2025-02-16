@@ -61,8 +61,6 @@ const CreateTestForm = () => {
   };
 
   const handleAddQuestion = async () => {
-      console.log('hi there')
-    //   if()
       try {
         console.log(1)
         const res = await axios.post("/api/auth/signup", {

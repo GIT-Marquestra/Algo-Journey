@@ -104,6 +104,14 @@ const ContestQuest: React.FC = () => {
     
     requestAnimationFrame(animate);
   };
+  const checkExistingSubmission = async (problemName: string) => {
+    const response = await axios.post('/api/checkExistingSubmission', {
+      problemName
+    })
+
+    return response.data.solved
+
+  }
 
   const handleVerify = useCallback(async (
     platform: 'Leetcode' | 'Codeforces', 
@@ -131,10 +139,17 @@ const ContestQuest: React.FC = () => {
 
         
         if (res?.recentSubmissionList) {
-          const solved = res.recentSubmissionList.find(
+          let solved = res.recentSubmissionList.find(
             (p: LeetCodeSubmission) => p.titleSlug === problemName && p.statusDisplay === 'Accepted' && parseInt(p.timestamp) > parseInt(resLeet)
           );
-          console.log('2')
+          if(solved){
+            const r = await checkExistingSubmission(problemName)
+            if(r){
+              solved = undefined
+              toast.success('Already Attempted Question')
+            } 
+          }
+          console.log(2)
           if (solved) {
             console.log(3)
             setVerifiedProblems(prev => new Set([...prev, questionId]));
@@ -146,11 +161,26 @@ const ContestQuest: React.FC = () => {
         }
       } else {
         const res = await fetchLatestSubmissionsCodeForces(cusername);
+        console.log(res)
         if (res) {
-          const solved = res.find(//@ts-expect-error : it important here
-            (p: CodeForcesSubmission) => p.problem.name === problemName && p.verdict === 'OK' && p.creationTimeSeconds > parseInt(resCodef)
+          let solved = res.find(
+            (p: CodeForcesSubmission) => {
+              console.log(p.problem.name === problemName && p.verdict === 'OK')
+              p.problem.name === problemName && p.verdict === 'OK'
+            }
+
           );
+          if(solved){
+            const r = await checkExistingSubmission(problemName)
+            console.log(r)
+            if(r){
+              solved = undefined
+              toast.success('Already Attempted Question')
+            } 
+          }
+          console.log(solved)
           if (solved) {
+            console.log('gxitdculycoyd')
             setVerifiedProblems(prev => new Set([...prev, questionId]));
             animateScoreUpdate(score, score + points);
             toast.success(`Problem verified! +${points} points`);
@@ -320,38 +350,33 @@ const ContestQuest: React.FC = () => {
         return;
       }
       setloadingStartTest(true)
-      const response = await axios.post('/api/startContest', 
+      const response = await axios.post(`/api/startContest/${id}`, 
         { user: session?.user, contestId: id },
         { 
           headers: { "Content-Type": "application/json" },
           validateStatus: (status) => status < 500 
         }
       );
-      console.log(-3)
       const resLeet = await fetchLatestSubmissionsLeetCode(lusername)
-      console.log(resLeet)
-      if(!resLeet) return 
+      if(!resLeet) {
+        toast.error('Unable to fetch Timestamp, check Leetcode Username')
+        return 
+      }
       if(!(resLeet.recentSubmissionList)) return
       const leetTime = resLeet?.recentSubmissionList[0].timestamp
-      console.log(-2)
       if(leetTime) setResLeet(leetTime)
-      const resCodef = await fetchLatestSubmissionsCodeForces(cusername)
-      console.log(-1)
-      if(!resCodef) return
-      const codefTime = resCodef[0].creationTimeSeconds
-      console.log(-0.5)
+      const resCodef2 = await fetchLatestSubmissionsCodeForces(cusername)
+      if(!resCodef2) {
+        toast.error('Unable to fetch Timestamp, check Codeforces Username')
+        return
+      }
+      const codefTime = resCodef2[0].creationTimeSeconds
       setResCodef(codefTime)
-      if(resCodef) setResCodef(resCodef) 
-      console.log(0)
-      
-      console.log(response.status)
-      console.log(1)
 
       if (response.status === 200) {
         setTimeLeft(response.data.remainingTime + 30)
         
         if (response.data.questions) {
-          console.log(2)
           setShow(true);
           setQuestions(response.data.questions);
         }
@@ -376,11 +401,8 @@ const ContestQuest: React.FC = () => {
       }
 
       
-
-      // Handle all status codes
-      
     } catch (error) {
-      // This will now only catch network errors or 500+ status codes
+     
       console.error('Start test error:', error);
       toast.error('Server error occurred');
     } finally {

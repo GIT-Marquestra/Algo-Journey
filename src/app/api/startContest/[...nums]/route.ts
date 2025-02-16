@@ -9,10 +9,29 @@ interface Contest {
     questions: object[]
 }
 
-export async function POST() {
+export async function POST(
+    request: Request
+  ) {
     try {
         const session = await getServerSession()
         const userEmail = session?.user?.email
+        const url = request.url
+
+        console.log(url)
+    
+
+        const contestNumber = url.split('/api/startContest/')[1]
+        
+        if (!contestNumber) {
+        return Response.json({ 
+            error: 'Contest number not found' 
+        }, { status: 400 })
+        }
+
+        // Convert to number and validate
+        const contestId = parseInt(contestNumber)
+
+        // Example: Extracting individual parameters
 
         if(!userEmail) return NextResponse.json({ message: "UnAuthorized" }, { status: 401 });
 
@@ -26,8 +45,7 @@ export async function POST() {
             return NextResponse.json({ message: "User not provided" }, { status: 400 });
         }
 
-        
-        // Get the latest contest
+    
         const contestData = await prisma.contest.findFirst({
             orderBy: {
                 id: 'desc'
@@ -45,11 +63,11 @@ export async function POST() {
             return NextResponse.json({ error: "Contest not found" }, { status: 404 });
         }
         
-        // Convert Date fields to string
+
         const contest: Contest = {
             ...contestData,
-            startTime: contestData.startTime.toISOString(), // Convert Date to string
-            endTime: contestData.endTime.toISOString(), // Convert Date to string
+            startTime: contestData.startTime.toISOString(),
+            endTime: contestData.endTime.toISOString(), 
         };
 
         if(!contest) return 
@@ -94,6 +112,7 @@ export async function POST() {
         const contestStart = new Date(contest.startTime);
         const contestEnd = new Date(contest.endTime);
         const joiningWindowEnd = new Date(contestStart.getTime() + (10 * 60 * 1000)); // 10 minutes after start
+        console.log(contestStart, contestEnd, joiningWindowEnd)
 
         // Time validation checks
         if (currentTimeIST < contestStart) {
@@ -110,12 +129,12 @@ export async function POST() {
             }, { status: 420 });
         }
 
-        if (currentTimeIST > joiningWindowEnd) {
-            return NextResponse.json({ 
-                message: "Contest joizning window has closed",
-                joiningWindowEnd
-            }, { status: 403 });
-        }
+        // if (currentTimeIST > joiningWindowEnd) {
+        //     return NextResponse.json({ 
+        //         message: "Contest joining window has closed",
+        //         joiningWindowEnd
+        //     }, { status: 403 });
+        // }
 
         // Handle group contest entry
         let groupOnContest = await prisma.groupOnContest.findUnique({
@@ -146,7 +165,8 @@ export async function POST() {
         console.log(expiryTime.getTime())
         const remainingTime = Math.floor((expiryTime.getTime() - currentTimeIST.getTime()) / 1000);
 
-        console.log(remainingTime)
+
+        console.log('questions are here: ', contest.questions)
 
         return NextResponse.json({
             message: "User can take the test",
@@ -162,6 +182,9 @@ export async function POST() {
             groupId: userGroup.id,
             status: 200
         });
+
+
+
 
     } catch (error) {
         console.error('Contest route error:', error);

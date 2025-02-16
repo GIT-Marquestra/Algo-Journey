@@ -31,37 +31,30 @@ export async function GET() {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
 
-        
-        // Fetch all upcoming contests
-        let upcomingContests = await prisma.contest.findMany({
-            where: { status: "UPCOMING" },
-            orderBy: { startTime: "asc" },
-        });
-
-        console.log(upcomingContests)
-        
-        if (!upcomingContests.length) {
-            upcomingContests = await prisma.contest.findMany({
-                take: 2,
-            });
-        }
-
         // Calculate current time in IST
         const nowO = new Date();
         const offset = 5.5 * 60 * 60 * 1000; // IST offset
         const now = new Date(nowO.getTime() + offset);
 
-        // Update status for all upcoming contests
+        // Fetch contests that might need updates
+        let contestsToUpdate = await prisma.contest.findMany({
+            where: {
+                status: { in: ["UPCOMING", "ACTIVE"] },
+            },
+            orderBy: { startTime: "asc" },
+        });
+
+        // Update contest statuses
         const updatedContests = await Promise.all(
-            upcomingContests.map(async (contest) => {
+            contestsToUpdate.map(async (contest) => {
                 if (now > contest.endTime) {
-                    // Contest has ended
+                    // Contest has ended, mark as COMPLETED
                     return prisma.contest.update({
                         where: { id: contest.id },
                         data: { status: "COMPLETED" },
                     });
                 } else if (now >= contest.startTime && now <= contest.endTime) {
-                    // Contest is ongoing
+                    // Contest is ongoing, mark as ACTIVE
                     return prisma.contest.update({
                         where: { id: contest.id },
                         data: { status: "ACTIVE" },
@@ -71,14 +64,19 @@ export async function GET() {
             })
         );
 
+        // Fetch updated contest list (latest 2)
+        const latestContests = await prisma.contest.findMany({
+            orderBy: { startTime: "desc" },
+            take: 2,
+        });
+
         const submissionCount = await prisma.submission.count({
             where: { userId: user.id },
         });
 
-        
         return NextResponse.json(
             {
-                latestContests: updatedContests,
+                latestContests,
                 user: {
                     id: user.id,
                     email: user.email,

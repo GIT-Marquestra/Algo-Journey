@@ -92,7 +92,7 @@ const TopicGrid: React.FC = () => {
                 hover:shadow-lg 
                 hover:scale-102
                 hover:bg-gray-50
-                border border-gray-200
+                border border-gray-300
                 rounded-lg
                 overflow-hidden
                 ${loading && currentTopic === topic ? 'bg-blue-50' : 'bg-white'}
