@@ -80,7 +80,7 @@ export default function SignIn() {
         <CardHeader>
           <CardTitle className="text-center flex items-center justify-center gap-2">
             <Lock className="w-6 h-6" />
-            Sign In
+            Enter & Explore
           </CardTitle>
         </CardHeader>
         <CardContent>
