@@ -114,7 +114,7 @@ export default function SignIn() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign In if already Signed Up'}
+              {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
             <div className='flex justify-center'>OR</div>       
             <Button 
