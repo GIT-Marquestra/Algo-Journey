@@ -11,13 +11,13 @@ export default {
   	extend: {
 		keyframes: {
 			buttonPulse: {
-			  '0%': { transform: 'scale(1)' },
-			  '50%': { transform: 'scale(1.1)', boxShadow: '0 0 15px black' },
-			  '100%': { transform: 'scale(1)' },
+			  "0%": { transform: "scale(1)" },
+			  "50%": { transform: "scale(1.1)", boxShadow: "0 0 15px rgba(0, 0, 0, 0.5)" },
+			  "100%": { transform: "scale(1)" },
 			},
 		  },
 		  animation: {
-			buttonPulse: 'buttonPulse 60s infinite',
+			buttonPulse: "buttonPulse 1000s infinite",
 		  },
   		colors: {
   			background: 'hsl(var(--background))',

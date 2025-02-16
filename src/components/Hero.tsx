@@ -32,7 +32,7 @@ const HeroSection = () => {
         {!session && (
           <Button
             size="lg"
-            className="animate-buttonPulse w-40 md:w-48 bg-gradient-to-r from-black to-slate-300 hover:from-black hover:to-gray-400 shadow-lg hover:shadow-xl transition-all duration-300"
+            className="animate-[buttonPulse_360s_infinite_linear] w-40 md:w-48 bg-gradient-to-r from-black to-slate-300 hover:from-black hover:to-gray-400 shadow-lg hover:shadow-xl transition-all duration-300"
             asChild
           >
             <Link href="/auth/signin" className="text-white flex items-center">
