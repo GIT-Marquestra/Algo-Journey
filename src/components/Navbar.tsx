@@ -1,5 +1,5 @@
 'use client'
-import React, { ReactEventHandler, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
