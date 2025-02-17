@@ -24,6 +24,7 @@ import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 import { getDuration } from '@/serverActions/getDuration';
 import { cn } from "@/lib/utils"
+import { redirect } from 'next/navigation';
 
 interface UserStats {
   totalSubmissions: number;
@@ -54,7 +55,13 @@ export default function Dashboard() {
     groupMembers: []
   });
   
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      redirect('/auth/signin');
+    }
+  }, [status]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,6 +92,8 @@ export default function Dashboard() {
     }
   }, [session]);
 
+
+  console.log(session)
   return (
     <div className="min-h-screen">
       <div className="container mx-auto p-8 pt-20 space-y-8">
