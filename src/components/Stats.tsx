@@ -401,7 +401,7 @@ const AdminDashboard = () => {
           loading={loading}
         />
         <StatsCard
-          title="Total Groups"
+          title="Total Teams"
           value={numbers.totalGroups.toString()}
           description="Active groups"
           loading={loading}
@@ -418,7 +418,7 @@ const AdminDashboard = () => {
       <Tabs defaultValue="students" className="space-y-4">
         <TabsList>
           <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="groups">Groups</TabsTrigger>
+          <TabsTrigger value="groups">Teams</TabsTrigger>
           <TabsTrigger value="contests">Contests</TabsTrigger>
         </TabsList>
 
@@ -440,14 +440,14 @@ const AdminDashboard = () => {
         <TabsContent value="groups" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Group Information</CardTitle>
+              <CardTitle>Team Information</CardTitle>
               <CardDescription>View and manage all active groups</CardDescription>
             </CardHeader>
             <CardContent>
               <SearchInput<Group> items={groups} searchFields={[
                 'name',
               ]} onResultsChange={setFilteredGroups} 
-                placeholder="Search groups..."
+                placeholder="Search team..."
               />
               <ScrollArea className="h-[400px] pr-4">
                 <GroupList loading={loading} groups={filteredGroups} />

@@ -97,8 +97,6 @@ const QuestionSolving = () => {
   const [score, setScore] = useState<number>(0);
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
   const [isScoreUpdating, setIsScoreUpdating] = useState<boolean>(false);
-  const [resLeet, setResLeet] = useState<string>();
-  const [resCodef, setResCodef] = useState<string>();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
@@ -158,13 +156,11 @@ const QuestionSolving = () => {
     try {
       if (platform === "Leetcode") {
         const res = await fetchLatestSubmissionsLeetCode(lUsername);
-        if(!resLeet) return
         if (res?.recentSubmissionList) {
           let solved = res.recentSubmissionList.find(
             (p: LeetCodeSubmission) => 
               p.titleSlug === problemName && 
-              p.statusDisplay === 'Accepted' && 
-              p.timestamp > resLeet
+              p.statusDisplay === 'Accepted'
           );
           if(solved){
             const r = await checkExistingSubmission(problemName)
@@ -185,18 +181,15 @@ const QuestionSolving = () => {
         }
       } else {
         const res = await fetchLatestSubmissionsCodeForces(cUsername);
-        if(!resCodef) return
         if (res) {
           let solved = res.find(
             (p: CodeForcesSubmission) => 
               p.problem.name === problemName && 
-              p.verdict === 'OK' && 
-              p.creationTimeSeconds > parseInt(resCodef)
+              p.verdict === 'OK'
           );
 
           if(solved){
             const r = await checkExistingSubmission(problemName)
-            console.log(r)
             if(r){
               solved = undefined
               toast.success('Already Attempted Question')
@@ -252,16 +245,7 @@ const QuestionSolving = () => {
         setQuestions(response.data.questions);
         console.log(response.data.questions)
         setScore(response.data.individualPoints)
-        const resLeet = await fetchLatestSubmissionsLeetCode(lUsername)
-        if(!resLeet) return 
-        if(!(resLeet.recentSubmissionList)) return
-        const leetTime = resLeet?.recentSubmissionList[0].timestamp
-        if(leetTime) setResLeet(leetTime)
-        const resCodef = await fetchLatestSubmissionsCodeForces(cUsername)
-        if(!resCodef) return
-        const codefTime = resCodef[0].creationTimeSeconds
-        setResCodef(codefTime)
-        if(resCodef) setResCodef(resCodef)
+        
       } catch (error) {
         console.log(error)
         toast.error('Error fetching questions');

@@ -34,8 +34,8 @@ function Page() {
         <GroupManagement isAdmin={showAdminSpecific}/>
       </div>
       <div className='mt-5'>
-        {show && group && <GroupMemberAdder groupId={group.id} groupName={group.name}/>}
-        {showAdminSpecific && <AdminGroupCreator/>}
+        {show && group && <GroupMemberAdder groupId={group.id} groupName={group.name}/>} 
+        {showAdminSpecific && <AdminGroupCreator/>}        
       </div>
     </div>
   )

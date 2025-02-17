@@ -62,6 +62,7 @@ export default function AllQuestions() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
+  const [duration, setDuration] = useState(2);
   const [show, setShow] = useState(true)
 
 
@@ -177,6 +178,11 @@ export default function AllQuestions() {
     return utcDate.toISOString();
   };
 
+  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setDuration(isNaN(value) ? 1 : Math.max(1, value)); // Ensure duration is at least 1 hour
+};
+
   const handleCreateTest = async () => {
     if (show && selectedQuestions.length === 0) {
       toast.error("Please select at least one question to create a test.");
@@ -192,6 +198,7 @@ export default function AllQuestions() {
       const testData = {
         questions: selectedQuestions,
         startTime: formatDateForPrisma(startTime),
+        duration,
         endTime: formatDateForPrisma(endTime)
       };
 
@@ -222,6 +229,17 @@ export default function AllQuestions() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                  <label className="block mb-1">Contest Duration (hours)</label>
+                  <input
+                      type="number"
+                      min="1"
+                      max="24"
+                      value={duration}
+                      onChange={handleDurationChange}
+                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                  />
+              </div>
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">Start Time</label>
                 <Input
