@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 const prisma = globalForPrisma.prisma ?? new PrismaClient({
-  log: [], // Disable all logs
+  log: [],
 })
 
 if (!globalForPrisma.prisma) {

@@ -1,9 +1,9 @@
-
 'use client'
 import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import {
   DropdownMenu,
@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 
 const Navbar = () => {
+  const router = useRouter();
   const { status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState('');
@@ -56,6 +57,16 @@ const Navbar = () => {
     { href: '/leaderboard/user', label: 'Leaderboard', icon: Trophy },
     { href: '/arena', label: 'Arena', icon: Swords },
   ];
+
+  const handleSignOut = async (e:any) => {
+    e.preventDefault();
+    try {
+      await signOut({ redirect: false });
+      router.push('/');
+    } catch (error) {
+      console.error('Error during sign out:', error);
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 w-full h-16 z-50 flex items-center justify-between px-4 md:px-8 border-b shadow-lg bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -126,7 +137,7 @@ const Navbar = () => {
                   </>
                 )}
                 
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem onSelect={(e) => handleSignOut(e)}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Sign out</span>
                 </DropdownMenuItem>

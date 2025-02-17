@@ -23,7 +23,9 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
 import { cn } from "@/lib/utils"
+import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+
 
 interface UserStats {
   totalSubmissions: number;
@@ -55,7 +57,13 @@ export default function Dashboard() {
     groupMembers: []
   });
   
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      redirect('/auth/signin');
+    }
+  }, [status]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +97,6 @@ export default function Dashboard() {
       fetchData();
     }
   }, [session]);
-
   const checkPermission = async (id: number) => {
     try {
       const checkPermission = await axios.post('/api/checkIfPermission', {
@@ -121,7 +128,6 @@ export default function Dashboard() {
       toast.error('Reset failed');
     }
   }
-
   return (
     <div className="min-h-screen">
       <div className="container mx-auto p-8 pt-20 space-y-8">
