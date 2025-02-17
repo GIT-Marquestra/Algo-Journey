@@ -52,7 +52,7 @@ const Navbar = () => {
 
   const navigationItems = [
     { href: '/user/dashboard', label: 'Home', icon: Home },
-    { href: '/groupCreation', label: 'Groups', icon: Users },
+    { href: '/groupCreation', label: 'Teams', icon: Users },
     { href: '/leaderboard/user', label: 'Leaderboard', icon: Trophy },
     { href: '/arena', label: 'Arena', icon: Swords },
   ];

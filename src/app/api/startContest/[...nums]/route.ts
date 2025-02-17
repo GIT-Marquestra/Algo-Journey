@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { getDurationUlt } from '@/serverActions/getDuration';
 import { getServerSession } from 'next-auth';
+
 interface Contest {
     id: number,
     startTime: string,
@@ -11,50 +12,38 @@ interface Contest {
 
 export async function POST(
     request: Request
-  ) {
+) {
     try {
-        const session = await getServerSession()
-        const userEmail = session?.user?.email
-        const url = request.url
+        const session = await getServerSession();
+        const userEmail = session?.user?.email;
+        const url = request.url;
 
-        console.log(url)
-    
+        if (!userEmail) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-        const contestNumber = url.split('/api/startContest/')[1]
+        // Extract contest ID from URL
+        const contestNumber = url.split('/api/startContest/')[1];
         
         if (!contestNumber) {
-        return Response.json({ 
-            error: 'Contest number not found' 
-        }, { status: 400 })
+            return Response.json({ error: 'Contest number not found' }, { status: 400 });
         }
 
         // Convert to number and validate
-        const contestId = parseInt(contestNumber)
-
-        // Example: Extracting individual parameters
-
-        if(!userEmail) return NextResponse.json({ message: "UnAuthorized" }, { status: 401 });
+        const contestId = parseInt(contestNumber);
 
         const user = await prisma.user.findUnique({
-            where:{
-                email: userEmail
-            }
-        })
+            where: { email: userEmail }
+        });
         
         if (!user) {
-            return NextResponse.json({ message: "User not provided" }, { status: 400 });
+            return NextResponse.json({ message: "User not found" }, { status: 400 });
         }
 
-    
-        const contestData = await prisma.contest.findFirst({
-            orderBy: {
-                id: 'desc'
-            },
+        // Get the requested contest
+        const contestData = await prisma.contest.findUnique({
+            where: { id: contestId },
             include: {
                 questions: {
-                    include: {
-                        question: true,
-                    },
+                    include: { question: true },
                 },
             },
         });
@@ -62,40 +51,24 @@ export async function POST(
         if (!contestData) {
             return NextResponse.json({ error: "Contest not found" }, { status: 404 });
         }
-        
+
+        // Find the latest active contest for comparison
+        const latestContest = await prisma.contest.findFirst({
+            where: { status: 'ACTIVE' },
+            orderBy: { startTime: 'desc' },
+        });
 
         const contest: Contest = {
             ...contestData,
             startTime: contestData.startTime.toISOString(),
-            endTime: contestData.endTime.toISOString(), 
+            endTime: contestData.endTime.toISOString(),
         };
-
-        if(!contest) return 
-
-        const existingSubmission = await prisma.submission.findFirst({
-            where: {
-                userId: user.id,
-                contestId: contest.id
-            }
-        });
-        
-        if (existingSubmission) {
-            return NextResponse.json({
-                message: "User has already participated in this contest"
-            }, { status: 430 });
-        }
-
-        if (!contest) {
-            return NextResponse.json({ message: "No contest found" }, { status: 404 });
-        }
 
         // Get user's group
         const userGroup = await prisma.group.findFirst({
             where: {
                 members: {
-                    some: {
-                        email: user.email
-                    }
+                    some: { id: user.id }
                 }
             }
         });
@@ -103,6 +76,9 @@ export async function POST(
         if (!userGroup) {
             return NextResponse.json({ message: "User not part of any group" }, { status: 404 });
         }
+
+        // Check if this is the latest contest
+        const isLatestContest = latestContest?.id === contestId;
 
         // Time calculations
         const now = new Date();
@@ -112,31 +88,61 @@ export async function POST(
         const contestStart = new Date(contest.startTime);
         const contestEnd = new Date(contest.endTime);
         const joiningWindowEnd = new Date(contestStart.getTime() + (10 * 60 * 1000)); // 10 minutes after start
-        console.log(contestStart, contestEnd, joiningWindowEnd)
 
-        // Time validation checks
-        if (currentTimeIST < contestStart) {
-            return NextResponse.json({ 
-                message: "Contest hasn't started yet",
-                startTime: contestStart
-            }, { status: 440 });
+        if (isLatestContest) {
+            // FLOW 1: Latest contest - Check permissions and enforce timing
+            
+            // Check for contest permission
+            const hasPermission = await prisma.contestPermission.findFirst({
+                where: {
+                    contestId: contestId,
+                    users: {
+                        some: { id: user.id }
+                    }
+                }
+            });
+
+            if (!hasPermission) {
+                return NextResponse.json({ 
+                    message: "You don't have permission to attempt this contest",
+                    status: 403
+                });
+            }
+
+           
+            const existingSubmission = await prisma.submission.findFirst({
+                where: {
+                    userId: user.id,
+                    contestId: contest.id
+                }
+            });
+            
+            if (existingSubmission) {
+                return NextResponse.json({
+                    message: "User has already participated in this contest"
+                }, { status: 430 });
+            }
+
+        
+            if (currentTimeIST < contestStart) {
+                return NextResponse.json({ 
+                    message: "Contest hasn't started yet",
+                    startTime: contestStart
+                }, { status: 440 });
+            }
+
+            if (currentTimeIST > contestEnd) {
+                return NextResponse.json({ 
+                    message: "Contest has ended",
+                    endTime: contestEnd
+                }, { status: 420 });
+            }
+        } else {
+      
+            console.log("Practice mode - attempting older contest");
         }
 
-        if (currentTimeIST > contestEnd) {
-            return NextResponse.json({ 
-                message: "Contest has ended",
-                endTime: contestEnd
-            }, { status: 420 });
-        }
-
-        // if (currentTimeIST > joiningWindowEnd) {
-        //     return NextResponse.json({ 
-        //         message: "Contest joining window has closed",
-        //         joiningWindowEnd
-        //     }, { status: 403 });
-        // }
-
-        // Handle group contest entry
+        // Common code for both flows: Set up GroupOnContest relation and calculate times
         let groupOnContest = await prisma.groupOnContest.findUnique({
             where: {
                 groupId_contestId: {
@@ -162,29 +168,23 @@ export async function POST(
         }
 
         const expiryTime = new Date(contestStart.getTime() + (duration * 60 * 60 * 1000)); // Convert hours to milliseconds
-        console.log(expiryTime.getTime())
         const remainingTime = Math.floor((expiryTime.getTime() - currentTimeIST.getTime()) / 1000);
 
-
-        console.log('questions are here: ', contest.questions)
-
         return NextResponse.json({
-            message: "User can take the test",
+            message: isLatestContest ? "Starting active contest" : "Starting practice contest",
             contest: {
                 id: contest.id,
                 startTime: contestStart,
                 endTime: contestEnd,
                 joiningWindowEnd,
                 expiryTime,
+                isPractice: !isLatestContest
             },
             remainingTime,
             questions: contest.questions,
             groupId: userGroup.id,
             status: 200
         });
-
-
-
 
     } catch (error) {
         console.error('Contest route error:', error);

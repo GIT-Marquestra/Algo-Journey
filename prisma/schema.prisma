@@ -15,20 +15,21 @@ model User {
   username            String              @unique
   email               String              @unique
   password            String
-  leetcodeUsername    String      
+  leetcodeUsername    String              @unique    
   isComplete          Boolean     
-  codeforcesUsername  String         
+  codeforcesUsername  String              @unique        
   section            String
-  enrollmentNum      String              @unique
+  enrollmentNum      String               @unique
   profileUrl         String?
   groupId            String?
-  group              Group?              @relation(fields: [groupId], references: [id])
+  group              Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
   submissions        Submission[]
   individualPoints   Int                 @default(0)
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-  applications  GroupApplication[] @relation("GroupApplications")
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  applications      GroupApplication[]   @relation("GroupApplications")
   coordinatedGroup   Group?              @relation("GroupCoordinator") 
+  contestPermissions ContestPermission[]
   
   @@index([groupId]) 
 }
@@ -38,7 +39,7 @@ model User {
 model Group {
   id                String              @id @default(uuid())
   name              String              @unique
-  coordinator       User                @relation("GroupCoordinator", fields: [coordinatorId], references: [id])
+  coordinator       User                @relation("GroupCoordinator", fields: [coordinatorId], references: [id], onDelete: Cascade)
   coordinatorId     String              @unique
   members           User[]
   contestsAttempted GroupOnContest[]
@@ -51,16 +52,19 @@ model Group {
 }
 
 
+
 model Contest {
   id                Int                 @id @default(autoincrement())
   startTime         DateTime
   endTime           DateTime            
   status            ContestStatus       @default(UPCOMING) 
+  duration          Int                 @default(0)
   questions         QuestionOnContest[]
   submissions       Submission[]
   attemptedGroups   GroupOnContest[]
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
+  contestPermissions  ContestPermission[]
 
   @@index([status, startTime]) 
 }
@@ -76,7 +80,7 @@ model GroupOnContest {
   groupId           String
   contestId         Int
   contest           Contest             @relation(fields: [contestId], references: [id])
-  group             Group               @relation(fields: [groupId], references: [id])
+  group             Group               @relation(fields: [groupId], references: [id], onDelete: Cascade)
   score             Int                 @default(0)
   rank              Int?                
   createdAt         DateTime            @default(now())
@@ -85,6 +89,7 @@ model GroupOnContest {
   @@unique([groupId, contestId])
   @@index([contestId, score]) 
 }
+
 
 model Question {
   id                String              @id @default(uuid())
@@ -132,6 +137,16 @@ model QuestionOnContest {
   @@unique([contestId, questionId])
 }
 
+
+model ContestPermission{
+  id                String              @id @default(uuid())
+  users             User[]
+  contestId         Int
+  contest           Contest             @relation(fields: [contestId], references: [id])
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt 
+}
+
 model Submission {
   id                String              @id @default(uuid())
   userId            String
@@ -159,14 +174,14 @@ enum SubmissionStatus {
 }
 
 model GroupApplication {
-  id            String          @id @default(uuid())
-  status        ApplicationStatus @default(PENDING)
+  id            String             @id @default(uuid())
+  status        ApplicationStatus  @default(PENDING)
   applicantId   String
   groupId       String
-  applicant     User            @relation("GroupApplications", fields: [applicantId], references: [id])
-  group         Group           @relation("GroupApplications", fields: [groupId], references: [id])
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  applicant     User               @relation("GroupApplications", fields: [applicantId], references: [id], onDelete: Cascade)
+  group         Group              @relation("GroupApplications", fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   @@unique([applicantId, groupId])
   @@index([groupId, status])

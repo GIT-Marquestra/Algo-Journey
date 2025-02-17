@@ -22,8 +22,8 @@ import axios from 'axios';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { useSession } from 'next-auth/react';
-import { getDuration } from '@/serverActions/getDuration';
 import { cn } from "@/lib/utils"
+import { useRouter } from 'next/navigation';
 
 interface UserStats {
   totalSubmissions: number;
@@ -45,8 +45,9 @@ interface Contest {
 export default function Dashboard() {
   const [latestContests, setLatestContests] = useState<Contest[] | null>(null);
   const [username, setUsername] = useState<string>('');
-  const [latestContest, setLatestContest] = useState<Contest | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [isCoord, setIsCoord] = useState<boolean>(false);
+  const Router = useRouter();
   const [userStats, setUserStats] = useState<UserStats>({
     totalSubmissions: 0,
     totalPoints: 0,
@@ -60,11 +61,15 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const coordResponse = await axios.post('/api/checkIfCoordinator')
+        if(!coordResponse.data.isCoordinator) setIsCoord(false);
+        setIsCoord(true);
+        
         const res = await axios.post('/api/getUsername')
+        console.log(res.data.username)
         setUsername(res.data.username)
         const contestsResponse = await axios.get('/api/getData');
         setLatestContests(contestsResponse.data.latestContests);
-        setLatestContest(contestsResponse.data.latestContests[0]);
         
         setUserStats({
           totalSubmissions: contestsResponse.data.submissionCount,
@@ -85,11 +90,42 @@ export default function Dashboard() {
     }
   }, [session]);
 
+  const checkPermission = async (id: number) => {
+    try {
+      const checkPermission = await axios.post('/api/checkIfPermission', {
+        contestId: id
+      })
+      if(!checkPermission.data.hasPermission) {
+        toast.error('You do not have permission to start the contest');
+      }
+      else {
+      toast.success('Permission checked, Directing...');
+      setTimeout(() => {
+        Router.push(`/contest/${id}`);
+      }, 2000);
+      }
+    } catch (error) {
+      console.log(error)
+      toast.error('Unable to check permission');
+      
+    }
+  }
+
+  const handleReset = async () => {
+    try {
+      const res = await axios.post('/api/reset');
+      console.log(res.data);
+      toast.success('Reset successful');
+    } catch (error) {
+      console.error(error);
+      toast.error('Reset failed');
+    }
+  }
+
   return (
     <div className="min-h-screen">
       <div className="container mx-auto p-8 pt-20 space-y-8">
         {loading ? (
-          // Loading skeleton with subtle animations
           <div className="space-y-8 animate-pulse">
             <div className="grid gap-4 md:grid-cols-3">
               {[...Array(3)].map(() => (
@@ -107,6 +143,7 @@ export default function Dashboard() {
         ) : (
           <>
             <div className='text-pretty text-2xl font-sans'>Hi, {username}</div>
+            <button onClick={handleReset}>reset</button>
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="bg-white/60 backdrop-blur-sm border-purple-100 hover:border-purple-200 transition-colors">
                 <CardHeader>
@@ -136,7 +173,7 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-indigo-700">
                     <Users className="h-5 w-5" />
-                    Group: {userStats.groupName ? userStats.groupName : 'Null'}
+                    Team: {userStats.groupName ? userStats.groupName : 'Null'}
                   </CardTitle>
                 </CardHeader>
                 {userStats.groupName && (
@@ -186,25 +223,28 @@ export default function Dashboard() {
                         <p className="text-sm">Status</p>
                         <p className="text-lg font-medium">{contest.status}</p>
                       </div>
+                      {isCoord && contest.status === 'ACTIVE' && <Button 
+                      size="lg" 
+                      className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
+                      asChild
+                      >
+                      <Link href={`/contest/${contest.id}`}>
+                        Start Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>}
+                      {!isCoord && contest.status === 'ACTIVE' && <Button 
+                      size="lg" 
+                      className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
+                      asChild
+                      onClick={() => checkPermission(contest.id)}
+                      >
+                      Start Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
+                    </Button>}
                     </div>
                   </div>
                 ))}
               </CardContent>
-              {latestContests?.map((contest) => (
-                contest.status === 'ACTIVE' && (
-                  <CardFooter key={contest.id}>
-                    <Button 
-                      size="lg" 
-                      className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
-                      asChild
-                    >
-                      <Link href={`/contest/${contest.id}`}>
-                        Attempt Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                )
-                ))}
+         
             </Card>
 
             {userStats.groupName ? (
@@ -212,7 +252,7 @@ export default function Dashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Group Members
+                    Team Members
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

@@ -32,6 +32,7 @@ import { Difficulty } from '@prisma/client';
 
 import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
 import axios from 'axios';
+import CoordinatorContestPermissions from './CoordinatorContestPermissions';
 
 
 interface Question {
@@ -75,8 +76,6 @@ const ContestQuest: React.FC = () => {
   const params = useParams();
   const id = params.num?.[0];
   const [loadingStartTest, setloadingStartTest] = useState(false)
-  const [resLeet, setResLeet] = useState<string>();
-  const [resCodef, setResCodef] = useState<string>();
   const [score, setScore] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -84,6 +83,7 @@ const ContestQuest: React.FC = () => {
   const [isScoreUpdating, setIsScoreUpdating] = useState<boolean>(false);
   const [isEndingTest, setIsEndingTest] = useState<boolean>(false);
   const [progress, setProgress] = useState(0);
+  const [isCoord, setIsCoord] = useState<boolean>(false);
   const [lusername, setLUsername] = useState('')
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
@@ -129,18 +129,10 @@ const ContestQuest: React.FC = () => {
         
         const res = await fetchLatestSubmissionsLeetCode(lusername);
 
-
-        console.log(resLeet)
-
-        if(!resLeet) {
-          toast.error('Unable to fetch Timestamp')
-          return 
-        }
-
         
         if (res?.recentSubmissionList) {
           let solved = res.recentSubmissionList.find(
-            (p: LeetCodeSubmission) => p.titleSlug === problemName && p.statusDisplay === 'Accepted' && parseInt(p.timestamp) > parseInt(resLeet)
+            (p: LeetCodeSubmission) => p.titleSlug === problemName && p.statusDisplay === 'Accepted'
           );
           if(solved){
             const r = await checkExistingSubmission(problemName)
@@ -161,26 +153,19 @@ const ContestQuest: React.FC = () => {
         }
       } else {
         const res = await fetchLatestSubmissionsCodeForces(cusername);
-        console.log(res)
         if (res) {
           let solved = res.find(
-            (p: CodeForcesSubmission) => {
-              console.log(p.problem.name === problemName && p.verdict === 'OK')
-              p.problem.name === problemName && p.verdict === 'OK'
-            }
+            (p: CodeForcesSubmission) => (p.problem.name === problemName && p.verdict === 'OK')
 
           );
           if(solved){
             const r = await checkExistingSubmission(problemName)
-            console.log(r)
             if(r){
               solved = undefined
               toast.success('Already Attempted Question')
             } 
           }
-          console.log(solved)
           if (solved) {
-            console.log('gxitdculycoyd')
             setVerifiedProblems(prev => new Set([...prev, questionId]));
             animateScoreUpdate(score, score + points);
             toast.success(`Problem verified! +${points} points`);
@@ -198,7 +183,7 @@ const ContestQuest: React.FC = () => {
     } finally {
       setIsVerifying({ ...isVerifying, [questionId]: false });
     }
-  }, [cusername, lusername, isVerifying, setIsVerifying, setVerifiedProblems, resCodef, resLeet, score, verifiedProblems]);
+  }, [cusername, lusername, isVerifying, setIsVerifying, setVerifiedProblems, score, verifiedProblems]);
 
   const handleEndTest = useCallback(async (): Promise<void> => {
     setIsEndingTest(true);
@@ -217,7 +202,6 @@ const ContestQuest: React.FC = () => {
         }
       }
 
-      console.log(verifiedProblems)
 
       const res = await axios.post('/api/endContest', {
         contestId: id,
@@ -245,6 +229,9 @@ const ContestQuest: React.FC = () => {
         const resC = await axios.post('/api/user/codeforces/username')
         setCUsername(resC.data.codeforcesUsername)
         setLUsername(resL.data.leetcodeUsername)
+        const coordResponse = await axios.post('/api/checkIfCoordinator')
+        if(!coordResponse.data.isCoordinator) setIsCoord(false);
+        setIsCoord(true);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -357,22 +344,8 @@ const ContestQuest: React.FC = () => {
           validateStatus: (status) => status < 500 
         }
       );
-      const resLeet = await fetchLatestSubmissionsLeetCode(lusername)
-      if(!resLeet) {
-        toast.error('Unable to fetch Timestamp, check Leetcode Username')
-        return 
-      }
-      if(!(resLeet.recentSubmissionList)) return
-      const leetTime = resLeet?.recentSubmissionList[0].timestamp
-      if(leetTime) setResLeet(leetTime)
-      const resCodef2 = await fetchLatestSubmissionsCodeForces(cusername)
-      if(!resCodef2) {
-        toast.error('Unable to fetch Timestamp, check Codeforces Username')
-        return
-      }
-      const codefTime = resCodef2[0].creationTimeSeconds
-      setResCodef(codefTime)
-
+      
+      
       if (response.status === 200) {
         setTimeLeft(response.data.remainingTime + 30)
         
@@ -412,6 +385,8 @@ const ContestQuest: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       {!show ? (
+        <>
+        {id && isCoord && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
         <div className="container mx-auto p-4 pt-20">
           <Card className="max-w-2xl mx-auto">
             <CardHeader>
@@ -430,6 +405,7 @@ const ContestQuest: React.FC = () => {
             </CardContent>
           </Card>
         </div>
+        </>
       ) : (
         <div className="container mx-auto p-4 pt-20 space-y-6">
           <Card className="sticky top-16 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
