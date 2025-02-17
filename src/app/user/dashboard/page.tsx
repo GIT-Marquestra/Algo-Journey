@@ -24,6 +24,8 @@ import { useSession } from 'next-auth/react';
 import { cn } from "@/lib/utils"
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
+import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
+import { set } from 'zod';
 
 
 interface UserStats {
@@ -45,6 +47,8 @@ interface Contest {
 
 export default function Dashboard() {
   const [latestContests, setLatestContests] = useState<Contest[] | null>(null);
+  const [leetcodeRanking, setLeetcodeRanking] = useState<number | null>(null);
+  const [codeforcesRating, setCodeforcesRating] = useState<number | null>(null);
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isCoord, setIsCoord] = useState<boolean>(false);
@@ -70,15 +74,33 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        const contestsResponse = await axios.get('/api/getData');
+        setLatestContests(contestsResponse.data.latestContests);
         const coordResponse = await axios.post('/api/checkIfCoordinator')
         if(!coordResponse.data.isCoordinator) setIsCoord(false);
         setIsCoord(true);
-        
         const res = await axios.post('/api/getUsername')
-        console.log(res.data.username)
         setUsername(res.data.username)
-        const contestsResponse = await axios.get('/api/getData');
-        setLatestContests(contestsResponse.data.latestContests);
+        const leetcodeUsername = await axios.post('/api/user/leetcode/username')
+        const codeforcesUsername = await axios.post('/api/user/codeforces/username')
+
+        if(!leetcodeUsername.data.leetcodeUsername || !codeforcesUsername.data.codeforcesUsername) {
+          toast.error('Please set your leetcode and codeforces usernames in settings');
+        }
+
+        const leetcodeResponse = await fetchLatestSubmissionsLeetCode(leetcodeUsername.data.leetcodeUsername)
+        const codeforcesResponse = await fetchCodeforcesUserData(codeforcesUsername.data.codeforcesUsername) 
+
+        if(leetcodeResponse?.matchedUser?.profile.ranking){
+          setLeetcodeRanking(leetcodeResponse?.matchedUser?.profile.ranking);
+        }
+
+        if(codeforcesResponse && codeforcesResponse.rating) {
+          setCodeforcesRating(codeforcesResponse.rating);
+
+        }
+
+        
         
         setUserStats({
           totalSubmissions: contestsResponse.data.submissionCount,
@@ -206,6 +228,40 @@ export default function Dashboard() {
                   <div>
                     <CardTitle className="text-2xl flex items-center gap-2">
                       <Award className="h-6 w-6" />
+                      Your Data
+                    </CardTitle>
+                    <CardDescription>
+                      Be Consitent, and watch your rating rise!
+                    </CardDescription>
+                  </div>
+                  <Button variant="outline" size="icon" className="border-purple-200 hover:bg-purple-50">
+                    <Clock className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+              <div className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="p-4 rounded-lg bg-purple-100/50">
+                        <p className="text-sm">Leetcode Rank</p>
+                        <p className="text-lg font-medium">{leetcodeRanking}</p>
+                      </div>
+                      <div className="p-4 rounded-lg bg-purple-100/50">
+                        <p className="text-sm">Codeforces Rating</p>
+                        <p className="text-lg font-medium">{codeforcesRating}</p>
+                      </div>
+                      
+                    </div>
+              </div>
+              </CardContent>
+         
+            </Card>
+            <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl flex items-center gap-2">
+                      <Award className="h-6 w-6" />
                       Latest Contests
                     </CardTitle>
                     <CardDescription>
@@ -231,7 +287,7 @@ export default function Dashboard() {
                       </div>
                       <div className="p-4 rounded-lg bg-slate-200/50">
                         <p className="text-sm">Time</p>
-                        <p className="text-lg font-medium">{contest.startTime.split('T')[1]}</p>
+                        <p className="text-lg font-medium">{contest.startTime.split('T')[1].split('000Z')[0]}</p>
                       </div>
                       <div className="p-4 rounded-lg bg-green-100/50">
                         <p className="text-sm">Status</p>
