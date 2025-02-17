@@ -49,6 +49,7 @@ export default function Dashboard() {
   const [username, setUsername] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [isCoord, setIsCoord] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const Router = useRouter();
   const [userStats, setUserStats] = useState<UserStats>({
     totalSubmissions: 0,
@@ -66,6 +67,7 @@ export default function Dashboard() {
   }, [status]);
 
   useEffect(() => {
+    
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -90,6 +92,13 @@ export default function Dashboard() {
         toast.error('Unable to fetch dashboard data');
       } finally {
         setLoading(false);
+      }
+      try {
+        const adminResponse = await axios.post('/api/checkIfAdmin')
+        
+        setIsAdmin(adminResponse.data.isAdmin);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
       }
     };
 
@@ -149,7 +158,7 @@ export default function Dashboard() {
         ) : (
           <>
             <div className='text-pretty text-2xl font-sans'>Hi, {username}</div>
-            <button onClick={handleReset}>reset</button>
+            {isAdmin && <Button onClick={handleReset}>Reset all tests</Button>}
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="bg-white/60 backdrop-blur-sm border-purple-100 hover:border-purple-200 transition-colors">
                 <CardHeader>

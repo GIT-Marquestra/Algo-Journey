@@ -105,8 +105,8 @@ export async function POST(
             if (!hasPermission) {
                 return NextResponse.json({ 
                     message: "You don't have permission to attempt this contest",
-                    status: 403
-                });
+                    
+                }, { status: 490 });
             }
 
            
