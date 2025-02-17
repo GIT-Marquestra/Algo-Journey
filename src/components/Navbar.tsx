@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { ReactEventHandler, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
@@ -58,7 +58,7 @@ const Navbar = () => {
     { href: '/arena', label: 'Arena', icon: Swords },
   ];
 
-  const handleSignOut = async (e:any) => {
+  const handleSignOut = async (e: Event) => {
     e.preventDefault();
     try {
       await signOut({ redirect: false });

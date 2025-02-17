@@ -20,16 +20,16 @@ import QuestionForm from './QuestionsInput';
 const AVAILABLE_TAGS = [
   "PrefixSum",
   "TwoPointers",
-  "1D Arrays",
+  "1DArrays",
   "Graph",
-  "2D Arrays",
-  "Time complexity",
-  "Basic Maths",
-  "Space complexity",
+  "2DArrays",
+  "TimeComplexity",
+  "BasicMaths",
+  "SpaceComplexity",
   "BinarySearch",
   "DP",
   "Sorting",
-  "Linear search",
+  "LinearSearch",
   "Exponentiation",
   "Recursion"
 ];
@@ -68,7 +68,6 @@ export default function AllQuestions() {
 
   const fetchQuestions = useCallback(async () => {
     try {
-      // await new Promise((r) => (setTimeout(r, 5000)))
       const res = await axios.post('/api/checkIfAdmin')
       const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
       if(!res.data.isAdmin) {

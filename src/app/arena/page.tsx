@@ -6,9 +6,20 @@ import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 
 const topics = [
-  "PrefixSum", "TwoPointers", "1D Arrays", "Graph", "2D Arrays",
-  "Time complexity", "Basic Maths", "Space complexity", "BinarySearch",
-  "DP", "Sorting", "Linear search", "Exponentiation", "Recursion"
+  "PrefixSum",
+  "TwoPointers",
+  "1DArrays",
+  "Graph",
+  "2DArrays",
+  "TimeComplexity",
+  "BasicMaths",
+  "SpaceComplexity",
+  "BinarySearch",
+  "DP",
+  "Sorting",
+  "LinearSearch",
+  "Exponentiation",
+  "Recursion"
 ] as const;
 
 type TopicType = typeof topics[number];

@@ -8,7 +8,6 @@ import { Trash2 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { revalidatePath } from 'next/cache';
 
 interface User {
   id: string;
@@ -132,7 +131,7 @@ const GroupManagement = ({isAdmin}:{isAdmin:boolean}) => {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Group</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete the group "{group.name}"? This action cannot be undone.
+            Are you sure you want to delete the group &quot;{group.name}&quot;? This action cannot be undone.
             All members will be removed and all associated data will be permanently deleted.
           </AlertDialogDescription>
         </AlertDialogHeader>
