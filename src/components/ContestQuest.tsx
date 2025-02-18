@@ -377,7 +377,7 @@ const ContestQuest: React.FC = () => {
     } catch (error) {
      
       console.error('Start test error:', error);
-      toast.error('Server error occurred');
+      toast.error('Some unexpected error occurred');
     } finally {
       setloadingStartTest(false)
     }

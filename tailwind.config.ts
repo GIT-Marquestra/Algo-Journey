@@ -9,23 +9,53 @@ export default {
   ],
   theme: {
   	extend: {
-		keyframes: {
-			buttonPulse: {
-			  "0%": { transform: "scale(1)" },
-			  "50%": { transform: "scale(1.1)", boxShadow: "0 0 15px rgba(0, 0, 0, 0.5)" },
-			  "100%": { transform: "scale(1)" },
-			},
-			borderMove: {
-				"0%": { borderColor: "rgba(173, 216, 230, 0.3)" },
-				"50%": { borderColor: "rgba(173, 216, 230, 0.8)" },
-				"100%": { borderColor: "rgba(173, 216, 230, 0.3)" },
-			},
-		  },
-		  
-		  animation: {
-			buttonPulse: "buttonPulse 1000s infinite",
-			borderMove: "borderMove 3s infinite alternate ease-in-out",
-		  },
+  		keyframes: {
+  			buttonPulse: {
+  				'0%': {
+  					transform: 'scale(1)'
+  				},
+  				'50%': {
+  					transform: 'scale(1.1)',
+  					boxShadow: '0 0 15px rgba(0, 0, 0, 0.5)'
+  				},
+  				'100%': {
+  					transform: 'scale(1)'
+  				}
+  			},
+  			borderMove: {
+  				'0%': {
+  					borderColor: 'rgba(173, 216, 230, 0.3)'
+  				},
+  				'50%': {
+  					borderColor: 'rgba(173, 216, 230, 0.8)'
+  				},
+  				'100%': {
+  					borderColor: 'rgba(173, 216, 230, 0.3)'
+  				}
+  			},
+  			'accordion-down': {
+  				from: {
+  					height: '0'
+  				},
+  				to: {
+  					height: 'var(--radix-accordion-content-height)'
+  				}
+  			},
+  			'accordion-up': {
+  				from: {
+  					height: 'var(--radix-accordion-content-height)'
+  				},
+  				to: {
+  					height: '0'
+  				}
+  			}
+  		},
+  		animation: {
+  			buttonPulse: 'buttonPulse 1000s infinite',
+  			borderMove: 'borderMove 3s infinite alternate ease-in-out',
+  			'accordion-down': 'accordion-down 0.2s ease-out',
+  			'accordion-up': 'accordion-up 0.2s ease-out'
+  		},
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
