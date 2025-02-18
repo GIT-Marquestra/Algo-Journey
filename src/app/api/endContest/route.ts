@@ -16,8 +16,6 @@ export async function POST(req: NextRequest) {
 
         const contestID = parseInt(contestId);
 
-        console.log(finalScore)
-
         const user = await prisma.user.findUnique({
             where: { email: userEmail },
             include: { group: { include: { members: true } } },
@@ -28,7 +26,6 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await prisma.$transaction(async (prisma) => {
-            // Store submissions
             await Promise.all(
                 questions.map(async (questionId) => {
                     const question = await prisma.questionOnContest.findFirst({
@@ -39,7 +36,6 @@ export async function POST(req: NextRequest) {
                     if (!question || !question.question) {
                         throw new Error(`Invalid questionId: ${questionId}`);
                     }
-
 
                     await prisma.submission.create({
                         data: {
@@ -53,40 +49,48 @@ export async function POST(req: NextRequest) {
                 })
             );
 
+            // Update individual points
             const userSubmissions = await prisma.submission.findMany({
                 where: { userId: user.id, status: "ACCEPTED" },
                 select: { score: true },
             });
 
             const totalUserPoints = userSubmissions.reduce((acc, curr) => acc + (curr.score || 0), 0);
-            console.log(totalUserPoints);
+            console.log(`Total user points: ${totalUserPoints}`);
             await prisma.user.update({
                 where: { id: user.id },
                 data: { individualPoints: totalUserPoints },
             });
 
             if (user.groupId && user.group) {
+                // Count total permitted members for this contest
+                const contestPermission = await prisma.contestPermission.findFirst({
+                    where: { contestId: contestID },
+                    include: { users: { where: { groupId: user.groupId } } },
+                });
 
-                const latestContest = await prisma.contest.findFirst({ orderBy: { id: "desc" } });
+                // Get the number of members with permission (minimum is 1 since current user has permission)
+                const totalPermittedMembers = contestPermission ? contestPermission.users.length : 1;
+                
+                // For averaging, always use at least 4 members as divisor
+                const divisor = Math.max(4, totalPermittedMembers);
+                const averageScore = finalScore / divisor;
+                
+                console.log(`Group members with permission: ${totalPermittedMembers}, divisor: ${divisor}, average score: ${averageScore}`);
 
- 
-                const existingGroupAttempt = await prisma.groupOnContest.findUnique({
+                // Check if this is the first attempt for this contest by the group
+                await prisma.groupOnContest.findUnique({
                     where: { groupId_contestId: { groupId: user.groupId, contestId: contestID } },
                 });
 
-                const groupScore = existingGroupAttempt
-                    ? latestContest?.id !== contestID
-                        ? finalScore / 2
-                        : finalScore
-                    : finalScore;
-
+                // Create or update the group's score for this contest
                 await prisma.groupOnContest.upsert({
                     where: { groupId_contestId: { groupId: user.groupId, contestId: contestID } },
-                    create: { groupId: user.groupId, contestId: contestID, score: groupScore },
-                    update: { score: { increment: groupScore } },
+                    create: { groupId: user.groupId, contestId: contestID, score: averageScore },
+                    update: { score: { increment: averageScore } },
                 });
 
-               
+                // Update rankings for all groups in this contest
                 const groupsInContest = await prisma.groupOnContest.findMany({
                     where: { contestId: contestID },
                     orderBy: { score: "desc" },
@@ -99,7 +103,7 @@ export async function POST(req: NextRequest) {
                     });
                 }
 
-      
+                // Recalculate total group points by summing scores from all contests
                 const totalGroupPoints = await prisma.groupOnContest.findMany({
                     where: { groupId: user.groupId },
                     select: { score: true },
@@ -112,22 +116,36 @@ export async function POST(req: NextRequest) {
                 });
             }
 
-            
-            const allMembersSubmissions = await prisma.submission.findMany({
-                where: { contestId: contestID, userId: { in: user.group?.members.map(m => m.id) || [] } },
-                distinct: ["userId"],
-            });
-
-            if (user.group?.members && allMembersSubmissions.length === user.group.members.length) {
-                await prisma.contest.update({
-                    where: { id: contestID },
-                    data: { status: "COMPLETED" },
+            // Check if all members with permission have submitted for this contest
+            if (user.group?.members) {
+                const contestPermission = await prisma.contestPermission.findFirst({
+                    where: { contestId: contestID },
+                    include: { users: { where: { groupId: user.groupId } } },
                 });
+                
+                if (contestPermission) {
+                    const permittedMemberIds = contestPermission.users.map(u => u.id);
+                    
+                    const allMembersSubmissions = await prisma.submission.findMany({
+                        where: { 
+                            contestId: contestID, 
+                            userId: { in: permittedMemberIds } 
+                        },
+                        distinct: ["userId"],
+                    });
+    
+                    if (allMembersSubmissions.length === permittedMemberIds.length) {
+                        await prisma.contest.update({
+                            where: { id: contestID },
+                            data: { status: "COMPLETED" },
+                        });
+                    }
+                }
             }
 
             return { message: "Contest submissions recorded successfully" };
         },{
-            timeout: 15000, // Increase timeout to 15 seconds (adjust as needed)
+            timeout: 20000, 
             isolationLevel: "ReadCommitted", // Ensures consistency but improves concurrency
         });
 

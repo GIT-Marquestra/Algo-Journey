@@ -12,7 +12,7 @@ export async function POST() {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    console.log(1)
+
     
     const userEmail = session?.user?.email;
     if (!userEmail) {
@@ -26,7 +26,7 @@ export async function POST() {
     if (!user || !user.username) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-    console.log(1)
+
     const isAdmin = admins.includes(user.username);
 
 

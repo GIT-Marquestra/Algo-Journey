@@ -9,7 +9,6 @@ export async function fetchLatestSubmissionsLeetCode(username: string){
     try {
         const leetcode = new LeetCode()
         const userStats = await leetcode.user(username)
-        console.log("User Stats: ", userStats)
         return userStats
     } catch (error) {
         console.log("Error: ", error)
@@ -32,7 +31,7 @@ export async function fetchLatestSubmissionsCodeForces(username: string){
     try {
        
         const userStats = await CodeforcesAPI.call("user.status", { handle: username });
-        console.log('codeforces stats: ', userStats)
+
         //@ts-expect-error : it important here
         return userStats.result
     } catch (error) {
@@ -59,7 +58,6 @@ export async function fetchCodeforcesUserData(username: string) {
             //@ts-expect-error : it important here
             const user = userInfo.result[0];
 
-            console.log(userInfo)
 
 
             return {

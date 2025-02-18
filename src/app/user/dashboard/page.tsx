@@ -31,6 +31,7 @@ interface UserStats {
   totalSubmissions: number;
   totalPoints: number;
   groupName: string;
+  groupPoints: number;
   groupMembers: {
     username: string;
     individualPoints: number;
@@ -55,6 +56,7 @@ export default function Dashboard() {
   const Router = useRouter();
   const [userStats, setUserStats] = useState<UserStats>({
     totalSubmissions: 0,
+    groupPoints: 0,
     totalPoints: 0,
     groupName: '',
     groupMembers: []
@@ -99,12 +101,14 @@ export default function Dashboard() {
 
         }
 
+
         
         
         setUserStats({
           totalSubmissions: contestsResponse.data.submissionCount,
           totalPoints: contestsResponse.data.user.individualPoints,
           groupName: contestsResponse.data.user.group?.name,
+          groupPoints: contestsResponse.data.user.group?.groupPoints,
           groupMembers: contestsResponse.data.user.group?.members
         });
       } catch (error) {
@@ -214,7 +218,7 @@ export default function Dashboard() {
                 {userStats.groupName && (
                   <CardContent>
                     <p className="text-3xl font-bold text-indigo-900">
-                      {userStats.groupMembers.reduce((sum, member) => sum + member.individualPoints, 0)}
+                      {userStats.groupPoints}
                     </p>
                   </CardContent>
                 )}

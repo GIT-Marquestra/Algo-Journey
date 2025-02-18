@@ -11,18 +11,17 @@ export async function GET() {
 
         const userEmail = session.user.email;
 
+        console.log('grgw')
+
         const user = await prisma.user.findUnique({
             where: { email: userEmail },
             include: {
                 group: {
                     include: {
                         members: {
-                            select: {
-                                username: true,
-                                individualPoints: true
-                            }
-                        }
-                    }
+                            select: { username: true, individualPoints: true },
+                        },
+                    },
                 }
             }
         });
@@ -30,6 +29,7 @@ export async function GET() {
         if (!user) {
             return NextResponse.json({ error: "User not found" }, { status: 404 });
         }
+
 
         // Calculate current time in IST
         const nowO = new Date();
@@ -74,6 +74,19 @@ export async function GET() {
             where: { userId: user.id },
         });
 
+
+        console.log({
+            latestContests,
+            user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                individualPoints: user.individualPoints,
+                group: user.group
+            },
+            submissionCount
+        })
+
         return NextResponse.json(
             {
                 latestContests,
@@ -83,14 +96,6 @@ export async function GET() {
                     username: user.username,
                     individualPoints: user.individualPoints,
                     group: user.group
-                        ? {
-                            name: user.group.name,
-                            members: user.group.members.map(member => ({
-                                username: member.username,
-                                individualPoints: member.individualPoints,
-                            })),
-                        }
-                        : null,
                 },
                 submissionCount,
             },
