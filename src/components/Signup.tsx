@@ -34,6 +34,7 @@ import toast from "react-hot-toast";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from 'next/image'
+import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from "@/serverActions/fetch";
 
 // Validation schema remains the same
 const signupSchema = z.object({
@@ -79,6 +80,10 @@ export default function Signup() {
   const onSubmit = async (data: SignupFormData) => {
     setIsSubmitting(true);
     try {
+      const checkLeet = await fetchLatestSubmissionsLeetCode(data.leetcodeUsername)
+      if(!checkLeet) return toast.error("Invalid Leetcode Username")
+      const checkCodeforces = await fetchLatestSubmissionsCodeForces(data.codeforcesUsername)
+      if(!checkCodeforces) return toast.error("Invalid Codeforces Username")
       const signupResponse = await axios.post("/api/auth/signup", data, {
         headers: { "Content-Type": "application/json" }
       });

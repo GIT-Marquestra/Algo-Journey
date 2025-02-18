@@ -353,6 +353,7 @@ const ContestQuest: React.FC = () => {
           setShow(true);
           setQuestions(response.data.questions);
         }
+
         toast.success('Test Started')
       }  
       else {
@@ -363,17 +364,15 @@ const ContestQuest: React.FC = () => {
           440: 'Contest has not started yet!',
           430: 'User has already participated in the contest',
           404: 'To attempt Tests become member of a Group',
+          490: 'You do not have permission to start the test',
           400: 'Not Authenticated, Please SignIn',
           401: 'Not Authenticated, Please SignIn'
         };
         
         toast.error(errorMessages[response.status] || "Unknown Error");
-        setTimeout(() => router.push('/user/dashboard'), 2000);
-        
-       
+        setTimeout(() => router.push('/user/dashboard'), 2000); 
       }
 
-      
     } catch (error) {
      
       console.error('Start test error:', error);
@@ -475,6 +474,14 @@ const ContestQuest: React.FC = () => {
                         <CardTitle className="text-xl">
                           Question {index + 1}
                         </CardTitle>
+                        <div className='flex flex-col'>
+                        {/* <CardDescription>
+                          {q.question.slug}
+                        </CardDescription> */}
+                        <CardDescription>
+                          {q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces'}
+                        </CardDescription>
+                        </div>
                         {isVerified && (
                           <Badge variant="secondary" className="bg-green-500/10 text-green-500">
                             <Check className="h-3 w-3 mr-1" />

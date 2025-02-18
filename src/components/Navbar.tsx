@@ -58,7 +58,7 @@ const Navbar = () => {
     { href: '/arena', label: 'Arena', icon: Swords },
   ];
 
-  const handleSignOut = async (e:any) => {
+  const handleSignOut = async (e: Event) => {
     e.preventDefault();
     try {
       await signOut({ redirect: false });

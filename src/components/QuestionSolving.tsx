@@ -65,16 +65,16 @@ interface QuestionTag {
 const AVAILABLE_TAGS = [
   "PrefixSum",
   "TwoPointers",
-  "1D Arrays",
+  "1DArrays",
   "Graph",
-  "2D Arrays",
-  "Time complexity",
-  "Basic Maths",
-  "Space complexity",
+  "2DArrays",
+  "TimeComplexity",
+  "BasicMaths",
+  "SpaceComplexity",
   "BinarySearch",
   "DP",
   "Sorting",
-  "Linear search",
+  "LinearSearch",
   "Exponentiation",
   "Recursion"
 ];

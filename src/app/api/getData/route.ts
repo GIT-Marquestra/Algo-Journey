@@ -37,7 +37,7 @@ export async function GET() {
         const now = new Date(nowO.getTime() + offset);
 
         // Fetch contests that might need updates
-        let contestsToUpdate = await prisma.contest.findMany({
+        const contestsToUpdate = await prisma.contest.findMany({
             where: {
                 status: { in: ["UPCOMING", "ACTIVE"] },
             },
@@ -45,7 +45,7 @@ export async function GET() {
         });
 
         // Update contest statuses
-        const updatedContests = await Promise.all(
+        await Promise.all(
             contestsToUpdate.map(async (contest) => {
                 if (now > contest.endTime) {
                     // Contest has ended, mark as COMPLETED
