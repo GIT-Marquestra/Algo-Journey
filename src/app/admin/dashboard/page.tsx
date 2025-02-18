@@ -13,6 +13,7 @@ function Page() {
       try {
         const res = await axios.post('../api/checkIfAdmin')
         if (res.data.isAdmin) {
+          console.log(res.data.isAdmin)
           setIsAdmin(true)
         } else {
           redirect("/user/dashboard")
@@ -26,10 +27,10 @@ function Page() {
     }
 
     checkAdmin()
-  }, []) // Empty dependency array since we only want to check once
+  }, [])
 
   if (isLoading) {
-    return <div>Loading...</div> // Or your loading component
+    return <div>Loading...</div>
   }
 
   return (
