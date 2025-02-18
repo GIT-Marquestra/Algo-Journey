@@ -73,6 +73,7 @@ const ContestQuest: React.FC = () => {
   const { data: session } = useSession();
   const [show, setShow] = useState<boolean>(false);
   const [showModal, setShowModal] = useState(false);
+  const [showStartConfirmation, setShowStartConfirmation] = useState(false);
   const params = useParams();
   const id = params.num?.[0];
   const [loadingStartTest, setloadingStartTest] = useState(false)
@@ -87,6 +88,7 @@ const ContestQuest: React.FC = () => {
   const [lusername, setLUsername] = useState('')
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
+
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
     let current = oldScore;
@@ -104,13 +106,13 @@ const ContestQuest: React.FC = () => {
     
     requestAnimationFrame(animate);
   };
+
   const checkExistingSubmission = async (problemName: string) => {
     const response = await axios.post('/api/checkExistingSubmission', {
       problemName
     })
 
     return response.data.solved
-
   }
 
   const handleVerify = useCallback(async (
@@ -175,8 +177,6 @@ const ContestQuest: React.FC = () => {
         }
       }
 
-
-
     } catch (error) {
       toast.error('Error verifying submission');
       console.error('Verification error:', error);
@@ -202,7 +202,6 @@ const ContestQuest: React.FC = () => {
         }
       }
 
-
       const res = await axios.post('/api/endContest', {
         contestId: id,
         userEmail: session?.user?.email,
@@ -220,7 +219,6 @@ const ContestQuest: React.FC = () => {
       toast.dismiss(loader)
     }
   }, [handleVerify, id, questions, router, score, session?.user?.email, verifiedProblems]);
-
 
   useEffect(() => {
     const checkIfAdmin = async () => {
@@ -241,8 +239,6 @@ const ContestQuest: React.FC = () => {
     
   }, []);
 
-  
-
   useEffect(() => {
      
     const handleBack = () => {
@@ -256,6 +252,7 @@ const ContestQuest: React.FC = () => {
       window.removeEventListener("popstate", handleBack);
     };
   }, []);
+
   useEffect(() => {
     if (questions.length > 0) {
       const completedCount = verifiedProblems.size;
@@ -281,7 +278,6 @@ const ContestQuest: React.FC = () => {
     setShowModal(false);
     router.back();
   };
-
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -311,6 +307,7 @@ const ContestQuest: React.FC = () => {
     }
     return () => clearInterval(timer);
   }, [show, timeLeft, handleEndTest]);
+
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -328,15 +325,22 @@ const ContestQuest: React.FC = () => {
     return colors[difficulty] || 'bg-gray-500/10 text-gray-500';
   };
 
-  
+  const handleStartTestClick = () => {
+    if (!lusername || !cusername) {
+      toast.error('Please wait while we load your profile data');
+      return;
+    }
+    setShowStartConfirmation(true);
+  };
 
   const handleStartTest = async (): Promise<void> => {
     try {
-      if (!lusername || !cusername) {
-        toast.error('Please wait while we load your profile data');
-        return;
-      }
-      setloadingStartTest(true)
+      setShowStartConfirmation(false);
+      setloadingStartTest(true);
+      
+      // Show loading toast
+      const loader = toast.loading('Initializing test environment...');
+      
       const response = await axios.post(`/api/startContest/${id}`, 
         { user: session?.user, contestId: id },
         { 
@@ -345,6 +349,7 @@ const ContestQuest: React.FC = () => {
         }
       );
       
+      toast.dismiss(loader);
       
       if (response.status === 200) {
         setTimeLeft(response.data.remainingTime + 30)
@@ -352,9 +357,13 @@ const ContestQuest: React.FC = () => {
         if (response.data.questions) {
           setShow(true);
           setQuestions(response.data.questions);
+          
+          // Enhanced success message with time information
+          toast.success(`Test Started! You have ${formatTime(response.data.remainingTime)} to complete it. Good luck!`, {
+            duration: 5000,
+            icon: '🚀'
+          });
         }
-
-        toast.success('Test Started')
       }  
       else {
         const errorMessages: Record<number, string> = {
@@ -369,18 +378,40 @@ const ContestQuest: React.FC = () => {
           401: 'Not Authenticated, Please SignIn'
         };
         
-        toast.error(errorMessages[response.status] || "Unknown Error");
-        setTimeout(() => router.push('/user/dashboard'), 2000); 
+        // Enhanced error handling with custom icons for certain errors
+        if (response.status === 404) {
+          toast.error(errorMessages[404], {
+            duration: 4000,
+            icon: '👥'
+          });
+        } else if (response.status === 440) {
+          toast.error(errorMessages[440], {
+            duration: 4000,
+            icon: '⏰'
+          });
+        } else if (response.status === 400 || response.status === 401) {
+          toast.error(errorMessages[response.status], {
+            duration: 4000,
+            icon: '🔒'
+          });
+        } else {
+          toast.error(errorMessages[response.status] || "Unknown Error");
+        }
+        
+        setTimeout(() => router.push('/user/dashboard'), 2000);
       }
 
     } catch (error) {
-     
+      toast.error('Server error encountered. Please try again later or contact support.', {
+        duration: 6000,
+        icon: '⚠️'
+      });
       console.error('Start test error:', error);
-      toast.error('Some unexpected error occurred');
     } finally {
-      setloadingStartTest(false)
+      setloadingStartTest(false);
     }
-};
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {!show ? (
@@ -398,12 +429,33 @@ const ContestQuest: React.FC = () => {
               <div className="rounded-full bg-primary/10 p-6">
                 <Play className="h-12 w-12 text-primary" />
               </div>
-              <Button size="lg" onClick={handleStartTest} className="w-full max-w-sm">
+              <Button size="lg" onClick={handleStartTestClick} className="w-full max-w-sm">
                 {loadingStartTest ? <span>Starting...</span> : <span>Start Test</span>}
               </Button>
             </CardContent>
           </Card>
         </div>
+        
+        {/* Start Test Confirmation Dialog */}
+        <AlertDialog open={showStartConfirmation}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Play className="h-5 w-5 text-primary" />
+                Start Test?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you ready to begin? Once started, the timer cannot be paused. Make sure you have enough time to complete the test.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowStartConfirmation(false)}>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleStartTest} className="bg-primary text-primary-foreground">
+                Start Test
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         </>
       ) : (
         <div className="container mx-auto p-4 pt-20 space-y-6">
@@ -441,7 +493,7 @@ const ContestQuest: React.FC = () => {
                   </div>
                   <Button
                     variant="destructive"
-                    onClick={handleEndTest}
+                    onClick={() => setShowModal(true)}
                     disabled={isEndingTest}
                   >
                     {isEndingTest ? (
@@ -534,15 +586,15 @@ const ContestQuest: React.FC = () => {
                           className={`${isVerified ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''} transition-all`}
                         >
                           {isVerifying[q.id] ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Verifying...
-                        </>
-                      ) : (isVerified) ? (
-                        <>Verified <Check className="ml-2 h-4 w-4" /></>
-                      ) : (
-                        <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>
-                      )}
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Verifying...
+                            </>
+                          ) : (isVerified) ? (
+                            <>Verified <Check className="ml-2 h-4 w-4" /></>
+                          ) : (
+                            <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -552,6 +604,7 @@ const ContestQuest: React.FC = () => {
             })}
           </div>
 
+          {/* End Test Confirmation Dialog */}
           <AlertDialog open={showModal}>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -560,13 +613,13 @@ const ContestQuest: React.FC = () => {
                   End Test?
                 </AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to leave? Your progress will be saved, but you won&apos;t be able to return to this test.
+                  Are you sure you want to end this test? Your final score will be {score} points. All unsolved problems will be verified one last time before submission.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setShowModal(false)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={confirmExit} className="bg-destructive text-destructive-foreground">
-                  End Test
+                <AlertDialogCancel onClick={() => setShowModal(false)}>Continue Test</AlertDialogCancel>
+                <AlertDialogAction onClick={handleEndTest} className="bg-destructive text-destructive-foreground">
+                  End Test Now
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

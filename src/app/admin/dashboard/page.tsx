@@ -6,17 +6,33 @@ import { redirect } from 'next/navigation';
 import React, { useEffect, useState } from 'react'
 
 function Page() {
+  const [isLoading, setIsLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+
   useEffect(() => {
-    const func = async () => {
-      const res1 = await axios.post('../api/checkIfAdmin')
-      if(res1.data.isAdmin)
-        setIsAdmin(true)
+    const checkAdmin = async () => {
+      try {
+        const res = await axios.post('../api/checkIfAdmin')
+        if (res.data.isAdmin) {
+          setIsAdmin(true)
+        } else {
+          redirect("/user/dashboard")
+        }
+      } catch (error) {
+        console.error("Error checking admin status:", error)
+        redirect("/user/dashboard")
+      } finally {
+        setIsLoading(false)
+      }
     }
-    func()
-    if(!isAdmin)
-      redirect("/user/dashboard")
-  }, [])
+
+    checkAdmin()
+  }, []) // Empty dependency array since we only want to check once
+
+  if (isLoading) {
+    return <div>Loading...</div> // Or your loading component
+  }
+
   return (
     <div className='flex items-center justify-center pt-16 w-full h-screen'>
       <div className='w-full h-full overflow-auto'>
