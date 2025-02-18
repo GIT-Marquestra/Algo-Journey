@@ -1,11 +1,20 @@
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function GET(req: Request, { params }: { params: { contestId: string } }) {
+interface RouteParams {
+  params: {
+    contestId: string;
+  };
+}
+
+export async function GET(
+  request: Request,
+  { params }: RouteParams
+) {
   try {
     const contestId = parseInt(params.contestId);
 
-    console.log(req)
+    console.log(request)
 
     if (isNaN(contestId)) {
       return NextResponse.json({ error: "Invalid contest ID" }, { status: 400 });
