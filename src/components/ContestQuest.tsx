@@ -274,10 +274,7 @@ const ContestQuest: React.FC = () => {
     };
   }, []);
 
-  const confirmExit = () => {
-    setShowModal(false);
-    router.back();
-  };
+  
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
