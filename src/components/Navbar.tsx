@@ -22,7 +22,8 @@ import {
   UserCircle,
   ShieldCheck,
   ChartNoAxesColumnIcon,
-  UserCog 
+  UserCog, 
+  LucideSword
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -56,6 +57,7 @@ const Navbar = () => {
     { href: '/groupCreation', label: 'Teams', icon: Users },
     { href: '/leaderboard/user', label: 'Leaderboard', icon: Trophy },
     { href: '/arena', label: 'Arena', icon: Swords },
+    { href: '/contestsPage', label: 'Contests', icon: LucideSword}
   ];
 
   const handleSignOut = async (e: Event) => {
