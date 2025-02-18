@@ -65,16 +65,16 @@ interface QuestionTag {
 const AVAILABLE_TAGS = [
   "PrefixSum",
   "TwoPointers",
-  "1DArrays",
+  "1D Arrays",
   "Graph",
-  "2DArrays",
-  "TimeComplexity",
-  "BasicMaths",
-  "SpaceComplexity",
+  "2D Arrays",
+  "Time complexity",
+  "Basic Maths",
+  "Space complexity",
   "BinarySearch",
   "DP",
   "Sorting",
-  "LinearSearch",
+  "Linear search",
   "Exponentiation",
   "Recursion"
 ];
@@ -92,11 +92,14 @@ const QuestionSolving = () => {
   const { topic } = useParams();
   const [loading, setLoading] = useState<boolean>(false);
   const [verifiedProblems, setVerifiedProblems] = useState<Set<string>>(new Set());
+  const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
   const [cUsername, setCUsername] = useState('')
   const [lUsername, setLUsername] = useState('')
   const [score, setScore] = useState<number>(0);
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
   const [isScoreUpdating, setIsScoreUpdating] = useState<boolean>(false);
+  const [resLeet, setResLeet] = useState<string>();
+  const [resCodef, setResCodef] = useState<string>();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
@@ -135,9 +138,8 @@ const QuestionSolving = () => {
     const response = await axios.post('/api/checkExistingSubmission', {
       problemName
     })
-
+    console.log(response)
     return response.data.solved
-
   }
 
   const handleVerify = async (
@@ -147,7 +149,7 @@ const QuestionSolving = () => {
     contestId: number,
     points: number
   ): Promise<void> => {
-    if (verifiedProblems.has(questionId)) {
+    if (verifiedProblems.has(questionId) || solvedProblems.has(questionId)) {
       toast.error('Problem already verified!');
       return;
     }
@@ -156,17 +158,20 @@ const QuestionSolving = () => {
     try {
       if (platform === "Leetcode") {
         const res = await fetchLatestSubmissionsLeetCode(lUsername);
+        if(!resLeet) return
         if (res?.recentSubmissionList) {
           let solved = res.recentSubmissionList.find(
             (p: LeetCodeSubmission) => 
               p.titleSlug === problemName && 
-              p.statusDisplay === 'Accepted'
+              p.statusDisplay === 'Accepted' && 
+              p.timestamp > resLeet
           );
           if(solved){
             const r = await checkExistingSubmission(problemName)
             if(r){
               solved = undefined
               toast.success('Already Attempted Question')
+              setSolvedProblems(prev => new Set([...prev, questionId]));
             } 
           }
           if (solved) {
@@ -181,18 +186,22 @@ const QuestionSolving = () => {
         }
       } else {
         const res = await fetchLatestSubmissionsCodeForces(cUsername);
+        if(!resCodef) return
         if (res) {
           let solved = res.find(
             (p: CodeForcesSubmission) => 
               p.problem.name === problemName && 
-              p.verdict === 'OK'
+              p.verdict === 'OK' && 
+              p.creationTimeSeconds > parseInt(resCodef)
           );
 
           if(solved){
             const r = await checkExistingSubmission(problemName)
+            console.log(r)
             if(r){
               solved = undefined
               toast.success('Already Attempted Question')
+              setSolvedProblems(prev => new Set([...prev, questionId]));
             } 
           }
           
@@ -239,13 +248,33 @@ const QuestionSolving = () => {
         const response = await axios.post('/api/questions', topic ? { topic } : {});
         const responseCodeforcesUsername = await axios.post('/api/user/codeforces/username')
         const responseLeetcodeUsername = await axios.post('/api/user/leetcode/username')
-        // console.log(responseCodeforcesUsername, responseLeetcodeUsername)
+        console.log(response)
         setCUsername(responseCodeforcesUsername.data.codeforcesUsername)
         setLUsername(responseLeetcodeUsername.data.leetcodeUsername)
         setQuestions(response.data.questions);
-        console.log(response.data.questions)
         setScore(response.data.individualPoints)
         
+        // Check for already solved problems
+        const solvedSet = new Set<string>();
+        for (const q of response.data.questions) {
+          //@ts-ignore
+          if (q.submissions?.some(s => s.status === 'ACCEPTED')) {
+            solvedSet.add(q.id);
+          }
+        }
+        setSolvedProblems(solvedSet);
+        
+        const resLeet = await fetchLatestSubmissionsLeetCode(lUsername)
+        if(!resLeet) return 
+        if(!(resLeet.recentSubmissionList)) return
+        const leetTime = resLeet?.recentSubmissionList[0].timestamp
+        if(leetTime) setResLeet(leetTime)
+        
+        const resCodef = await fetchLatestSubmissionsCodeForces(cUsername)
+        if(!resCodef) return
+        const codefTime = resCodef[0].creationTimeSeconds
+        setResCodef(codefTime)
+        if(resCodef) setResCodef(resCodef)
       } catch (error) {
         console.log(error)
         toast.error('Error fetching questions');
@@ -258,12 +287,10 @@ const QuestionSolving = () => {
 
   useEffect(() => {
     let filtered = questions;
-
     
     if (selectedDifficulty !== 'ALL') {
       filtered = filtered.filter(q => q.question.difficulty === selectedDifficulty);
     }
-
    
     if (selectedTags.length > 0) {
       filtered = filtered.filter(q => {
@@ -404,12 +431,13 @@ const QuestionSolving = () => {
         {filteredQuestions.map((q) => {
           const isVerified = verifiedProblems.has(q.id);
           const hasSubmission = q.submissions?.some(s => s.status === 'ACCEPTED');
+          const isSolved = solvedProblems.has(q.id);
 
           return (
             <Card 
               key={q.id}
               className={`transition-colors duration-200 ${
-                (isVerified || hasSubmission) ? 'bg-green-500/5 border-green-500/20' : ''
+                (isVerified || hasSubmission || isSolved) ? 'bg-green-500/5 border-green-500/20' : ''
               }`}
             >
               <CardHeader>
@@ -418,14 +446,14 @@ const QuestionSolving = () => {
                     <CardTitle className="text-xl">
                       {q.question.slug}
                     </CardTitle>
-                    {(isVerified || hasSubmission) && (
+                    {(isVerified || hasSubmission || isSolved) && (
                       <Check className="h-5 w-5 text-green-500" />
                     )}
                   </div>
                   <Badge 
                     variant="secondary" 
                     className={`${getDifficultyColor(q.question.difficulty)} ${
-                      (isVerified || hasSubmission) ? 'opacity-75' : ''
+                      (isVerified || hasSubmission || isSolved) ? 'opacity-75' : ''
                     }`}
                   >
                     {q.question.difficulty}
@@ -457,15 +485,15 @@ const QuestionSolving = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        className={(isVerified || hasSubmission) ? 'opacity-75' : ''}
+                        className={(isVerified || hasSubmission || isSolved) ? 'opacity-75' : ''}
                       >
                         Solve <ExternalLink className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>
                     <Button
-                      variant={(isVerified || hasSubmission) ? "ghost" : "outline"}
+                      variant={(isVerified || hasSubmission || isSolved) ? "ghost" : "outline"}
                       size="sm"
-                      disabled={isVerified || hasSubmission || isVerifying[q.id]}
+                      disabled={isVerified || hasSubmission || isSolved || isVerifying[q.id]}
                       onClick={() => handleVerify(
                         q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces',
                         q.question.slug,
@@ -473,14 +501,14 @@ const QuestionSolving = () => {
                         q.contestId,
                         q.question.points
                       )}
-                      className={(isVerified || hasSubmission) ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''}
+                      className={(isVerified || hasSubmission || isSolved) ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''}
                     >
                       {isVerifying[q.id] ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Verifying...
                         </>
-                      ) : (isVerified || hasSubmission) ? (
+                      ) : (isVerified || hasSubmission || isSolved) ? (
                         <>Verified <Check className="ml-2 h-4 w-4" /></>
                       ) : (
                         <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>
@@ -495,7 +523,6 @@ const QuestionSolving = () => {
       </div>
     </div>}
     </>
-    
   );
 };
 

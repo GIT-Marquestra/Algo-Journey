@@ -11,11 +11,10 @@ export async function POST(req: Request) {
     }
 
     const { problemName } = await req.json();
-    console.log('Problem name: ', problemName)
+    
     if (!problemName) {
       return NextResponse.json({ error: 'Problem name is required' }, { status: 400 });
     }
-
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -30,7 +29,7 @@ export async function POST(req: Request) {
       where: {
         userId: user.id,
         question: {
-          slug: problemName, 
+          slug: problemName,
         },
         status: 'ACCEPTED',
       },
