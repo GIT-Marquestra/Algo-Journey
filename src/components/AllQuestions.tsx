@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import QuestionForm from './QuestionsInput';
+import UpdateContestCard from './UpdateContest';
+import Link from 'next/link';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -216,10 +218,12 @@ export default function AllQuestions() {
 
   return (
     <>
+    
     {show ? <div className="container mx-auto p-4 space-y-6">
       <div className="flex flex-col md:flex-row gap-6">
         {/* Left Column - Test Creation */}
         <div className="w-full md:w-1/3 space-y-6">
+        <UpdateContestCard dbQuestions={questions}/>
         <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -229,14 +233,14 @@ export default function AllQuestions() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                  <label className="block mb-1">Contest Duration (hours)</label>
+                  <label className="block mb-1">Contest Duration (minutes)</label>
                   <input
                       type="number"
                       min="1"
-                      max="24"
+                      max="1440"
                       value={duration}
                       onChange={handleDurationChange}
-                      className="w-full p-2 bg-gray-800 border border-gray-600 rounded-md text-white"
+                      className="w-full p-2 border border-gray-600 rounded-md text-white"
                   />
               </div>
               <div className="space-y-2">
@@ -262,9 +266,7 @@ export default function AllQuestions() {
               )}
             </CardContent>
           </Card>
-
-          
-
+        
           <Card>
             <CardHeader>
               <CardTitle>Selected Questions</CardTitle>
@@ -275,7 +277,9 @@ export default function AllQuestions() {
               ) : (
                 selectedQuestions.map((q) => (
                   <div key={q.id} className="flex items-center justify-between p-2 rounded-lg border">
-                    <span className="font-medium">{q.slug}</span>
+                    <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                      <span className="font-medium text-blue-700">{q.slug}</span>
+                    </Link>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -366,7 +370,9 @@ export default function AllQuestions() {
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start gap-4">
                         <div className="space-y-2">
-                          <h3 className="font-semibold">{q.slug}</h3>
+                          <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                            <h3 className="font-semibold text-blue-700">{q.slug}</h3>
+                          </Link>
                           <Badge variant="secondary" className={getDifficultyColor(q.difficulty)}>
                             {q.difficulty}
                           </Badge>

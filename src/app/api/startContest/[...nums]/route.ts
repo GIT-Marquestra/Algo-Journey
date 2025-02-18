@@ -168,19 +168,18 @@ export async function POST(
         }
 
         const expiryTime = new Date(contestStart.getTime() + (duration * 60 * 60 * 1000)); // Convert hours to milliseconds
-        const remainingTime = Math.floor((expiryTime.getTime() - currentTimeIST.getTime()) / 1000);
 
         return NextResponse.json({
             message: isLatestContest ? "Starting active contest" : "Starting practice contest",
             contest: {
                 id: contest.id,
+                duration: contestData.duration,
                 startTime: contestStart,
                 endTime: contestEnd,
                 joiningWindowEnd,
                 expiryTime,
                 isPractice: !isLatestContest
             },
-            remainingTime,
             questions: contest.questions,
             groupId: userGroup.id,
             status: 200

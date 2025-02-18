@@ -100,10 +100,7 @@ export default function Dashboard() {
           setCodeforcesRating(codeforcesResponse.rating);
 
         }
-
-
-        
-        
+  
         setUserStats({
           totalSubmissions: contestsResponse.data.submissionCount,
           totalPoints: contestsResponse.data.user.individualPoints,
@@ -290,7 +287,7 @@ export default function Dashboard() {
                       </div>
                       <div className="p-4 rounded-lg bg-slate-200/50">
                         <p className="text-sm">Time</p>
-                        <p className="text-lg font-medium">{contest.startTime.split('T')[1].split('000Z')[0]}</p>
+                        <p className="text-lg font-medium">{contest.startTime.split('T')[1].split('.000Z')[0]}</p>
                       </div>
                       <div className="p-4 rounded-lg bg-green-100/50">
                         <p className="text-sm">Status</p>

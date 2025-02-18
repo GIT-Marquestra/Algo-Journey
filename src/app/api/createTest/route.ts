@@ -18,7 +18,7 @@ export async function POST(req: Request) {
         duration
       }
     })
-    console.log(contest)
+
     const user = await prisma.questionOnContest.createMany({
       data: request.questions.map((q : Q) => ({
         contestId: contest.id,

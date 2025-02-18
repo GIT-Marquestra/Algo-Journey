@@ -14,15 +14,15 @@ function Page() {
   const [group, setGroup] = useState<Group>()
   useEffect(() => {
     const func = async () => {
-      const res1 = await axios.post('api/checkIfAdmin')
+      const res1 = await axios.post('/api/checkIfAdmin')
       if(res1.data.isAdmin){
         setShowAdminSpecific(true)
       }
-      const res2 = await axios.post('api/isCoordinator')
+      const res2 = await axios.post('/api/isCoordinator')
       if(res2.data.isCoordinator){
         setShow(true)
       }
-      const response = await axios.post('api/getGroup')
+      const response = await axios.post('/api/getGroup')
       setGroup(response.data.group)
       console.log(response.data)
     }

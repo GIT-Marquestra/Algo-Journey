@@ -130,7 +130,6 @@ const ContestQuest: React.FC = () => {
       if (platform === "Leetcode") {
         
         const res = await fetchLatestSubmissionsLeetCode(lusername);
-
         
         if (res?.recentSubmissionList) {
           let solved = res.recentSubmissionList.find(
@@ -143,9 +142,7 @@ const ContestQuest: React.FC = () => {
               toast.success('Already Attempted Question')
             } 
           }
-          console.log(2)
           if (solved) {
-            console.log(3)
             setVerifiedProblems(prev => new Set([...prev, questionId]));
             animateScoreUpdate(score, score + points);
             toast.success(`Problem verified! +${points} points`);
@@ -229,7 +226,9 @@ const ContestQuest: React.FC = () => {
         setLUsername(resL.data.leetcodeUsername)
         const coordResponse = await axios.post('/api/checkIfCoordinator')
         if(!coordResponse.data.isCoordinator) setIsCoord(false);
-        setIsCoord(true);
+        else {
+          setIsCoord(true);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -345,11 +344,13 @@ const ContestQuest: React.FC = () => {
           validateStatus: (status) => status < 500 
         }
       );
+
+      console.log(response.data)
       
       toast.dismiss(loader);
       
       if (response.status === 200) {
-        setTimeLeft(response.data.remainingTime + 30)
+        setTimeLeft(response.data.contest.duration*60 + 10)
         
         if (response.data.questions) {
           setShow(true);

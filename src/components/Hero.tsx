@@ -118,7 +118,7 @@ const HeroSection = () => {
                 {/* Contributor Cards */}
                 {[
                   {
-                    name: "Abhishek",
+                    name: "Abhishek Verma",
                     role: "Full Stack Developer",
                     skills: [
                       { icon: <Layout className="h-4 w-4 text-gray-400" />, text: "Frontend Development" },
@@ -126,6 +126,16 @@ const HeroSection = () => {
                     ],
                     github: "https://github.com/GIT-Marquestra",
                     linkedin: "https://www.linkedin.com/in/abhishek-verma-6803b1309/"
+                  },
+                  {
+                    name: "Anish Suman",
+                    role: "Full Stack Developer",
+                    skills: [
+                      { icon: <Layout className="h-4 w-4 text-gray-400" />, text: "Frontend Development" },
+                      { icon: <Database className="h-4 w-4 text-gray-400" />, text: "Backend Architecture" }
+                    ],
+                    github: "https://github.com/anish877",
+                    linkedin: "https://www.linkedin.com/in/aniiiiiiiii/"
                   },
                   {
                     name: "Taj",
