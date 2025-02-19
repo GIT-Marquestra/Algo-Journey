@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
 
 
-    if (!contestId || !questionId || score === undefined) {
+    if (!questionId || score === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -35,17 +35,21 @@ export async function POST(req: Request) {
 
 
 
+    console.log(user.id, questionId, contestId, score)
+
 
 
     const res = await prisma.submission.create({
       data: {
         userId: user.id,
         questionId,
-        contestId,
-        score,
+        contestId: contestId,
+        score: parseInt(score),
         status: 'ACCEPTED', 
       },
     });
+
+    console.log(res)
 
 
     if(!res) return NextResponse.json({ message: "Submission not created" });

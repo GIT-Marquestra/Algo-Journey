@@ -172,12 +172,12 @@ model Submission {
   id                String              @id @default(uuid())
   userId            String
   questionId        String             
-  contestId         Int
+  contestId         Int?
   score             Int                 @default(0)
   status            SubmissionStatus   
   user              User                @relation(fields: [userId], references: [id])
   question          Question            @relation(fields: [questionId], references: [id])
-  contest           Contest             @relation(fields: [contestId], references: [id])
+  contest           Contest?             @relation(fields: [contestId], references: [id])
   createdAt         DateTime            @default(now())
 
   @@index([userId, contestId]) 
