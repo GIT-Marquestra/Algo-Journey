@@ -34,19 +34,7 @@ export async function POST(req: Request) {
     });
 
 
-    if (user.groupId) {
-      await prisma.group.update({
-        where: { id: user.groupId },
-        data: { groupPoints: { increment: score } },
-      });
 
-
-      await prisma.groupOnContest.upsert({
-        where: { groupId_contestId: { groupId: user.groupId, contestId } },
-        update: { score: { increment: score } },
-        create: { groupId: user.groupId, contestId, score },
-      });
-    }
 
 
     const res = await prisma.submission.create({

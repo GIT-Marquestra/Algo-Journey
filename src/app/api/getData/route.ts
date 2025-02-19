@@ -39,7 +39,7 @@ export async function GET() {
         // Fetch contests that might need updates
         const contestsToUpdate = await prisma.contest.findMany({
             where: {
-                status: { in: ["UPCOMING", "ACTIVE"] },
+                status: { in: ["UPCOMING", "ACTIVE", "COMPLETED"] },
             },
             orderBy: { startTime: "asc" },
         });
@@ -59,7 +59,13 @@ export async function GET() {
                         where: { id: contest.id },
                         data: { status: "ACTIVE" },
                     });
-                }
+                } else if (now < contest.startTime) {
+                    // Contest is ongoing, mark as ACTIVE
+                    return prisma.contest.update({
+                        where: { id: contest.id },
+                        data: { status: "UPCOMING" },
+                    });
+                } 
                 return contest; // Return unchanged if no update needed
             })
         );

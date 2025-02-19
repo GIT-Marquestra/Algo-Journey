@@ -6,8 +6,9 @@ import toast from 'react-hot-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Clock, X, Save, Loader2, Search } from 'lucide-react';
+import { Clock, X, Save, Loader2, Search, Users } from 'lucide-react';
 import Link from 'next/link';
+import { Checkbox } from './ui/checkbox';
 
 interface QuestionOnContest {
   questionId: string;
@@ -21,6 +22,12 @@ interface Question {
   questionTags: { id: string; name: string; }[];
   slug: string;
   difficulty: string;
+}
+
+
+interface Group {
+  id: string;
+  name: string;
 }
 
 interface Contest {
@@ -44,8 +51,11 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [allGroups, setAllGroups] = useState<Group[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+  const [groupSearchTerm, setGroupSearchTerm] = useState('');
+  const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
 
-  // Fetch contest details
   const fetchContestDetails = async () => {
     if (!contestId.trim()) {
       toast.error('Please enter a contest ID');
@@ -54,10 +64,13 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
 
     setFetchingContest(true);
     try {
-      const response = await axios.post('/api/getContest', { contestId });
-      console.log(response)
-      const contestData = response.data.contest;
-      
+      const [contestResponse, groupsResponse, permissionsResponse] = await Promise.all([
+        axios.post('/api/getContest', { contestId }),
+        axios.post('/api/getGroups'),
+        axios.post('/api/getGroupPermission', { contestId })
+      ]);
+
+      const contestData = contestResponse.data.contest;
       if (!contestData) {
         toast.error('Contest not found');
         setShowForm(false);
@@ -65,16 +78,25 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
         return;
       }
 
-      
+      if(permissionsResponse.status === 204){
+        toast.error(permissionsResponse.data.message)
+      }
+
       setContest(contestData);
       setStartTime(formatDateForInput(contestData.startTime));
       setEndTime(formatDateForInput(contestData.endTime));
       setDuration(contestData.duration);
       setShowForm(true);
       
-      // Fetch available questions
+      // Set available questions
       setAvailableQuestions(dbQuestions.dbQuestions);
       setFilteredQuestions(dbQuestions.dbQuestions);
+
+      // Set groups
+      setAllGroups(groupsResponse.data.groups);
+      setFilteredGroups(groupsResponse.data.groups);
+      setSelectedGroups(permissionsResponse.data.permittedGroups);
+
     } catch (error) {
       console.error('Error fetching contest details:', error);
       toast.error('Failed to fetch contest details');
@@ -82,10 +104,30 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     setFetchingContest(false);
   };
 
+
+  useEffect(() => {
+    if (allGroups.length) {
+      const filtered = allGroups.filter(group => 
+        group.name.toLowerCase().includes(groupSearchTerm.toLowerCase())
+      );
+      setFilteredGroups(filtered);
+    }
+  }, [groupSearchTerm, allGroups]);
+
+
   // Format date for input field
   const formatDateForInput = (dateString: string) => {
     const date = new Date(dateString);
     return date.toISOString().slice(0, 16);
+  };
+
+
+  const toggleGroupSelection = (groupId: string) => {
+    setSelectedGroups(prev => 
+      prev.includes(groupId)
+        ? prev.filter(id => id !== groupId)
+        : [...prev, groupId]
+    );
   };
 
   // Format date for Prisma
@@ -94,6 +136,20 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     const offset = date.getTimezoneOffset();
     const utcDate = new Date(date.getTime() - (offset * 60000));
     return utcDate.toISOString();
+  };
+
+  const selectAllGroups = () => {
+    const filteredGroupIds = filteredGroups.map(group => group.id);
+    setSelectedGroups(prev => {
+      const uniqueIds = new Set([...prev, ...filteredGroupIds]);
+      return Array.from(uniqueIds);
+    });
+  };
+
+
+  const deselectAllGroups = () => {
+    const filteredGroupIds = new Set(filteredGroups.map(group => group.id));
+    setSelectedGroups(prev => prev.filter(id => !filteredGroupIds.has(id)));
   };
 
   // Handle duration change
@@ -178,7 +234,8 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
         questions: contest.questions,
         startTime: formatDateForPrisma(startTime),
         endTime: formatDateForPrisma(endTime),
-        duration
+        duration,
+        permittedGroups: selectedGroups
       };
       
       const response = await axios.post('/api/updateContest', updateData);
@@ -197,9 +254,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     } finally {
       setLoading(false);
     }
-    
   };
-
   // Get difficulty color
   const getDifficultyColor = (difficulty: string): string => {
     const colors: Record<string, string> = {
@@ -273,6 +328,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
               {dateError && (
                 <p className="text-sm text-destructive">{dateError}</p>
               )}
+           
             </div>
 
             <div className="space-y-4">
@@ -333,6 +389,62 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                Group Permissions
+              </h3>
+              <div className="space-y-2">
+                <Input
+                  placeholder="Search groups..."
+                  value={groupSearchTerm}
+                  onChange={(e) => setGroupSearchTerm(e.target.value)}
+                />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={selectAllGroups}
+                  >
+                    Select All Filtered
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={deselectAllGroups}
+                  >
+                    Deselect All Filtered
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-60 overflow-y-auto p-2 border rounded-md">
+                {filteredGroups.map((group) => (
+                  <div
+                    key={group.id}
+                    className={`flex items-center justify-between p-2 rounded-lg border ${
+                      selectedGroups.includes(group.id)
+                        ? 'bg-primary/5'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={selectedGroups.includes(group.id)}
+                        onCheckedChange={() => toggleGroupSelection(group.id)}
+                        id={`group-${group.id}`}
+                      />
+                      <label
+                        htmlFor={`group-${group.id}`}
+                        className="text-sm font-medium"
+                      >
+                        {group.name}
+                      </label>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 

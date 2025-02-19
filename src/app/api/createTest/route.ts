@@ -15,7 +15,8 @@ export async function POST(req: Request) {
       data: {
         startTime: request.startTime,  
         endTime: request.endTime,
-        duration
+        duration,
+        name: request.name
       }
     })
 
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
         questionId: q.id,
       }))
     });
-    return NextResponse.json({ user }, { status: 200 });
+    return NextResponse.json({ contestId: contest.id }, { status: 200 });
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: "User creation failed" }, { status: 400 });

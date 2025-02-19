@@ -14,6 +14,7 @@ import {
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface TeamMember {
   id: string;
@@ -22,11 +23,14 @@ interface TeamMember {
   isCoordinator: boolean;
 }
 
+
+
 export default function CoordinatorContestPermissions({ contestId }: { contestId: number | undefined }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const Router = useRouter()
 
   useEffect(() => {
 
@@ -76,7 +80,12 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
         memberIds: selectedMembers,
       });
 
-      console.log(response)
+
+      if(response.status === 440){
+        toast.error(response.data.message)
+        return 
+      }
+
 
       if (!response.data.success) {
         throw new Error('Failed to update contest permissions');
@@ -90,9 +99,30 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
 
 
 
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error updating contest permissions:', error);
-      toast.error('Failed to update contest permissions');
+      if (error && typeof error === 'object') {
+        if ('status' in error && error.status === 440) {
+          if ('response' in error && 
+              error.response && 
+              typeof error.response === 'object' &&
+              'data' in error.response &&
+              error.response.data &&
+              typeof error.response.data === 'object' &&
+              'message' in error.response.data &&
+              typeof error.response.data.message === 'string'
+          ) {
+            toast.error(error.response.data.message);
+            setTimeout(() => {
+              Router.push('/user/dashboard')
+            }, 1000);
+          }
+        } else {
+          toast.error('Failed to grant permissions');
+        }
+      } else {
+        toast.error('Failed to grant permissions');
+      }
     } finally {
       setSubmitting(false);
     }

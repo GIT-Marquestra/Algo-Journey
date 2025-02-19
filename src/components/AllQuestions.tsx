@@ -18,6 +18,7 @@ import {
 import QuestionForm from './QuestionsInput';
 import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
+import ContestPermissionModal from './ContestPermissionModal';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -47,6 +48,7 @@ const DIFFICULTY_LEVELS = [
 
 interface Question {
   id: string;
+  name: string;
   leetcodeUrl: string;
   codeforcesUrl: string;
   questionTags: { id: string; name: string; }[];
@@ -56,6 +58,7 @@ interface Question {
 
 export default function AllQuestions() {
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [startTime, setStartTime] = useState("");
@@ -64,7 +67,8 @@ export default function AllQuestions() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
-  const [duration, setDuration] = useState(2);
+  const [duration, setDuration] = useState(120);
+  const [contestName, setContestName] = useState("");
   const [show, setShow] = useState(true)
 
 
@@ -184,36 +188,43 @@ export default function AllQuestions() {
     setDuration(isNaN(value) ? 1 : Math.max(1, value)); // Ensure duration is at least 1 hour
 };
 
-  const handleCreateTest = async () => {
-    if (show && selectedQuestions.length === 0) {
-      toast.error("Please select at least one question to create a test.");
-      return;
-    }
+const handleCreateTest = async () => {
+  if (selectedQuestions.length === 0) {
+    toast.error("Please select at least one question to create a test.");
+    return 0;
+  }
 
-    if (!validateDates()) {
-      return;
-    }
+  if (!validateDates()) {
+    return 0;
+  }
 
-    setLoading(true);
-    try {
-      const testData = {
-        questions: selectedQuestions,
-        startTime: formatDateForPrisma(startTime),
-        duration,
-        endTime: formatDateForPrisma(endTime)
-      };
+  setLoading(true);
+  try {
+    console.log('creating test')
+    const testData = {
+      questions: selectedQuestions,
+      name: contestName,
+      startTime: formatDateForPrisma(startTime),
+      duration,
+      endTime: formatDateForPrisma(endTime)
+    };
 
-      await axios.post("/api/createTest", testData);
-      toast.success("Test created successfully!");
-      setSelectedQuestions([]);
-      setStartTime("");
-      setEndTime("");
-    } catch (error) {
-      console.error("Error creating test:", error);
-      toast.error("Failed to create test.");
-    }
+    console.log(testData)
+
+    const response = await axios.post("/api/createTest", testData);
+    console.log(response.data)  
+    const contestId = response.data.contestId; // Make sure your API returns the contest ID
+    
+    return contestId;
+  } catch (error) {
+    console.error("Error creating test:", error);
+    toast.error("Failed to create test.");
+    return 0;
+  } finally {
     setLoading(false);
-  };
+  }
+};
+
 
 
   return (
@@ -232,15 +243,21 @@ export default function AllQuestions() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm text-muted-foreground">Name</label>
+                <Input
+                  type="text"
+                  value={contestName}
+                  onChange={(e) => setContestName(e.target.value)}
+                />
+              </div>
               <div>
                   <label className="block mb-1">Contest Duration (minutes)</label>
                   <input
                       type="number"
-                      min="1"
-                      max="1440"
                       value={duration}
                       onChange={handleDurationChange}
-                      className="w-full p-2 border border-gray-600 rounded-md text-white"
+                      className="w-full p-2 border border-gray-600 rounded-md text-black"
                   />
               </div>
               <div className="space-y-2">
@@ -261,9 +278,11 @@ export default function AllQuestions() {
                   min={startTime}
                 />
               </div>
+              
               {dateError && (
                 <p className="text-sm text-destructive">{dateError}</p>
               )}
+              
             </CardContent>
           </Card>
         
@@ -292,7 +311,7 @@ export default function AllQuestions() {
               )}
               <Button
                 className="w-full mt-4"
-                onClick={handleCreateTest}
+                onClick={() => setIsPermissionModalOpen(true)}
                 disabled={loading}
               >
                 {loading ? "Creating Test..." : "Create Test"}
@@ -405,6 +424,11 @@ export default function AllQuestions() {
           </Card>
         </div>
       </div>
+      <ContestPermissionModal
+        isOpen={isPermissionModalOpen}
+        onClose={() => setIsPermissionModalOpen(false)}
+        onCreateTest={handleCreateTest}
+      />
       </div> : <div className='flex justify-center'>Not an Admin</div>}</>
    
   );

@@ -9,13 +9,12 @@ interface UpdateData {
 
 interface QuestionItem {
   questionId: string;
-  // Add other properties if present in your questions objects
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { contestId, questions, startTime, endTime, duration } = body;
+    const { contestId, questions, startTime, endTime, duration, permittedGroups } = body;
     
     console.log("Received request:", body);
 
@@ -39,59 +38,92 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contest not found" }, { status: 404 });
     }
 
-    // Prepare update data
-    const updateData: UpdateData = {};
-    
-    if (startTime) updateData.startTime = new Date(startTime);
-    if (endTime) updateData.endTime = new Date(endTime);
-    if (duration != null) updateData.duration = parseInt(duration);
+    console.log(1)
 
-    // Update the contest
-    await prisma.contest.update({
-      where: { id: parsedContestId },
-      data: updateData,
-    });
+    // Start a transaction to handle all updates atomically
+    const result = await prisma.$transaction(async (tx) => {
+      // Prepare update data
+      const updateData: UpdateData = {};
+      
+      if (startTime) updateData.startTime = new Date(startTime);
+      if (endTime) updateData.endTime = new Date(endTime);
+      if (duration != null) updateData.duration = parseInt(duration);
 
-    // Handle questions update if provided and valid
-    if (questions && Array.isArray(questions) && questions.length > 0) {
-      // First delete existing questions connected to this contest
-      await prisma.questionOnContest.deleteMany({
-        where: { contestId: parsedContestId },
+      // Update the contest
+      await tx.contest.update({
+        where: { id: parsedContestId },
+        data: updateData,
       });
 
-      // Extract question IDs from objects and create connections
-      const questionConnections = questions
-        .filter((q: QuestionItem) => q && typeof q.questionId === 'string')
-        .map((q: QuestionItem) => ({
-          contestId: parsedContestId,
-          questionId: q.questionId,
-        }));
-
-      console.log("Creating question connections:", questionConnections);
-
-      // Only attempt to create if there are valid question connections
-      if (questionConnections.length > 0) {
-        await prisma.questionOnContest.createMany({
-          data: questionConnections,
+      // Handle questions update if provided
+      if (questions && Array.isArray(questions) && questions.length > 0) {
+        // Delete existing questions
+        await tx.questionOnContest.deleteMany({
+          where: { contestId: parsedContestId },
         });
-      }
-    }
 
-    // Fetch the updated contest with questions to return
-    const contestWithQuestions = await prisma.contest.findUnique({
-      where: { id: parsedContestId },
-      include: {
-        questions: {
-          include: {
-            question: true,
+        // Create new question connections
+        const questionConnections = questions
+          .filter((q: QuestionItem) => q && typeof q.questionId === 'string')
+          .map((q: QuestionItem) => ({
+            contestId: parsedContestId,
+            questionId: q.questionId,
+          }));
+
+        if (questionConnections.length > 0) {
+          await tx.questionOnContest.createMany({
+            data: questionConnections,
+          });
+        }
+      }
+
+      console.log(2)
+
+      // Handle group permissions update if provided
+      if (permittedGroups && Array.isArray(permittedGroups)) {
+        // Delete existing group permissions
+        await tx.groupPermission.deleteMany({
+          where: { contestId: parsedContestId },
+        });
+
+        // Create new group permissions
+        if (permittedGroups.length > 0) {
+          const groupPermissionData = permittedGroups.map(groupId => ({
+            groupId,
+            contestId: parsedContestId,
+          }));
+
+          await tx.groupPermission.createMany({
+            data: groupPermissionData,
+          });
+        }
+      }
+
+      console.log(3)
+
+      // Fetch updated contest with all relations
+      return await tx.contest.findUnique({
+        where: { id: parsedContestId },
+        include: {
+          questions: {
+            include: {
+              question: true,
+            },
+          },
+          groupPermissions: {
+            include: {
+              group: true,
+            },
           },
         },
-      },
+      });
     });
+
+    console.log(5)
 
     return NextResponse.json({ 
       message: "Contest updated successfully", 
-      contest: contestWithQuestions 
+      contest: result 
     }, { status: 200 });
 
   } catch (error) {

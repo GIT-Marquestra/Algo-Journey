@@ -58,6 +58,14 @@ export async function POST(request: Request) {
       },
     });
 
+    const permittedGroup = await prisma.groupPermission.findUnique({
+      where:{
+        groupId: currentUser?.coordinatedGroup?.id
+      }
+    })
+
+    if(!permittedGroup) return NextResponse.json({  message: 'This group is not permitted to enter this contest' }, { status: 440 })
+
     if (!currentUser || !currentUser.coordinatedGroup) {
       return NextResponse.json(
         { error: 'Only group coordinators can start contests for members' },

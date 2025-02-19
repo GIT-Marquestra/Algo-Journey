@@ -220,7 +220,9 @@ const ContestDetails = ({ contest, isLoading }: { contest: Contest; isLoading?: 
       <CardTitle className="flex items-center gap-4">
         <Trophy className="h-6 w-6 text-yellow-500" />
         <div>
-          Contest #{contest.id}
+          <Link href={`/contest/${contest.id}`} target='_blank'>
+            <span className='text-blue-700'>Contest #{contest.id}</span>
+          </Link>
           <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
             <Calendar className="h-4 w-4" />
             <span>

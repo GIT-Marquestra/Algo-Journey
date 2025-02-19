@@ -42,6 +42,7 @@ model Group {
   coordinator       User                @relation("GroupCoordinator", fields: [coordinatorId], references: [id], onDelete: Cascade)
   coordinatorId     String              @unique
   members           User[]
+  groupPermissions GroupPermission[]
   contestsAttempted GroupOnContest[]
   groupPoints       Int                 @default(0)
   createdAt         DateTime            @default(now())
@@ -51,14 +52,26 @@ model Group {
   @@index([coordinatorId])
 }
 
+model GroupPermission {
+  id                String              @id @default(uuid())
+  groupId           String
+  contestId         Int
+  contest           Contest             @relation(fields: [contestId], references: [id])
+  group             Group               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 
+  @@unique([groupId])
+}
 
 model Contest {
   id                Int                 @id @default(autoincrement())
   startTime         DateTime
+  name              String              @default("Contest")
   endTime           DateTime            
   status            ContestStatus       @default(UPCOMING) 
   duration          Int                 @default(0)
+  groupPermissions  GroupPermission[]
   questions         QuestionOnContest[]
   submissions       Submission[]
   attemptedGroups   GroupOnContest[]
