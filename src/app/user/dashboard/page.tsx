@@ -20,7 +20,6 @@ import { Trophy, Users, Target, ChevronRight, Award, Clock } from "lucide-react"
 import axios from 'axios';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { Session } from 'next-auth';
 import { useSession } from 'next-auth/react';
 import { cn } from "@/lib/utils"
 import { redirect } from 'next/navigation';

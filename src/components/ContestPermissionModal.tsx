@@ -12,7 +12,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
 
 interface Group {
   id: string;
@@ -34,7 +33,6 @@ export default function ContestPermissionModal({
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [loading, setLoading] = useState(false);
-  const Router = useRouter()
 
   useEffect(() => {
     fetchGroups();
