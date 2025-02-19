@@ -7,7 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Clock, Filter, Plus, X } from 'lucide-react';
+import Leetcode from '@/images/leetcode-svgrepo-com.svg'
+import Codeforces from '@/images/codeforces-svgrepo-com.svg'
+import { Clock, Filter, LucideSword, Plus, X } from 'lucide-react';
+import { 
+  Swords, 
+} from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -19,6 +24,7 @@ import QuestionForm from './QuestionsInput';
 import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
 import ContestPermissionModal from './ContestPermissionModal';
+import Image from 'next/image';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -49,8 +55,16 @@ const DIFFICULTY_LEVELS = [
 
 interface Question {
   id: string;
-  name: string;
   leetcodeUrl: string;
+  codeforcesUrl: string;
+  questionTags: { id: string; name: string; }[];
+  slug: string;
+  difficulty: string;
+}
+interface QuestionOnContest {
+  id: string;
+  leetcodeUrl: string;
+  contestAppearances: number[]
   codeforcesUrl: string;
   questionTags: { id: string; name: string; }[];
   slug: string;
@@ -70,7 +84,7 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
-  const [questionOnContest, setQuestionOnContest] = useState<Question[]>([])
+  const [questionOnContest, setQuestionOnContest] = useState<QuestionOnContest[]>([])
   const [loadingArena, setLoadingArena] = useState(false)
   const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
   const [show, setShow] = useState(true)
@@ -84,7 +98,8 @@ export default function AllQuestions() {
       if(!(response2.status === 200)) {
         toast.error(response2.data.message)
       }
-      setQuestionOnContest(response2.data.formattedQuestions)
+      setQuestionOnContest(response2.data.data)
+      console.log(response2.data.data)
       if(!res.data.isAdmin) {
         setShow(false)
         return
@@ -260,16 +275,16 @@ const handlePushToArena = async () => {
     console.log(response.data)  
     if(!(response.status === 200)) {
       toast.error(response.data.message)
+      return 
     }
+    toast.success("Pushed Successfully")
   } catch (error) {
-    console.error("Error creating test:", error);
-    toast.error("Failed to create test.");
+    console.error("Error adding to arena:", error);
+    toast.error("Failed to add to arena.");
   } finally {
     setLoadingArena(false);
   }
 };
-
-
 
   return (
     <>
@@ -464,29 +479,35 @@ const handlePushToArena = async () => {
                 </p>
               ) : (
                 filteredQuestions?.map((q) => (
-                  <Card key={q.id}>
+                  <Card key={q.id} className='relative'>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start gap-4">
-                        <div className="space-y-2 ">
+                        <div className="space-y-2 flex">
                           <div>
-                          <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
-                            <h3 className="font-semibold text-blue-700">{q.slug}</h3>
-                          </Link>
-                          <Badge variant="secondary" className={getDifficultyColor(q.difficulty)}>
-                            {q.difficulty}
-                          </Badge>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            {q.questionTags.map((tag) => (
-                              <Badge
-                                key={tag.id}
-                                variant="outline"
-                                className="text-xs"
-                              >
-                                {tag.name}
-                              </Badge>
-                            ))}
+                            <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                              <h3 className="font-semibold text-blue-700">{q.slug}</h3>
+                            </Link>
+                            <Badge variant="secondary" className={getDifficultyColor(q.difficulty)}>
+                              {q.difficulty}
+                            </Badge>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {q.questionTags.map((tag) => (
+                                <Badge
+                                  key={tag.id}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {tag.name}
+                                </Badge>
+                              ))}
+                            </div>
                           </div>
-                          </div>
+                            <div className='flex flex-col'>
+                            <span className='p-3 absolute top-1'>{questionOnContest.filter((p) => p.id === q.id) && <Swords/>}</span>
+                            <Image src={q.leetcodeUrl ? Leetcode : Codeforces} alt='logo' className='size-6 mx-10 absolute top-4'/>
+                            <span className='p-3 absolute top-8'>{questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.length !== 0 && <LucideSword/> }</span>
+                            {/* <span className='p-3 absolute bottom-1 font-bold text-[15px]'>Contest {questionOnContest.filter((p) => p.contestAppearances && p.id === q.id) ? questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.map((m) => <span className='font-bold text-[15px]'>{m}</span>): '-'}</span> */}
+                            </div>
                         </div>
                         <div className='flex flex-col'>
                         <Button

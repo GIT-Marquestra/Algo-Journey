@@ -337,7 +337,7 @@ export default function Dashboard() {
                           className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
                           asChild
                         >
-                          <Link href={`/contest/${contest.id}`}>
+                          <Link href={`/contest/${contest.id}`} target='_blank'>
                             Start Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
                           </Link>
                         </Button>
