@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Trophy, Users, Target, ChevronRight, Award, Clock } from "lucide-react"
-import axios, { AxiosResponse } from 'axios';
+import axios from 'axios';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Session } from 'next-auth';
@@ -27,7 +27,6 @@ import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
-import { any } from 'zod';
 
 interface GroupMember {
   username: string;
@@ -66,7 +65,6 @@ interface DashboardData {
   username: string;
   isAdmin: boolean;
   userStats: UserStats;
-
 }
 
 interface PlatformData {
@@ -74,20 +72,25 @@ interface PlatformData {
   codeforcesRating: number | null;
 }
 
-interface ApiResponse<T> {
-  data: T;
-}
-
 // API fetching functions
 const fetchDashboardData = async (): Promise<DashboardData> => {
-  const contestsResponse: AxiosResponse<{ latestContests: Contest[], submissionCount: number, user: User }> = 
-    await axios.get('/api/getData');
-  const coordResponse: AxiosResponse<{ isCoordinator: boolean }> = 
-    await axios.post('/api/checkIfCoordinator');
-  const usernameResponse: AxiosResponse<{ username: string }> = 
-    await axios.post('/api/getUsername');
-  const adminResponse: AxiosResponse<{ isAdmin: boolean }> = 
-    await axios.post('/api/checkIfAdmin');
+  const contestsResponse = await axios.get<{
+    latestContests: Contest[];
+    submissionCount: number;
+    user: User;
+  }>('/api/getData');
+  
+  const coordResponse = await axios.post<{
+    isCoordinator: boolean;
+  }>('/api/checkIfCoordinator');
+  
+  const usernameResponse = await axios.post<{
+    username: string;
+  }>('/api/getUsername');
+  
+  const adminResponse = await axios.post<{
+    isAdmin: boolean;
+  }>('/api/checkIfAdmin');
 
   return {
     contests: contestsResponse.data.latestContests,
@@ -105,10 +108,13 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
 };
 
 const fetchPlatformData = async (): Promise<PlatformData> => {
-  const leetcodeResponse: AxiosResponse<{ leetcodeUsername: string | null }> = 
-    await axios.post('/api/user/leetcode/username');
-  const codeforcesResponse: AxiosResponse<{ codeforcesUsername: string | null }> = 
-    await axios.post('/api/user/codeforces/username');
+  const leetcodeResponse = await axios.post<{
+    leetcodeUsername: string | null;
+  }>('/api/user/leetcode/username');
+  
+  const codeforcesResponse = await axios.post<{
+    codeforcesUsername: string | null;
+  }>('/api/user/codeforces/username');
 
   if (!leetcodeResponse.data.leetcodeUsername || !codeforcesResponse.data.codeforcesUsername) {
     throw new Error('Usernames not set');
@@ -129,34 +135,34 @@ export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // Main dashboard data query
   const { 
     data: dashboardData,
     isLoading: isDashboardLoading,
-  } = useQuery<DashboardData, Error>({
+  } = useQuery({
     queryKey: ['dashboardData'],
     queryFn: fetchDashboardData,
     enabled: !!session?.user?.email,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 30 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
-  // Platform data query
+
   const {
     data: platformData,
     isLoading: isPlatformLoading,
-  } = useQuery<PlatformData, Error>({
+  } = useQuery({
     queryKey: ['platformData'],
-    queryFn: fetchPlatformData,
-    enabled: !!session?.user?.email,
-    staleTime: 60 * 60 * 1000,
-    cacheTime: 2 * 60 * 60 * 1000,
-    retry: false,
-    onError: (error: Error) => {
+    queryFn: () => fetchPlatformData().catch((error: Error) => {
       if (error.message === 'Usernames not set') {
         toast.error('Please set your leetcode and codeforces usernames in settings');
       }
-    }
+      throw error;
+    }),
+    enabled: !!session?.user?.email,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 2 * 60 * 60 * 1000,
+    retry: false
   });
+
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -166,11 +172,11 @@ export default function Dashboard() {
 
   const checkPermission = async (id: number) => {
     try {
-      const checkPermission: AxiosResponse<{ hasPermission: boolean }> = await axios.post('/api/checkIfPermission', {
+      const response = await axios.post<{ hasPermission: boolean }>('/api/checkIfPermission', {
         contestId: id
       });
       
-      if (!checkPermission.data.hasPermission) {
+      if (!response.data.hasPermission) {
         toast.error('You do not have permission to start the contest');
         return;
       }
@@ -196,6 +202,7 @@ export default function Dashboard() {
   };
 
   const isLoading = isDashboardLoading || isPlatformLoading;
+
 
   return (
     <div className="min-h-screen">
