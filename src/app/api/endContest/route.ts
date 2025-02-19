@@ -2,19 +2,31 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
+
+
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession()
         const userEmail = session?.user?.email
         const body = await req.json();
         const { contestId, finalScore, questions } = body;
-        console.log(body);
+
+        
+
+       
 
         if (!contestId || !userEmail || typeof finalScore !== "number" || !Array.isArray(questions)) {
             return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
         }
 
         const contestID = parseInt(contestId);
+
+        const latestContest = await prisma.contest.findFirst({
+            orderBy:{
+                id: 'desc'
+            }
+        })
+        
 
         const user = await prisma.user.findUnique({
             where: { email: userEmail },
@@ -84,11 +96,23 @@ export async function POST(req: NextRequest) {
                 });
 
                 // Create or update the group's score for this contest
-                await prisma.groupOnContest.upsert({
-                    where: { groupId_contestId: { groupId: user.groupId, contestId: contestID } },
-                    create: { groupId: user.groupId, contestId: contestID, score: averageScore },
-                    update: { score: { increment: averageScore } },
-                });
+               if(latestContest){
+                const now = new Date();
+                const istOffset = 5.5 * 60 * 60 * 1000; // IST offset from UTC
+                const currentTimeIST = new Date(now.getTime() + istOffset);
+                const contestStart = new Date(latestContest.startTime);
+                const contestEnd = new Date(latestContest.endTime);
+
+                if(contestStart <= currentTimeIST && currentTimeIST <= contestEnd){
+
+                    await prisma.groupOnContest.upsert({
+                        where: { groupId_contestId: { groupId: user.groupId, contestId: contestID } },
+                        create: { groupId: user.groupId, contestId: contestID, score: averageScore },
+                        update: { score: { increment: averageScore } },
+                    });
+                   }
+                }
+
 
                 // Update rankings for all groups in this contest
                 const groupsInContest = await prisma.groupOnContest.findMany({
