@@ -20,10 +20,10 @@ export async function POST(req: Request) {
     const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
 
     // Get the latest contest
-    const latestContest = await prisma.contest.findFirst({
-      orderBy: { startTime: 'desc' },
-      select: { id: true, endTime: true },
-    });
+    // const latestContest = await prisma.contest.findFirst({
+    //   orderBy: { startTime: 'desc' },
+    //   select: { id: true, endTime: true },
+    // });
 
     // Find user by email and fetch individualPoints
     const user = await prisma.user.findUnique({
@@ -61,68 +61,40 @@ export async function POST(req: Request) {
       ReturnType<typeof prisma.questionOnContest.findMany>
     >;
 
-    let questions: QuestionOnContestWithDetails = [];
 
-    if (latestContest && istTime > latestContest.endTime) {
-      questions = await prisma.questionOnContest.findMany({
-        where: {
-          question: {
-            questionTags: { some: { name: topic } },
-          },
+    const questions: QuestionOnContestWithDetails = await prisma.questionOnContest.findMany({
+      where: {
+        question: {
+          questionTags: { some: { name: topic } },
         },
-        select: {
-          id: true,
-          contestId: true,
-          questionId: true,
-          createdAt: true,
-          question: {
-            select: {
-              id: true,
-              leetcodeUrl: true,
-              codeforcesUrl: true,
-              difficulty: true,
-              points: true,
-              slug: true,
-              questionTags: { select: { id: true, name: true } },
-              submissions: {
-                where: { userId: user.id },
-                select: { status: true, score: true, createdAt: true },
-              },
+      },
+      select: {
+        id: true,
+        contestId: true,
+        questionId: true,
+        createdAt: true,
+        question: {
+          select: {
+            id: true,
+            leetcodeUrl: true,
+            codeforcesUrl: true,
+            difficulty: true,
+            points: true,
+            slug: true,
+            questionTags: { select: { id: true, name: true } },
+            submissions: {
+              where: { userId: user.id },
+              select: { status: true, score: true, createdAt: true },
             },
           },
         },
-        orderBy: { contest: { startTime: 'desc' } },
-      });
-    } else if (latestContest) {
-      questions = await prisma.questionOnContest.findMany({
-        where: {
-          contestId: { not: latestContest.id },
-          question: { questionTags: { some: { name: topic } } },
-        },
-        select: {
-          id: true,
-          contestId: true,
-          questionId: true,
-          createdAt: true,
-          question: {
-            select: {
-              id: true,
-              leetcodeUrl: true,
-              codeforcesUrl: true,
-              difficulty: true,
-              points: true,
-              slug: true,
-              questionTags: { select: { id: true, name: true } },
-              submissions: {
-                where: { userId: user.id },
-                select: { status: true, score: true, createdAt: true },
-              },
-            },
-          },
-        },
-        orderBy: { contest: { startTime: 'desc' } },
-      });
-    }
+      },
+      orderBy: { contest: { startTime: 'desc' } },
+    });
+
+    
+
+    console.log(questions)
 
     // **Filter out duplicate questions based on `slug`**
     const uniqueQuestions: QuestionOnContestWithDetails = [];
@@ -136,6 +108,8 @@ export async function POST(req: Request) {
         uniqueQuestions.push(q);
       }
     }
+
+    console.log(uniqueQuestions)
 
     return NextResponse.json(
       { questions: uniqueQuestions, individualPoints: user.individualPoints, submissions: userSubmissions },

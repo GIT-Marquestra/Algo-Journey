@@ -70,6 +70,7 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
+  const [questionOnContest, setQuestionOnContest] = useState<Question[]>([])
   const [loadingArena, setLoadingArena] = useState(false)
   const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
   const [show, setShow] = useState(true)
@@ -79,6 +80,11 @@ export default function AllQuestions() {
     try {
       const res = await axios.post('/api/checkIfAdmin')
       const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
+      const response2 = await axios.post('/api/getQuestionOnContest')
+      if(!(response2.status === 200)) {
+        toast.error(response2.data.message)
+      }
+      setQuestionOnContest(response2.data.formattedQuestions)
       if(!res.data.isAdmin) {
         setShow(false)
         return
@@ -461,7 +467,8 @@ const handlePushToArena = async () => {
                   <Card key={q.id}>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 ">
+                          <div>
                           <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
                             <h3 className="font-semibold text-blue-700">{q.slug}</h3>
                           </Link>
@@ -478,6 +485,7 @@ const handlePushToArena = async () => {
                                 {tag.name}
                               </Badge>
                             ))}
+                          </div>
                           </div>
                         </div>
                         <div className='flex flex-col'>

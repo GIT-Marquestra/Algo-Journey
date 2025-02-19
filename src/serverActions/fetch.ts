@@ -9,7 +9,6 @@ export async function fetchLatestSubmissionsLeetCode(username: string){
     try {
         const leetcode = new LeetCode()
         const userStats = await leetcode.user(username)
-        console.log(userStats)
         return userStats
     } catch (error) {
         console.log("Error: ", error)
