@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import Leetcode from '@/images/leetcode-svgrepo-com.svg'
 import Codeforces from '@/images/codeforces-svgrepo-com.svg'
-import { Clock, Filter, LucideSword, Plus, X } from 'lucide-react';
+import { Clock, Filter, LucideSword, Pencil, Plus, X } from 'lucide-react';
 import { 
   Swords, 
 } from 'lucide-react';
@@ -25,6 +25,8 @@ import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
 import ContestPermissionModal from './ContestPermissionModal';
 import Image from 'next/image';
+import EditQuestionModal from './QuestionEditModal';
+import { DialogTrigger } from '@radix-ui/react-dialog';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -52,14 +54,19 @@ const DIFFICULTY_LEVELS = [
   { id: "hard", value: "HARD", label: "Hard" },
   { id: "veryhard", value: "VERYHARD", label: "Very Hard" }
 ];
-
-interface Question {
+type Difficulty = 'BEGINNER' | 'EASY' | 'MEDIUM' | 'HARD' | 'VERYHARD';
+interface Question1 {
   id: string;
   leetcodeUrl: string;
   codeforcesUrl: string;
-  questionTags: { id: string; name: string; }[];
+  questionTags: QuestionTag[];
   slug: string;
-  difficulty: string;
+  difficulty: Difficulty
+}
+
+interface QuestionTag {
+  id: string;
+  name: string;
 }
 interface QuestionOnContest {
   id: string;
@@ -72,28 +79,28 @@ interface QuestionOnContest {
 }
 
 export default function AllQuestions() {
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<Question1[]>([]);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
-  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
+  const [selectedQuestions, setSelectedQuestions] = useState<Question1[]>([]);
   const [loading, setLoading] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [dateError, setDateError] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
-  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<Question1[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
   const [questionOnContest, setQuestionOnContest] = useState<QuestionOnContest[]>([])
   const [loadingArena, setLoadingArena] = useState(false)
-  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
+  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question1[]>([])
   const [show, setShow] = useState(true)
 
 
   const fetchQuestions = useCallback(async () => {
     try {
       const res = await axios.post('/api/checkIfAdmin')
-      const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
+      const response = await axios.post<{ questions: Question1[] }>("/api/getQuestions");
       const response2 = await axios.post('/api/getQuestionOnContest')
       if(!(response2.status === 200)) {
         toast.error(response2.data.message)
@@ -154,7 +161,7 @@ export default function AllQuestions() {
     setSelectedDifficulty(value);
   };
 
-  const addToTest = (question: Question) => {
+  const addToTest = (question: Question1) => {
     if (selectedQuestions?.some(q => q.id === question.id)) {
       toast.error("Question already added to test");
       return;
@@ -169,7 +176,7 @@ export default function AllQuestions() {
     toast.success("Question removed from test");
   };
 
-  const addToArena = (question: Question) => {
+  const addToArena = (question: Question1) => {
     if (selectedArenaQuestions?.some(q => q.id === question.id)) {
       toast.error("Question already added to Arena");
       return;
@@ -263,6 +270,10 @@ const handleCreateTest = async () => {
     setLoading(false);
   }
 };
+
+const handleEdit = (id: string) => {
+
+}
 
 const handlePushToArena = async () => {
   if (selectedArenaQuestions.length === 0) {
@@ -490,6 +501,7 @@ const handlePushToArena = async () => {
                             <Badge variant="secondary" className={getDifficultyColor(q.difficulty)}>
                               {q.difficulty}
                             </Badge>
+                              <EditQuestionModal question={q}/>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {q.questionTags.map((tag) => (
                                 <Badge
@@ -538,6 +550,7 @@ const handlePushToArena = async () => {
           </Card>
         </div>
       </div>
+      
       <ContestPermissionModal
         isOpen={isPermissionModalOpen}
         onClose={() => setIsPermissionModalOpen(false)}

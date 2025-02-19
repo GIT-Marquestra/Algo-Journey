@@ -38,7 +38,7 @@ export async function POST() {
       const allContestIds = [...tempContestIds, ...contestIds];
 
       // Remove the temporary and contests fields and add contestAppearances
-      const { temporary, contests, ...questionData } = question;
+      const { ...questionData } = question;
       
       return {
         ...questionData,

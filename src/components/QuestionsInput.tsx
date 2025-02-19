@@ -44,7 +44,8 @@ const availableTags = [
   "Sorting",
   "LinearSearch",
   "Exponentiation",
-  "Recursion"
+  "Recursion",
+  "String"
 ];
 
 const getDifficultyColor = (difficulty: string) => {
