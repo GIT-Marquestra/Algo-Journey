@@ -34,7 +34,8 @@ const AVAILABLE_TAGS = [
   "Sorting",
   "LinearSearch",
   "Exponentiation",
-  "Recursion"
+  "Recursion",
+  "String"
 ];
 
 const DIFFICULTY_LEVELS = [
@@ -69,6 +70,8 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
+  const [loadingArena, setLoadingArena] = useState(false)
+  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
   const [show, setShow] = useState(true)
 
 
@@ -138,10 +141,25 @@ export default function AllQuestions() {
     setSelectedQuestions(prev => [...prev, { ...question }]);
     toast.success("Question added to test");
   };
+ 
 
   const removeFromTest = (questionId: string) => {
     setSelectedQuestions(prev => prev.filter(q => q.id !== questionId));
     toast.success("Question removed from test");
+  };
+
+  const addToArena = (question: Question) => {
+    if (selectedArenaQuestions?.some(q => q.id === question.id)) {
+      toast.error("Question already added to Arena");
+      return;
+    }
+    setSelectedArenaQuestions(prev => [...prev, { ...question }]);
+    toast.success("Question added to Arena");
+  };
+
+  const removeFromArena = (questionId: string) => {
+    setSelectedArenaQuestions(prev => prev.filter(q => q.id !== questionId));
+    toast.success("Question removed from Arena");
   };
 
   const validateDates = () => {
@@ -225,6 +243,26 @@ const handleCreateTest = async () => {
   }
 };
 
+const handlePushToArena = async () => {
+  if (selectedArenaQuestions.length === 0) {
+    toast.error("Please select at least one question to add to arena.");
+  }
+
+  setLoadingArena(true);
+  try {
+    const response = await axios.post("/api/pushToArena", { questions: selectedArenaQuestions });
+    console.log(response.data)  
+    if(!(response.status === 200)) {
+      toast.error(response.data.message)
+    }
+  } catch (error) {
+    console.error("Error creating test:", error);
+    toast.error("Failed to create test.");
+  } finally {
+    setLoadingArena(false);
+  }
+};
+
 
 
   return (
@@ -248,6 +286,7 @@ const handleCreateTest = async () => {
                 <Input
                   type="text"
                   value={contestName}
+                  placeholder='Enter Contest Name'
                   onChange={(e) => setContestName(e.target.value)}
                 />
               </div>
@@ -285,6 +324,7 @@ const handleCreateTest = async () => {
               
             </CardContent>
           </Card>
+          
         
           <Card>
             <CardHeader>
@@ -318,12 +358,45 @@ const handleCreateTest = async () => {
               </Button>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Questions to push to Arena</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {show && selectedArenaQuestions.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No questions selected.</p>
+              ) : (
+                selectedArenaQuestions.map((q) => (
+                  <div key={q.id} className="flex items-center justify-between p-2 rounded-lg border">
+                    <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                      <span className="font-medium text-blue-700">{q.slug}</span>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFromArena(q.id)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))
+              )}
+              <Button
+                className="w-full mt-4"
+                disabled={loadingArena}
+                onClick={handlePushToArena}   
+              >
+                {loadingArena ? "Pushing..." : "Push to Arena"}
+              </Button>
+            </CardContent>
+          </Card>
         <QuestionForm/>
         </div>
         
 
         {/* Right Column - Questions List */}
         <div className="w-full md:w-2/3">
+        
           <Card>
             <CardHeader>
               <CardTitle>Available Questions</CardTitle>
@@ -407,6 +480,7 @@ const handleCreateTest = async () => {
                             ))}
                           </div>
                         </div>
+                        <div className='flex flex-col'>
                         <Button
                           size="sm"
                           onClick={() => addToTest(q)}
@@ -415,7 +489,18 @@ const handleCreateTest = async () => {
                           <Plus className="h-4 w-4 mr-2" />
                           Add to Test
                         </Button>
+                        <Button
+                          size="sm"
+                          variant='outline'
+                          className="shrink-0 mt-4"
+                          onClick={() => addToArena(q)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add to arena
+                        </Button>
+                        </div>
                       </div>
+                      
                     </CardContent>
                   </Card>
                 ))

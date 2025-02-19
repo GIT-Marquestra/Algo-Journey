@@ -92,10 +92,6 @@ export default function ContestPermissionModal({
       }
 
       toast.success('Test created with permissions');
-      setTimeout(() => {
-        Router.push('/user/dashboard')
-        
-      }, 2000);
       onClose();
     } catch (error) {
       console.error('Error creating test with permissions:', error);

@@ -4,14 +4,13 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
 
-    const { contestId: id } = await req.json(); // Extracting id from the request body
+    const { contestId: id } = await req.json();
 
     
     if (!id) {
         return NextResponse.json({ error: "Contest ID is required" }, { status: 400 });
     }
     
-    // Fetch contest from the database
     const contest = await prisma.contest.findUnique({
       where: { id: parseInt(id) },
       include:{

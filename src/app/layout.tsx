@@ -36,7 +36,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         
-        <QueryClientProvider client={queryClient}>
             <QueryProvider>
       
         <SessionProviderWrapper>
@@ -50,7 +49,6 @@ export default function RootLayout({
         </main>
         </SessionProviderWrapper>
         </QueryProvider>
-        </QueryClientProvider>
       <footer></footer>
       </body>
       

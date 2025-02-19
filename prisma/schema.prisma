@@ -18,20 +18,27 @@ model User {
   leetcodeUsername    String              @unique    
   isComplete          Boolean     
   codeforcesUsername  String              @unique        
-  section            String
-  enrollmentNum      String               @unique
-  profileUrl         String?
-  groupId            String?
-  group              Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
-  submissions        Submission[]
-  individualPoints   Int                 @default(0)
-  createdAt         DateTime             @default(now())
-  updatedAt         DateTime             @updatedAt
-  applications      GroupApplication[]   @relation("GroupApplications")
-  coordinatedGroup   Group?              @relation("GroupCoordinator") 
-  contestPermissions ContestPermission[]
+  section             String
+  enrollmentNum       String               @unique
+  profileUrl          String?
+  groupId             String?
+  group               Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  submissions         Submission[]
+  individualPoints    Int                 @default(0)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  applications        GroupApplication[]   @relation("GroupApplications")
+  coordinatedGroup    Group?              @relation("GroupCoordinator") 
+  contestPermissions  ContestPermission[]
   
   @@index([groupId]) 
+}
+
+model TempContestQuestion {
+  id                  String              @id @default(uuid())
+  contestId           Int              
+  questions           Question[]
+
 }
 
 
@@ -105,17 +112,18 @@ model GroupOnContest {
 
 
 model Question {
-  id                String              @id @default(uuid())
+  id                String                @id @default(uuid())
   leetcodeUrl       String?         
   codeforcesUrl     String?          
   difficulty        Difficulty       
   points            Int
   questionTags      QuestionTag[]     
-  slug              String              @unique
+  slug              String                @unique
   contests          QuestionOnContest[]
   submissions       Submission[]        
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt         DateTime              @default(now())
+  temporary         TempContestQuestion[]
+  updatedAt         DateTime              @updatedAt
 
 }
 
@@ -141,9 +149,9 @@ enum Difficulty {
 
 model QuestionOnContest {
   id                String              @id @default(uuid())
-  contestId         Int
+  contestId         Int?
   questionId        String
-  contest           Contest             @relation(fields: [contestId], references: [id])
+  contest           Contest?            @relation(fields: [contestId], references: [id])
   question          Question            @relation(fields: [questionId], references: [id])
   createdAt         DateTime            @default(now())
 

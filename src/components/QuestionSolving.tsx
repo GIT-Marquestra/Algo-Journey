@@ -76,7 +76,8 @@ const AVAILABLE_TAGS = [
   "Sorting",
   "Linear search",
   "Exponentiation",
-  "Recursion"
+  "Recursion",
+  "String"
 ];
 
 const DIFFICULTIES = [
