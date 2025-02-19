@@ -252,7 +252,7 @@ const QuestionSolving = () => {
         // Check for already solved problems
         const solvedSet = new Set<string>();
         for (const q of response.data.questions) {
-          //@ts-ignore
+          //@ts-expect-error: it is important here
           if (q.submissions?.some(s => s.status === 'ACCEPTED')) {
             solvedSet.add(q.id);
           }

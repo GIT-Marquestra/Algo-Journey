@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import Leetcode from '@/images/leetcode-svgrepo-com.svg'
 import Codeforces from '@/images/codeforces-svgrepo-com.svg'
-import { Clock, Filter, LucideSword, Pencil, Plus, X } from 'lucide-react';
+import { Clock, Filter, LucideSword, Plus, X } from 'lucide-react';
 import { 
   Swords, 
 } from 'lucide-react';
@@ -26,7 +26,6 @@ import Link from 'next/link';
 import ContestPermissionModal from './ContestPermissionModal';
 import Image from 'next/image';
 import EditQuestionModal from './QuestionEditModal';
-import { DialogTrigger } from '@radix-ui/react-dialog';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -271,9 +270,9 @@ const handleCreateTest = async () => {
   }
 };
 
-const handleEdit = (id: string) => {
+// const handleEdit = (id: string) => {
 
-}
+// }
 
 const handlePushToArena = async () => {
   if (selectedArenaQuestions.length === 0) {

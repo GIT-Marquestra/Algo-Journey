@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { QueryProvider } from '@/components/QueryWrapper';
 import SessionRedirect from '@/components/SessionRedirect';
-import { QueryClient } from '@tanstack/react-query';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

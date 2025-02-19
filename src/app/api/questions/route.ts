@@ -15,17 +15,6 @@ export async function POST(req: Request) {
     
     const userEmail: string = session.user.email;
 
-    // Get current time in IST
-    const now = new Date();
-    const istTime = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
-
-    // Get the latest contest
-    // const latestContest = await prisma.contest.findFirst({
-    //   orderBy: { startTime: 'desc' },
-    //   select: { id: true, endTime: true },
-    // });
-
-    // Find user by email and fetch individualPoints
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
       select: { id: true, individualPoints: true },
@@ -94,7 +83,7 @@ export async function POST(req: Request) {
 
     
 
-    console.log(questions)
+
 
     // **Filter out duplicate questions based on `slug`**
     const uniqueQuestions: QuestionOnContestWithDetails = [];
@@ -109,7 +98,7 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log(uniqueQuestions)
+
 
     return NextResponse.json(
       { questions: uniqueQuestions, individualPoints: user.individualPoints, submissions: userSubmissions },
