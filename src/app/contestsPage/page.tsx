@@ -327,6 +327,7 @@ const ContestsPage = () => {
     queryKey: ['contests'],
     queryFn: async () => {
       const response = await axios.get('/api/contests');
+      console.log(response)
       return response.data;
     },
   });
