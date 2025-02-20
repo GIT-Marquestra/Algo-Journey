@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import Leetcode from '@/images/leetcode-svgrepo-com.svg'
 import Codeforces from '@/images/codeforces-svgrepo-com.svg'
-import { Clock, Filter, LucideSword, Plus, X } from 'lucide-react';
+import { Clock, Filter, LucideSword, Plus, Trash, X } from 'lucide-react';
 import { 
   Swords, 
 } from 'lucide-react';
@@ -266,6 +266,32 @@ const handleCreateTest = async () => {
   }
 };
 
+const confirm = (id: string) => {
+  //@ts-expect-error: it is important here , that's it 
+  toast((t) => (
+    <div className="flex flex-col">
+      <p className="font-semibold">Are you sure?</p>
+      <div className="flex gap-2 mt-2">
+        <button 
+          onClick={() => {
+            toast.dismiss(t.id);
+            handleDeleteQuestion(id);
+          }} 
+          className="bg-red-500 text-white px-3 py-1 rounded"
+        >
+          Yes
+        </button>
+        <button 
+          onClick={() => toast.dismiss(t.id)} 
+          className="bg-gray-300 px-3 py-1 rounded"
+        >
+          No
+        </button>
+      </div>
+    </div>
+  ), { duration: 5000 }); // Auto-dismiss after 5 sec
+};
+
 // const handleEdit = (id: string) => {
 
 // }
@@ -291,6 +317,21 @@ const handlePushToArena = async () => {
     setLoadingArena(false);
   }
 };
+
+const handleDeleteQuestion = async (id: string) => {
+  try {
+    const response = await axios.post('/api/deleteQuestion', { questionId: id })
+    if(!(response.status === 200)) {
+      toast.error(response.data.message)
+      return 
+    }
+
+    toast.success("Deleted")
+  } catch (error) {
+    console.log('Error while deleteing question: ', error)
+    toast.error("Some unexpected error occured!")
+  }
+}
 
   return (
     <>
@@ -486,6 +527,7 @@ const handlePushToArena = async () => {
               ) : (
                 filteredQuestions?.map((q) => (
                   <Card key={q.id} className='relative'>
+                    <Trash className='absolute right-1 mx-1 top-2 text-red-500' onClick={()=>confirm(q.id)}/>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start gap-4">
                         <div className="space-y-2 flex">
@@ -515,7 +557,7 @@ const handlePushToArena = async () => {
                             {/* <span className='p-3 absolute bottom-1 font-bold text-[15px]'>Contest {questionOnContest.filter((p) => p.contestAppearances && p.id === q.id) ? questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.map((m) => <span className='font-bold text-[15px]'>{m}</span>): '-'}</span> */}
                             </div>
                         </div>
-                        <div className='flex flex-col'>
+                        <div className='flex flex-col p-3 mr-2'>
                         <Button
                           size="sm"
                           onClick={() => addToTest(q)}
@@ -537,6 +579,7 @@ const handlePushToArena = async () => {
                       </div>
                       
                     </CardContent>
+                    
                   </Card>
                 ))
               )}
