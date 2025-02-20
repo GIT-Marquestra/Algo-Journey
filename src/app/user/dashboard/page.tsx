@@ -24,7 +24,7 @@ import { useSession } from 'next-auth/react';
 import { cn } from "@/lib/utils"
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode, fetchUserStats } from '@/serverActions/fetch';
+import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
 
 interface GroupMember {
