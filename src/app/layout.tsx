@@ -35,9 +35,9 @@ export default function RootLayout({
       >
         
         
-      
+        <QueryProvider>     
         <SessionProviderWrapper>
-        <QueryProvider>
+
         <header className="absolute w-full"><Navbar/></header>
         <main className="w-full flex justify-center min-h-screen overflow-hidden">
           <div className="w-full">
@@ -46,8 +46,9 @@ export default function RootLayout({
         <Toaster/>
           </div>
         </main>
-        </QueryProvider>
+
         </SessionProviderWrapper>
+        </QueryProvider>
       <footer></footer>
       </body>
       

@@ -404,7 +404,7 @@ const handleDeleteQuestion = async (id: string) => {
               ) : (
                 selectedQuestions.map((q) => (
                   <div key={q.id} className="flex items-center justify-between p-2 rounded-lg border">
-                    <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                    <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl || ''} target='_blank'>
                       <span className="font-medium text-blue-700">{q.slug}</span>
                     </Link>
                     <Button
@@ -436,7 +436,7 @@ const handleDeleteQuestion = async (id: string) => {
               ) : (
                 selectedArenaQuestions.map((q) => (
                   <div key={q.id} className="flex items-center justify-between p-2 rounded-lg border">
-                    <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                    <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl || ''} target='_blank'>
                       <span className="font-medium text-blue-700">{q.slug}</span>
                     </Link>
                     <Button
@@ -532,7 +532,7 @@ const handleDeleteQuestion = async (id: string) => {
                       <div className="flex justify-between items-start gap-4">
                         <div className="space-y-2 flex">
                           <div>
-                            <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                            <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl || ''} target='_blank'>
                               <h3 className="font-semibold text-blue-700">{q.slug}</h3>
                             </Link>
                             <Badge variant="secondary" className={getDifficultyColor(q.difficulty)}>
