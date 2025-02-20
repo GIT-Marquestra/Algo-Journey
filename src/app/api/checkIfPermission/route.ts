@@ -8,14 +8,14 @@ export async function POST(req: Request) {
     if (!userId || !contestId) {
       return NextResponse.json({ success: false, error: "Missing userId or contestId" }, { status: 400 });
     }
-
+    console.log(userId)
     const hasPermission = await prisma.contestPermission.findFirst({
       where: {
         contestId: Number(contestId),
         users: { some: { id: userId } } 
       }
     });
-
+    console.log(hasPermission)
     return NextResponse.json({ hasPermission: !!hasPermission });
 
   } catch (error) {

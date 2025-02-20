@@ -196,26 +196,26 @@ export default function Dashboard(): JSX.Element {
     }
   }, [status]);
 
-  const checkPermission = async (id: number): Promise<void> => {
-    try {
-      const response = await axios.post<{ hasPermission: boolean }>('/api/checkIfPermission', {
-        contestId: id
-      });
+  // const checkPermission = async (id: number): Promise<void> => {
+  //   try {
+  //     const response = await axios.post<{ hasPermission: boolean }>('/api/checkIfPermission', {
+  //       contestId: id
+  //     });
+  //     console.log(response)
+  //     if (!response.data.hasPermission) {
+  //       toast.error('You do not have permission to start the contest');
+  //       return;
+  //     }
       
-      if (!response.data.hasPermission) {
-        toast.error('You do not have permission to start the contest');
-        return;
-      }
-      
-      toast.success('Permission checked, Directing...');
-      setTimeout(() => {
-        router.push(`/contest/${id}`);
-      }, 2000);
-    } catch (error) {
-      console.error('Error checking permission:', error);
-      toast.error('Unable to check permission');
-    }
-  };
+  //     toast.success('Permission checked, Directing...');
+  //     setTimeout(() => {
+  //       router.push(`/contest/${id}`);
+  //     }, 2000);
+  //   } catch (error) {
+  //     console.error('Error checking permission:', error);
+  //     toast.error('Unable to check permission');
+  //   }
+  // };
 
   const handleReset = async (): Promise<void> => {
     try {
@@ -388,7 +388,7 @@ export default function Dashboard(): JSX.Element {
                         <Button 
                           size="lg" 
                           className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
-                          onClick={() => checkPermission(contest.id)}
+                          onClick={() => router.push(`/contest/${contest.id}`)}
                         >
                           Start Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
                         </Button>
