@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Calendar, Users, CheckCircle, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Trophy, Calendar, Users, CheckCircle, X, ChevronDown, ChevronUp, Ban } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -42,6 +42,7 @@ interface Member {
   id: string;
   username: string;
   submissions: Submission[];
+  isAllowedToParticipate?: boolean;
 }
 
 interface Group {
@@ -119,12 +120,33 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
             return (
               <TableRow key={member.id} className="hover:bg-gray-50 transition-colors">
                 <TableCell className="font-medium py-4">
-                  {member.username}
+                  <div className="flex items-center gap-2">
+                    {member.username}
+                    {member.isAllowedToParticipate === false && (
+                      <span className="text-xs text-red-500 flex items-center gap-1">
+                        <Ban className="h-3 w-3" />
+                        Not Allowed
+                      </span>
+                    )}
+                  </div>
                 </TableCell>
                 {questions?.map((q) => {
                   const submission = member.submissions?.find(
                     (s) => s.question.id === q.question.id
                   );
+                  
+                  if (member.isAllowedToParticipate === false) {
+                    return (
+                      <TableCell key={q.question.id} className="text-center py-4">
+                        <div className="flex flex-col items-center">
+                          <Ban className="h-5 w-5 text-red-400" />
+                          <span className="text-xs text-red-400 mt-1">
+                            Not Allowed
+                          </span>
+                        </div>
+                      </TableCell>
+                    );
+                  }
                   
                   return (
                     <TableCell key={q.question.id} className="text-center py-4">
@@ -147,11 +169,23 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
                   );
                 })}
                 <TableCell className="text-right font-semibold py-4 pr-6">
-                  {memberTotal}
+                  {member.isAllowedToParticipate === false ? (
+                    <span className="text-red-500">N/A</span>
+                  ) : (
+                    memberTotal
+                  )}
                 </TableCell>
               </TableRow>
             );
           })}
+          <TableRow className="bg-gray-50">
+            <TableCell colSpan={questions.length + 1} className="font-bold py-4">
+              Group Total
+            </TableCell>
+            <TableCell className="text-right font-bold py-4 pr-6">
+              {group.score}
+            </TableCell>
+          </TableRow>
         </TableBody>
       </Table>
     </div>
@@ -165,6 +199,8 @@ const GroupDetails = ({ group, questions, rank, isLoading }: {
   isLoading?: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const participatingMembers = group.members.filter(m => m.isAllowedToParticipate !== false);
+  const nonParticipatingMembers = group.members.filter(m => m.isAllowedToParticipate === false);
 
   return (
     <div className="border rounded-lg mb-4 overflow-hidden shadow-sm">
@@ -185,7 +221,8 @@ const GroupDetails = ({ group, questions, rank, isLoading }: {
             </div>
             <p className="text-sm text-gray-600 mt-1">
               Coordinator: {group.coordinator?.username} • 
-              Members: {group.members?.length || 0}
+              Participating: {participatingMembers.length} • 
+              Not Allowed: {nonParticipatingMembers.length}
             </p>
           </div>
           <div className="flex items-center gap-4">

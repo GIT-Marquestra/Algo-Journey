@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect } from 'react';
+import React, { JSX, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -66,21 +66,6 @@ interface DashboardData {
   userStats: UserStats;
 }
 
-interface PlatformData {
-  leetcodeData: {
-    totalSolved: number,
-    totalQuestions: number,
-    easySolved: number,
-    totalEasy: number,
-    mediumSolved: number,
-    totalMedium: number,
-    hardSolved: number,
-    totalHard: number,
-    ranking: number,
-  } | null;
-  codeforcesRating: number | null;
-}
-
 interface LeetCodeStats {
   totalSolved: number;
   totalQuestions: number;
@@ -93,6 +78,11 @@ interface LeetCodeStats {
   ranking: number;
 }
 
+interface PlatformData {
+  leetcodeData: LeetCodeStats | null;
+  codeforcesRating: number | null;
+}
+
 const calculateDuration = (startTime: string, endTime: string): string => {
   const start = new Date(startTime);
   const end = new Date(endTime);
@@ -102,7 +92,15 @@ const calculateDuration = (startTime: string, endTime: string): string => {
   return `${hours}h ${minutes}m`;
 };
 
-// API fetching functions
+const calculateLength = (startTime: string, endTime: string): string => {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const diffMs = end.getTime() - start.getTime();
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours} hours ${minutes} minutes`;
+};
+
 const fetchDashboardData = async (): Promise<DashboardData> => {
   const contestsResponse = await axios.get<{
     latestContests: Contest[];
@@ -151,7 +149,7 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
   }
 
   const [leetcodeData, codeforcesData] = await Promise.all([
-    fetchUserStats(leetcodeResponse.data.leetcodeUsername) as unknown as Promise<LeetCodeStats>,
+    fetchUserStats(leetcodeResponse.data.leetcodeUsername) as Promise<LeetCodeStats>,
     fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername),
   ]);
 
@@ -161,7 +159,7 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
   };
 };
 
-export default function Dashboard() {
+export default function Dashboard(): JSX.Element {
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -199,7 +197,7 @@ export default function Dashboard() {
     }
   }, [status]);
 
-  const checkPermission = async (id: number) => {
+  const checkPermission = async (id: number): Promise<void> => {
     try {
       const response = await axios.post<{ hasPermission: boolean }>('/api/checkIfPermission', {
         contestId: id
@@ -220,7 +218,7 @@ export default function Dashboard() {
     }
   };
 
-  const handleReset = async () => {
+  const handleReset = async (): Promise<void> => {
     try {
       await axios.post('/api/reset');
       toast.success('Reset successful');
@@ -254,6 +252,7 @@ export default function Dashboard() {
           <>
             <div className='text-pretty text-2xl font-sans'>Hi, {dashboardData?.username}</div>
             {dashboardData?.isAdmin && <Button onClick={handleReset}>Reset all tests</Button>}
+            
             <div className="grid gap-4 md:grid-cols-3">
               <Card className="bg-white/60 backdrop-blur-sm border-purple-100 hover:border-purple-200 transition-colors">
                 <CardHeader>
