@@ -54,6 +54,7 @@ interface UserStats {
 interface Contest {
   id: number;
   startTime: string;
+  name: string
   endTime: string;
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED';
 }
@@ -150,10 +151,14 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
     throw new Error('Usernames not set');
   }
 
+  
+
   const [leetcodeData, codeforcesData] = await Promise.all([
     fetchUserStats(leetcodeResponse.data.leetcodeUsername) as unknown as Promise<LeetCodeStats>,
     fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername),
   ]);
+
+
 
   return {
     leetcodeData: leetcodeData,
@@ -319,14 +324,10 @@ export default function Dashboard() {
                     <div className="p-4 rounded-lg bg-purple-100/50">
                       <p className='text-sm'>Leetcode Data </p>
                       <div className='grid grid-cols-2 p-2'>
-                        <div>
-                          <p className="text-md font-medium">Easy Solved: {platformData?.leetcodeData?.easySolved}</p>
-                          <p className="text-md font-medium">Medium Solved: {platformData?.leetcodeData?.mediumSolved}</p>
-                        </div>
-                        <div>
-                          <p className="text-md font-medium">Hard Solved: {platformData?.leetcodeData?.hardSolved}</p>
-                          <p className="text-md font-medium">Rank: {platformData?.leetcodeData?.ranking}</p>
-                        </div>
+                      <div>
+                      <p className="text-md font-medium">Total {platformData?.leetcodeData?.totalSolved} questions solved.</p>
+                     
+                      </div>
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-purple-100/50">
@@ -360,8 +361,8 @@ export default function Dashboard() {
                   <div key={contest.startTime} className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
                     <div className="grid md:grid-cols-5 gap-4">
                       <div className="p-4 rounded-lg bg-purple-100/50">
-                        <p className="text-sm">Contest</p>
-                        <p className="text-lg font-medium">{contest.id}</p>
+                        <p className="text-sm">Contest #{contest.id}</p>
+                        <p className="text-lg font-medium">{contest.name}</p>
                       </div>
                       <div className="p-4 rounded-lg bg-purple-100/50">
                         <p className="text-sm">Date</p>

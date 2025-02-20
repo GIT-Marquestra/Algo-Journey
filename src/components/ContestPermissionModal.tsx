@@ -82,13 +82,12 @@ export default function ContestPermissionModal({
         groups: isAllSelected ? [] : selectedGroups, // Empty array means all groups have access
         isAllSelected
       });
-      console.log(response)
+
 
       if(!(response.status === 200)){
-        toast.error('Failed to create test with permissions');
+        toast.error(response.data.message);
         return;
       }
-
       toast.success('Test created with permissions');
       onClose();
     } catch (error) {

@@ -38,16 +38,16 @@ export async function POST(request: Request) {
 
     if (currentTimeIST < contestStart) {
       return NextResponse.json({ 
-        error: 'Cannot grant permissions before contest start time',
+        message: 'Cannot grant permissions before contest start time',
         startTime: contestStart
-      }, { status: 400 });
+      }, { status: 250 });
     }
 
     if (currentTimeIST > contestEnd) {
       return NextResponse.json({ 
-        error: 'Cannot grant permissions after contest end time',
+        message: 'Cannot grant permissions after contest end time',
         endTime: contestEnd
-      }, { status: 400 });
+      }, { status: 240 });
     }
 
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import prisma from '../../../lib/prisma'; 
+import prisma from '../../../lib/prisma';
 
 interface Question {
   id: string;
@@ -19,36 +19,49 @@ export async function POST(req: Request) {
     console.log(request);
     const { duration, questions } = request;
 
-    // Create the contest first
-    const contest = await prisma.contest.create({
-      data: {
-        startTime: request.startTime,  
-        endTime: request.endTime,
-        duration,
-        name: request.name
-      }
-    });
-
-    // Create temporary contest question entries
-    if (questions && questions.length > 0) {
-      await prisma.tempContestQuestion.create({
+    // Create the contest and connect questions in a single transaction
+    const contest = await prisma.$transaction(async (tx) => {
+      // Create the contest first
+      const newContest = await tx.contest.create({
         data: {
-          contestId: contest.id,
-          questions: {
-            connect: questions.map(q => ({ id: q.id }))
-          }
+          startTime: request.startTime,
+          endTime: request.endTime,
+          duration,
+          name: request.name
         }
       });
-    }
 
-    return NextResponse.json({ 
+      // Create the question connections through QuestionOnContest
+      if (questions && questions.length > 0) {
+        await tx.questionOnContest.createMany({
+          data: questions.map(question => ({
+            contestId: newContest.id,
+            questionId: question.id
+          }))
+        });
+
+        // Also create the temporary contest questions if needed
+        await tx.tempContestQuestion.create({
+          data: {
+            contestId: newContest.id,
+            questions: {
+              connect: questions.map(q => ({ id: q.id }))
+            }
+          }
+        });
+      }
+
+      return newContest;
+    });
+
+    return NextResponse.json({
       contestId: contest.id,
-      message: "Contest and temporary questions created successfully" 
+      message: "Contest and questions connected successfully"
     }, { status: 200 });
 
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ 
+    return NextResponse.json({
       error: "Contest creation failed",
       details: error instanceof Error ? error.message : "Unknown error"
     }, { status: 400 });
