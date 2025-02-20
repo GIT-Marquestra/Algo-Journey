@@ -47,6 +47,8 @@ export async function POST(
                 },
             },
         });
+
+        console.log(contestData)
         
         if (!contestData) {
             return NextResponse.json({ error: "Contest not found" }, { status: 404 });
@@ -168,6 +170,8 @@ export async function POST(
         }
 
         const expiryTime = new Date(contestStart.getTime() + (duration * 60 * 60 * 1000)); // Convert hours to milliseconds
+
+        console.log(contest.questions)
 
         return NextResponse.json({
             message: isLatestContest ? "Starting active contest" : "Starting practice contest",
