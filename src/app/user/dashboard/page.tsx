@@ -158,6 +158,7 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
 
 
 
+
   return {
     leetcodeData: leetcodeData,
     codeforcesRating: codeforcesData?.rating || null

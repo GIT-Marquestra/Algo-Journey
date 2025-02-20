@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import Leetcode from '@/images/leetcode-svgrepo-com.svg'
 import Codeforces from '@/images/codeforces-svgrepo-com.svg'
-import { Clock, Filter, LucideSword, Plus, Trash, X } from 'lucide-react';
+import { Clock, Filter, LucideSword, Plus, Trash2, X } from 'lucide-react';
 import { 
   Swords, 
 } from 'lucide-react';
@@ -527,7 +527,7 @@ const handleDeleteQuestion = async (id: string) => {
               ) : (
                 filteredQuestions?.map((q) => (
                   <Card key={q.id} className='relative'>
-                    <Trash className='absolute right-1 mx-1 top-2 text-red-500' onClick={()=>confirm(q.id)}/>
+                    <Trash2 className='absolute right-1 mx-1 top-2 text-red-500' onClick={()=>confirm(q.id)}/>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start gap-4">
                         <div className="space-y-2 flex">

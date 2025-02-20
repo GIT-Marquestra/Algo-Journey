@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useParams } from 'next/navigation';
-import { ExternalLink, Check, Loader2 } from 'lucide-react';
+import { ExternalLink, Check } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Difficulty } from '@prisma/client';
@@ -81,8 +81,6 @@ const QuestionSolving = () => {
   const { topic } = useParams();
   const [loading, setLoading] = useState<boolean>(true);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
-  const [cUsername, setCUsername] = useState('');
-  const [lUsername, setLUsername] = useState('');
   const [score, setScore] = useState<number>(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -189,8 +187,6 @@ const QuestionSolving = () => {
           axios.post('/api/user/leetcode/username')
         ]);
 
-        setCUsername(cfUsernameRes.data.codeforcesUsername);
-        setLUsername(lcUsernameRes.data.leetcodeUsername);
         setQuestions(questionsRes.data.questions);
         setScore(questionsRes.data.individualPoints);
 
