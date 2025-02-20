@@ -19,14 +19,14 @@ model User {
   isComplete          Boolean     
   codeforcesUsername  String              @unique        
   section             String
-  enrollmentNum       String               @unique
+  enrollmentNum       String              @unique
   profileUrl          String?
   groupId             String?
   group               Group?              @relation(fields: [groupId], references: [id], onDelete: SetNull)
   submissions         Submission[]
   individualPoints    Int                 @default(0)
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   applications        GroupApplication[]   @relation("GroupApplications")
   coordinatedGroup    Group?              @relation("GroupCoordinator") 
   contestPermissions  ContestPermission[]
@@ -34,10 +34,11 @@ model User {
   @@index([groupId]) 
 }
 
+
 model TempContestQuestion {
   id                  String              @id @default(uuid())
   contestId           Int              
-  questions           Question[]
+  questions           Question[]          @relation("QuestionToTemp")
 
 }
 
@@ -119,12 +120,13 @@ model Question {
   points            Int
   questionTags      QuestionTag[]     
   slug              String                @unique
-  contests          QuestionOnContest[]
-  submissions       Submission[]        
+  contests          QuestionOnContest[]   @relation("QuestionToContest")
+  submissions       Submission[]          @relation("QuestionToSubmission")
   createdAt         DateTime              @default(now())
-  temporary         TempContestQuestion[]
+  temporary         TempContestQuestion[] @relation("QuestionToTemp")
   updatedAt         DateTime              @updatedAt
 
+  @@map("questions")
 }
 
 model QuestionTag {
@@ -151,12 +153,13 @@ model QuestionOnContest {
   id                String              @id @default(uuid())
   contestId         Int?
   questionId        String
-  contest           Contest?            @relation(fields: [contestId], references: [id])
-  question          Question            @relation(fields: [questionId], references: [id])
+  contest           Contest?            @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  question          Question            @relation("QuestionToContest", fields: [questionId], references: [id], onDelete: Cascade)
   createdAt         DateTime            @default(now())
 
   @@unique([contestId, questionId])
 }
+
 
 
 model ContestPermission{
@@ -175,14 +178,15 @@ model Submission {
   contestId         Int?
   score             Int                 @default(0)
   status            SubmissionStatus   
-  user              User                @relation(fields: [userId], references: [id])
-  question          Question            @relation(fields: [questionId], references: [id])
-  contest           Contest?             @relation(fields: [contestId], references: [id])
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question          Question            @relation("QuestionToSubmission", fields: [questionId], references: [id], onDelete: Cascade)
+  contest           Contest?            @relation(fields: [contestId], references: [id], onDelete: Cascade)
   createdAt         DateTime            @default(now())
 
   @@index([userId, contestId]) 
   @@index([contestId, score]) 
 }
+
 
 enum SubmissionStatus {
   PENDING

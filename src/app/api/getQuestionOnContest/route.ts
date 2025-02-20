@@ -14,11 +14,6 @@ export async function POST() {
         },
         // Get actual contest appearances
         contests: {
-          where: {
-            contestId: {
-              not: null
-            }
-          },
           select: {
             contestId: true
           }
@@ -46,8 +41,10 @@ export async function POST() {
       };
     });
 
+
+
     
-    console.log(formattedQuestions)
+    console.log(formattedQuestions[0].contests)
 
     return NextResponse.json({
       success: true,

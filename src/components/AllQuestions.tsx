@@ -25,7 +25,6 @@ import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
 import ContestPermissionModal from './ContestPermissionModal';
 import Image from 'next/image';
-import EditQuestionModal from './QuestionEditModal';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -71,6 +70,7 @@ interface QuestionOnContest {
   id: string;
   leetcodeUrl: string;
   contestAppearances: number[]
+  contests: { contestId: number | null }[]
   codeforcesUrl: string;
   questionTags: { id: string; name: string; }[];
   slug: string;
@@ -105,15 +105,12 @@ export default function AllQuestions() {
         toast.error(response2.data.message)
       }
       setQuestionOnContest(response2.data.data)
-      console.log(response2.data.data)
       if(!res.data.isAdmin) {
         setShow(false)
         return
       } 
-      console.log(res.data.isAdmin)
       if(res.data.isAdmin) setShow(true)
       
-      console.log('response: ', response)
       setQuestions(response.data.questions);
       setFilteredQuestions(response.data.questions);
     } catch (error) {
@@ -254,7 +251,6 @@ const handleCreateTest = async () => {
       endTime: formatDateForPrisma(endTime)
     };
 
-    console.log(testData)
 
     const response = await axios.post("/api/createTest", testData);
     console.log(response.data)  
@@ -500,7 +496,6 @@ const handlePushToArena = async () => {
                             <Badge variant="secondary" className={getDifficultyColor(q.difficulty)}>
                               {q.difficulty}
                             </Badge>
-                              <EditQuestionModal question={q}/>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {q.questionTags.map((tag) => (
                                 <Badge
@@ -514,9 +509,9 @@ const handlePushToArena = async () => {
                             </div>
                           </div>
                             <div className='flex flex-col'>
-                            <span className='p-3 absolute top-1'>{questionOnContest.filter((p) => p.id === q.id) && <Swords/>}</span>
+                            <span className='p-3 absolute top-1'>{(questionOnContest.filter((p) => p.id === q.id)[0].contests.length !== 0 && !questionOnContest.filter((p) => p.id === q.id)[0].contests[0].contestId) && <Swords/>}</span>
                             <Image src={q.leetcodeUrl ? Leetcode : Codeforces} alt='logo' className='size-6 mx-10 absolute top-4'/>
-                            <span className='p-3 absolute top-8'>{questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.length !== 0 && <LucideSword/> }</span>
+                            <span className='p-3 absolute top-8'>{!(questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances.length === 1 && questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances[0] === null) && <LucideSword/> }</span>
                             {/* <span className='p-3 absolute bottom-1 font-bold text-[15px]'>Contest {questionOnContest.filter((p) => p.contestAppearances && p.id === q.id) ? questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.map((m) => <span className='font-bold text-[15px]'>{m}</span>): '-'}</span> */}
                             </div>
                         </div>
