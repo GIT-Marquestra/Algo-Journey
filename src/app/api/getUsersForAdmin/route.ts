@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.user.findMany({
+      where:{
+        groupId: null,
+        coordinatedGroup: null
+      }
+    });
 
     return NextResponse.json({ users }, { status: 200 });
   } catch (error) {

@@ -33,11 +33,9 @@ const AdminGroupCreator = () => {
     const checkAdminStatus = async () => {
       try {
         const { data } = await axios.post('/api/checkIfAdmin');
-        console.log('Admin status:', data);
         setIsAdmin(data.isAdmin);
         if (data.isAdmin) {
           const usersResponse = await axios.post('/api/getUsersForAdmin');
-          console.log('Users data:', usersResponse.data);
           if (Array.isArray(usersResponse.data.users)) {
             setUsers(usersResponse.data.users);
           } else {
@@ -73,14 +71,7 @@ const AdminGroupCreator = () => {
       setError('Please enter a group name');
       return;
     }
-    // if (selectedUsers.length === 0) {
-    //   setError('Please select at least one user');
-    //   return;
-    // }
-    // if (!coordinator) {
-    //   setError('Please select a coordinator');
-    //   return;
-    // }
+
 
     setIsSubmitting(true);
     setError('');

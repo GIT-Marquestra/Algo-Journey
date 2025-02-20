@@ -8,6 +8,7 @@ export async function POST() {
     const users = await prisma.user.findMany({
       where: {
         coordinatedGroup: null, // Users who are NOT coordinators
+        groupId: null
       },
     });
 
