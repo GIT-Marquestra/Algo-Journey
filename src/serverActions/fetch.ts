@@ -2,6 +2,8 @@
 "use server"
 import { LeetCode } from "leetcode-query";
 import { CodeforcesAPI } from "codeforces-api-ts";
+import getUserProfile, { fetchAccount } from 'leetcode-public-api';
+import axios from "axios";
 
 
 export async function fetchLatestSubmissionsLeetCode(username: string){
@@ -16,6 +18,14 @@ export async function fetchLatestSubmissionsLeetCode(username: string){
     }
 
 } 
+
+
+
+export async function fetchUserProfile(username: string) {
+  const profile = await fetchAccount(username);
+  console.log('profile: ', profile);
+}
+
 
 
 export async function fetchLatestSubmissionsCodeForces(username: string){
@@ -40,6 +50,16 @@ export async function fetchLatestSubmissionsCodeForces(username: string){
 
 } 
 
+export async function fetchUserStats(username: string) {
+    try {
+      const response = await axios.get(`https://leetcode-stats-api.herokuapp.com/${username}`);
+      return response.data
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  }
+  
+
 export async function fetchCodeforcesUserData(username: string) {
     if (process.env.CODEFORCES_API_KEY && process.env.CODEFORCES_SECRET) {
         CodeforcesAPI.setCredentials({
@@ -52,12 +72,11 @@ export async function fetchCodeforcesUserData(username: string) {
 
     try {
         const userInfo = await CodeforcesAPI.call("user.info", { handles: username });
+        console.log('userInfo: ', userInfo)
         //@ts-expect-error : it important here
         if (userInfo && userInfo.result && userInfo.result.length > 0) {
             //@ts-expect-error : it important here
             const user = userInfo.result[0];
-
-
 
             return {
                 handle: user.handle,

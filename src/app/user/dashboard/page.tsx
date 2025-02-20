@@ -24,7 +24,7 @@ import { useSession } from 'next-auth/react';
 import { cn } from "@/lib/utils"
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
+import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
 
 interface GroupMember {
@@ -67,8 +67,30 @@ interface DashboardData {
 }
 
 interface PlatformData {
-  leetcodeRanking: number | null;
+  leetcodeData: {
+  totalSolved: number,
+  totalQuestions: number,
+  easySolved: number,
+  totalEasy: number,
+  mediumSolved: number,
+  totalMedium: number,
+  hardSolved: number,
+  totalHard: number,
+  ranking: number,
+  } | null;
   codeforcesRating: number | null;
+}
+
+interface LeetCodeStats {
+  totalSolved: number;
+  totalQuestions: number;
+  easySolved: number;
+  totalEasy: number;
+  mediumSolved: number;
+  totalMedium: number;
+  hardSolved: number;
+  totalHard: number;
+  ranking: number;
 }
 
 // API fetching functions
@@ -120,12 +142,13 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
   }
 
   const [leetcodeData, codeforcesData] = await Promise.all([
-    fetchLatestSubmissionsLeetCode(leetcodeResponse.data.leetcodeUsername),
-    fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername)
+    fetchUserStats(leetcodeResponse.data.leetcodeUsername) as unknown as Promise<LeetCodeStats>,
+    fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername),
   ]);
 
+
   return {
-    leetcodeRanking: leetcodeData?.matchedUser?.profile?.ranking || null,
+    leetcodeData: leetcodeData,
     codeforcesRating: codeforcesData?.rating || null
   };
 };
@@ -288,8 +311,17 @@ export default function Dashboard() {
                 <div className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-purple-100/50">
-                      <p className="text-sm">Leetcode Rank</p>
-                      <p className="text-lg font-medium">{platformData?.leetcodeRanking}</p>
+                    <p className='text-sm'>Leetcode Data </p>
+                      <div className='grid grid-cols-2 p-2'>
+                      <div>
+                      <p className="text-md font-medium">Easy Solved: {platformData?.leetcodeData?.easySolved}</p>
+                      <p className="text-md font-medium">Medium Solved: {platformData?.leetcodeData?.mediumSolved}</p>
+                      </div>
+                      <div>
+                      <p className="text-md font-medium">Hard Solved: {platformData?.leetcodeData?.hardSolved}</p>
+                      <p className="text-md font-medium">Rank: {platformData?.leetcodeData?.ranking}</p>
+                      </div>
+                      </div>
                     </div>
                     <div className="p-4 rounded-lg bg-purple-100/50">
                       <p className="text-sm">Codeforces Rating</p>
