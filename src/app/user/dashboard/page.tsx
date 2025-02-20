@@ -68,15 +68,15 @@ interface DashboardData {
 
 interface PlatformData {
   leetcodeData: {
-  totalSolved: number,
-  totalQuestions: number,
-  easySolved: number,
-  totalEasy: number,
-  mediumSolved: number,
-  totalMedium: number,
-  hardSolved: number,
-  totalHard: number,
-  ranking: number,
+    totalSolved: number,
+    totalQuestions: number,
+    easySolved: number,
+    totalEasy: number,
+    mediumSolved: number,
+    totalMedium: number,
+    hardSolved: number,
+    totalHard: number,
+    ranking: number,
   } | null;
   codeforcesRating: number | null;
 }
@@ -92,6 +92,15 @@ interface LeetCodeStats {
   totalHard: number;
   ranking: number;
 }
+
+const calculateDuration = (startTime: string, endTime: string): string => {
+  const start = new Date(startTime);
+  const end = new Date(endTime);
+  const durationMs = end.getTime() - start.getTime();
+  const hours = Math.floor(durationMs / (1000 * 60 * 60));
+  const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+};
 
 // API fetching functions
 const fetchDashboardData = async (): Promise<DashboardData> => {
@@ -146,7 +155,6 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
     fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername),
   ]);
 
-
   return {
     leetcodeData: leetcodeData,
     codeforcesRating: codeforcesData?.rating || null
@@ -184,7 +192,6 @@ export default function Dashboard() {
     gcTime: 2 * 60 * 60 * 1000,
     retry: false
   });
-
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -224,7 +231,6 @@ export default function Dashboard() {
   };
 
   const isLoading = isDashboardLoading || isPlatformLoading;
-
 
   return (
     <div className="min-h-screen">
@@ -311,16 +317,16 @@ export default function Dashboard() {
                 <div className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg bg-purple-100/50">
-                    <p className='text-sm'>Leetcode Data </p>
+                      <p className='text-sm'>Leetcode Data </p>
                       <div className='grid grid-cols-2 p-2'>
-                      <div>
-                      <p className="text-md font-medium">Easy Solved: {platformData?.leetcodeData?.easySolved}</p>
-                      <p className="text-md font-medium">Medium Solved: {platformData?.leetcodeData?.mediumSolved}</p>
-                      </div>
-                      <div>
-                      <p className="text-md font-medium">Hard Solved: {platformData?.leetcodeData?.hardSolved}</p>
-                      <p className="text-md font-medium">Rank: {platformData?.leetcodeData?.ranking}</p>
-                      </div>
+                        <div>
+                          <p className="text-md font-medium">Easy Solved: {platformData?.leetcodeData?.easySolved}</p>
+                          <p className="text-md font-medium">Medium Solved: {platformData?.leetcodeData?.mediumSolved}</p>
+                        </div>
+                        <div>
+                          <p className="text-md font-medium">Hard Solved: {platformData?.leetcodeData?.hardSolved}</p>
+                          <p className="text-md font-medium">Rank: {platformData?.leetcodeData?.ranking}</p>
+                        </div>
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-purple-100/50">
@@ -352,7 +358,7 @@ export default function Dashboard() {
               <CardContent>
                 {dashboardData?.contests.map((contest) => (
                   <div key={contest.startTime} className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
-                    <div className="grid md:grid-cols-4 gap-4">
+                    <div className="grid md:grid-cols-5 gap-4">
                       <div className="p-4 rounded-lg bg-purple-100/50">
                         <p className="text-sm">Contest</p>
                         <p className="text-lg font-medium">{contest.id}</p>
@@ -365,13 +371,17 @@ export default function Dashboard() {
                         <p className="text-sm">Time</p>
                         <p className="text-lg font-medium">{contest.startTime.split('T')[1].split('.000Z')[0]}</p>
                       </div>
+                      <div className="p-4 rounded-lg bg-blue-100/50">
+                        <p className="text-sm">Duration</p>
+                        <p className="text-lg font-medium">{calculateDuration(contest.startTime, contest.endTime)}</p>
+                      </div>
                       <div className="p-4 rounded-lg bg-green-100/50">
                         <p className="text-sm">Status</p>
                         <p className="text-lg font-medium">{contest.status}</p>
                       </div>
                       {dashboardData.isCoordinator && contest.status === 'ACTIVE' && (
                         <Button 
-                          size="lg" 
+                          size="lg"
                           className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
                           asChild
                         >
@@ -429,7 +439,8 @@ export default function Dashboard() {
                                 #{index + 1}
                               </span>
                             </TableCell>
-                          </TableRow>))}
+                          </TableRow>
+                        ))}
                     </TableBody>
                   </Table>
                 </CardContent>
