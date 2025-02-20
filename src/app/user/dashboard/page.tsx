@@ -93,14 +93,7 @@ const calculateDuration = (startTime: string, endTime: string): string => {
   return `${hours}h ${minutes}m`;
 };
 
-const calculateLength = (startTime: string, endTime: string): string => {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const diffMs = end.getTime() - start.getTime();
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours} hours ${minutes} minutes`;
-};
+
 
 const fetchDashboardData = async (): Promise<DashboardData> => {
   const contestsResponse = await axios.get<{
