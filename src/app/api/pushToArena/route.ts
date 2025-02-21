@@ -6,13 +6,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { questions } = body;
 
+    
     if (!Array.isArray(questions)) {
       return NextResponse.json({
         success: false,
         error: 'Questions must be an array'
       }, { status: 400 });
     }
-
+    
     const processedQuestions = await Promise.all(
       questions.map(async (question) => {
         // Find if question exists in TempContestQuestion
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
             contestId: true
           }
         });
-
+        
         // Create QuestionOnContest entry
         if (tempQuestion?.contestId) {
           // Create entry with contestId
@@ -39,7 +40,8 @@ export async function POST(req: NextRequest) {
               questionId: question.id
             }
           });
-
+          
+          console.log(questions)
           // Disconnect the question and delete temp entry if no questions remain
           await prisma.tempContestQuestion.update({
             where: {
@@ -95,7 +97,7 @@ export async function POST(req: NextRequest) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Error processing questions:', error);
+    console.error('Error processing questions:', error.message);
     
 
     return NextResponse.json({

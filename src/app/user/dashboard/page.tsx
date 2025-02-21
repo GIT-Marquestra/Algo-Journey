@@ -196,27 +196,6 @@ export default function Dashboard(): JSX.Element {
     }
   }, [status]);
 
-  // const checkPermission = async (id: number): Promise<void> => {
-  //   try {
-  //     const response = await axios.post<{ hasPermission: boolean }>('/api/checkIfPermission', {
-  //       contestId: id
-  //     });
-  //     console.log(response)
-  //     if (!response.data.hasPermission) {
-  //       toast.error('You do not have permission to start the contest');
-  //       return;
-  //     }
-      
-  //     toast.success('Permission checked, Directing...');
-  //     setTimeout(() => {
-  //       router.push(`/contest/${id}`);
-  //     }, 2000);
-  //   } catch (error) {
-  //     console.error('Error checking permission:', error);
-  //     toast.error('Unable to check permission');
-  //   }
-  // };
-
   const handleReset = async (): Promise<void> => {
     try {
       await axios.post('/api/reset');

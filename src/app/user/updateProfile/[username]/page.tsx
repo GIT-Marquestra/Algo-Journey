@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import Profile from '@/components/Profile';
 
 type UserProfile = {
   username: string;
@@ -147,6 +148,7 @@ const ProfilePage = () => {
   );
 
   return (
+    <>
     <div className="container mx-auto py-8 max-w-2xl mt-12">
       <Card className="w-full">
         <CardHeader>
@@ -335,6 +337,8 @@ const ProfilePage = () => {
         </CardContent>
       </Card>
     </div>
+      <Profile/>
+    </>
   );
 };
 

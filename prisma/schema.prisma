@@ -43,7 +43,6 @@ model TempContestQuestion {
 }
 
 
-
 model Group {
   id                String              @id @default(uuid())
   name              String              @unique
@@ -73,18 +72,18 @@ model GroupPermission {
 }
 
 model Contest {
-  id                Int                 @id @default(autoincrement())
-  startTime         DateTime
-  name              String              @default("Contest")
-  endTime           DateTime            
-  status            ContestStatus       @default(UPCOMING) 
-  duration          Int                 @default(0)
-  groupPermissions  GroupPermission[]
-  questions         QuestionOnContest[]
-  submissions       Submission[]
-  attemptedGroups   GroupOnContest[]
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  id                  Int                 @id @default(autoincrement())
+  startTime           DateTime
+  name                String              @default("Contest")
+  endTime             DateTime            
+  status              ContestStatus       @default(UPCOMING) 
+  duration            Int                 @default(0)
+  groupPermissions    GroupPermission[]
+  questions           QuestionOnContest[]
+  submissions         Submission[]
+  attemptedGroups     GroupOnContest[]
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
   contestPermissions  ContestPermission[]
 
   @@index([status, startTime]) 
