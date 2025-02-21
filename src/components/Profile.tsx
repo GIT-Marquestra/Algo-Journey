@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Leetcode from '@/images/leetcode-svgrepo-com.svg'
+import Codeforces from '@/images/codeforces-svgrepo-com.svg'
 import {
   Trophy,
   Users,
@@ -12,10 +14,10 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  Medal,
-  Code
+  Medal
 } from 'lucide-react';
 import { ContestStatus, SubmissionStatus, Difficulty } from '@prisma/client';
+import Image from 'next/image';
 
 // Type definitions
 type QuestionTag = {
@@ -264,15 +266,15 @@ const Profile = () => {
               <h3 className="text-sm font-medium mb-2">Platform Links</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Code className="h-4 w-4" />
+                  <Image src={Leetcode} alt='leetcodeImage' className='size-4'/>
                   <Link href={`https://leetcode.com/u/${user.leetcodeUsername}/`} target='_blank'>
-                    <span className="text-sm text-blue-700">LeetCode: {user.leetcodeUsername}</span>
+                    <span className="text-sm text-blue-700">{user.leetcodeUsername}</span>
                   </Link>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Code className="h-4 w-4" />
+                <Image src={Codeforces} alt='codeforcesImage' className='size-4'/>
                   <Link href={`https://codeforces.com/profile/${user.codeforcesUsername}`} target='_blank'>
-                    <span className="text-sm text-blue-700">CodeForces: {user.codeforcesUsername}</span>
+                    <span className="text-sm text-blue-700">{user.codeforcesUsername}</span>
                   </Link>
                 </div>
               </div>
