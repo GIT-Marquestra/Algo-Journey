@@ -115,48 +115,6 @@ const ProfilePage = () => {
   };
 
 
-  const CurrentDetailsView = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">Username</h3>
-          <p className="mt-1">{profile.username}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">Email</h3>
-          <p className="mt-1">{profile.email}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">LeetCode Username</h3>
-          <p className="mt-1">{profile.leetcodeUsername || "Not set"}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">CodeForces Username</h3>
-          <p className="mt-1">{profile.codeforcesUsername || "Not set"}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">Section</h3>
-          <p className="mt-1">{profile.section}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">Enrollment Number</h3>
-          <p className="mt-1">{profile.enrollmentNum}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">Profile URL</h3>
-          <p className="mt-1">{profile.profileUrl || "Not set"}</p>
-        </div>
-        <div>
-          <h3 className="font-medium text-sm text-muted-foreground">Individual Points</h3>
-          <p className="mt-1">{profile.individualPoints}</p>
-        </div>
-      </div>
-      <div className="flex justify-end">
-        
-      </div>
-    </div>
-  );
-
   return (
     <>
     {ifCurrentUser && <div className="container mx-auto py-8 max-w-2xl mt-12">

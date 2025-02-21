@@ -166,6 +166,7 @@ const Profile = () => {
           setError(response.data.error || 'Failed to load profile data');
         }
       } catch (error) {
+        console.log(error)
         setError('An error occurred while fetching profile data');
       } finally {
         setLoading(false);
