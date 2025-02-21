@@ -40,8 +40,10 @@ export async function POST(req: NextRequest) {
               questionId: question.id
             }
           });
+
           
-          console.log(questions)
+          
+          
           // Disconnect the question and delete temp entry if no questions remain
           await prisma.tempContestQuestion.update({
             where: {
@@ -75,6 +77,7 @@ export async function POST(req: NextRequest) {
             });
           }
         } else {
+          
           // If no contestId, create entry with null contestId
           await prisma.questionOnContest.create({
             data: {
@@ -97,7 +100,7 @@ export async function POST(req: NextRequest) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Error processing questions:', error.message);
+    console.error('Error processing questions:', error);
     
 
     return NextResponse.json({

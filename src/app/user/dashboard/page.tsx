@@ -400,7 +400,9 @@ export default function Dashboard(): JSX.Element {
                         .sort((a, b) => b.individualPoints - a.individualPoints)
                         .map((member, index) => (
                           <TableRow key={index} className="border-b border-indigo-50">
-                            <TableCell className="font-medium text-indigo-900">{member.username}</TableCell>
+                            <Link href={`/user/updateProfile/${member.username}`} target="_blank">
+                              <TableCell className="font-medium text-indigo-900">{member.username}</TableCell>
+                            </Link>
                             <TableCell className="text-indigo-800">{member.individualPoints}</TableCell>
                             <TableCell className="text-right">
                               <span className={cn(

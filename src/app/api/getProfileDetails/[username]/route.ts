@@ -51,46 +51,54 @@ type UserProfileResponse = {
           status: ContestStatus;
         } | null;
       }>;
-      contestHistory: Array<{
-        id: number;
-        name: string;
-        startTime: Date;
-        endTime: Date;
-        status: ContestStatus;
-        submissions: Array<{
-          id: string;
-          score: number;
-          status: SubmissionStatus;
-          question: {
-            slug: string;
-            difficulty: Difficulty;
-            points: number;
-          };
-        }>;
-        groupPerformance?: {
-          score: number;
-          rank?: number;
-        } | null;
+      
+      
+    },
+    contests: Array<{
+      id: number;
+      name: string;
+      startTime: Date;
+      endTime: Date;
+      status: ContestStatus;
+      submissions: Array<{
+        id: string;
+        score: number;
+        status: SubmissionStatus;
+        question: {
+          slug: string;
+          difficulty: Difficulty;
+          points: number;
+        };
       }>;
+      groupPerformance?: {
+        score: number;
+        rank?: number;
+      } | null;
+    }>,
+    summary: {
+      totalSubmissions: number;
+      totalContests: number;
+      averageScore: number;
+      completedQuestions: number;
+      bestRank?: number;
+      problemsByDifficulty: {
+        EASY: number;
+        MEDIUM: number;
+        HARD: number;
+      };
     };
   };
   error?: string;
 };
 
-// Input validation schema
-
-
-export async function GET(
-  request: Request,
-) {
+export async function GET(request: Request) {
   try {
+    console.log(request.url);
 
-    console.log(request.url)
-
-    // Validate the user ID
-    const { url } = request
-    const info = url.split('getProfileDetails/')[1]
-    const username = decodeURIComponent(info)
+    // Extract username from URL
+    const { url } = request;
+    const info = url.split('getProfileDetails/')[1];
+    const username = decodeURIComponent(info);
 
     // Fetch user data with related information
     const user = await prisma.user.findUnique({
@@ -155,21 +163,19 @@ export async function GET(
       },
     });
 
-    
     if (!user) {
-        return NextResponse.json<UserProfileResponse>(
-            { success: false, error: "User not found" },
-            { status: 404 }
-        );
+      return NextResponse.json<UserProfileResponse>(
+        { success: false, error: "User not found" },
+        { status: 404 }
+      );
     }
-    
-    const userId = user?.id
+
     // Fetch contest history
     const contestHistory = await prisma.contest.findMany({
       where: {
         submissions: {
           some: {
-            userId: userId,
+            userId: user.id,
           },
         },
       },
@@ -184,7 +190,7 @@ export async function GET(
         status: true,
         submissions: {
           where: {
-            userId: userId,
+            userId: user.id,
           },
           select: {
             id: true,
@@ -211,6 +217,28 @@ export async function GET(
       },
     });
 
+    // Calculate summary statistics
+    const summary = {
+      totalSubmissions: user.submissions.length,
+      totalContests: contestHistory.length,
+      averageScore: user.submissions.length > 0 
+        ? user.submissions.reduce((acc, sub) => acc + sub.score, 0) / user.submissions.length 
+        : 0,//@ts-expect-error: it is important her i dont know 
+      completedQuestions: user.submissions.filter(sub => sub.status === 'COMPLETED').length,
+      bestRank: Math.min(
+        ...contestHistory
+          .map(contest => contest.attemptedGroups?.[0]?.rank ?? Infinity)
+          .filter(rank => rank !== Infinity)
+      ),
+      problemsByDifficulty: {
+        BEGINNER: user.submissions.filter(sub => sub.question.difficulty === 'BEGINNER').length,
+        EASY: user.submissions.filter(sub => sub.question.difficulty === 'EASY').length,
+        MEDIUM: user.submissions.filter(sub => sub.question.difficulty === 'MEDIUM').length,
+        HARD: user.submissions.filter(sub => sub.question.difficulty === 'HARD').length,
+        VERYHARD: user.submissions.filter(sub => sub.question.difficulty === 'VERYHARD').length,
+      },
+    };
+
     // Transform contest history to include group performance
     const transformedContestHistory = contestHistory.map(contest => ({
       id: contest.id,
@@ -221,7 +249,7 @@ export async function GET(
       submissions: contest.submissions,
       groupPerformance: contest.attemptedGroups?.[0] ? {
         score: contest.attemptedGroups[0].score,
-        rank: contest.attemptedGroups[0].rank ?? undefined // Convert null to undefined
+        rank: contest.attemptedGroups[0].rank ?? undefined
       } : null
     }));
 
@@ -230,20 +258,24 @@ export async function GET(
       data: {
         user: {
           ...user,
-          contestHistory: transformedContestHistory,
         },
+        contests: transformedContestHistory,
+        summary: summary,
+    
       },
     };
+
+    console.log(response.data)
 
     return NextResponse.json<UserProfileResponse>(response);
   } catch (error) {
     console.error("Error fetching user profile:", error);
     return NextResponse.json<UserProfileResponse>(
-      { 
-        success: false, 
-        error: error instanceof z.ZodError 
-          ? "Invalid user ID format" 
-          : "Failed to fetch user profile" 
+      {
+        success: false,
+        error: error instanceof z.ZodError
+          ? "Invalid user ID format"
+          : "Failed to fetch user profile"
       },
       { status: error instanceof z.ZodError ? 400 : 500 }
     );

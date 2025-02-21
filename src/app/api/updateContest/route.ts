@@ -77,7 +77,7 @@ export async function POST(req: Request) {
         }
       }
 
-      console.log(2)
+
 
       // Handle group permissions update if provided
       if (permittedGroups && Array.isArray(permittedGroups)) {

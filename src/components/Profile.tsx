@@ -1,222 +1,381 @@
-'use client'
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Trophy,
-  ExternalLink,
   Users,
   User,
   Calendar,
   CheckCircle,
   XCircle,
-  Clock,
-  Award,
-  GitBranch
+  Medal,
+  Code
 } from 'lucide-react';
+import { ContestStatus, SubmissionStatus, Difficulty } from '@prisma/client';
 
-type ProfileData = {
-  user: {
+// Type definitions
+type QuestionTag = {
+  name: string;
+};
+
+type Question = {
+  id: string;
+  leetcodeUrl?: string | null;
+  codeforcesUrl?: string | null;
+  difficulty: Difficulty;
+  points: number;
+  slug: string;
+  questionTags: QuestionTag[];
+};
+
+type Submission = {
+  id: string;
+  score: number;
+  status: SubmissionStatus;
+  createdAt: Date;
+  question: Question;
+  contest?: {
+    id: number;
+    name: string;
+    startTime: Date;
+    endTime: Date;
+    status: ContestStatus;
+  } | null;
+};
+
+type Group = {
+  id: string;
+  name: string;
+  groupPoints: number;
+  coordinator: {
     username: string;
     email: string;
-    leetcodeUsername: string;
-    codeforcesUsername: string;
-    section: string;
-    enrollmentNum: string;
-    individualPoints: number;
-    profileUrl?: string;
-    group?: {
-      name: string;
-      groupPoints: number;
-      coordinator: {
-        username: string;
-      };
+  };
+};
+
+type User = {
+  id: string;
+  username: string;
+  email: string;
+  leetcodeUsername: string;
+  codeforcesUsername: string;
+  section: string;
+  enrollmentNum: string;
+  individualPoints: number;
+  profileUrl?: string | null;
+  createdAt: Date;
+  group?: Group | null;
+  submissions: Submission[];
+};
+
+type Contest = {
+  id: number;
+  name: string;
+  startTime: Date;
+  endTime: Date;
+  status: ContestStatus;
+  submissions: Array<{
+    id: string;
+    score: number;
+    status: SubmissionStatus;
+    question: {
+      slug: string;
+      difficulty: Difficulty;
+      points: number;
     };
-    submissions: Array<{
-      id: string;
-      score: number;
-      status: string;
-      createdAt: Date;
-      question: {
-        leetcodeUrl?: string;
-        codeforcesUrl?: string;
-        difficulty: string;
-        points: number;
-        slug: string;
-      };
-    }>;
+  }>;
+  groupPerformance?: {
+    score: number;
+    rank?: number;
+  } | null;
+};
+
+type Summary = {
+  totalSubmissions: number;
+  totalContests: number;
+  averageScore: number;
+  completedQuestions: number;
+  bestRank?: number;
+  problemsByDifficulty: {
+    BEGINNER: number;
+    EASY: number;
+    MEDIUM: number;
+    HARD: number;
+    VERYHARD: number
   };
 };
 
-const getDifficultyColor = (difficulty: string) => {
+type ProfileData = {
+  user: User;
+  contests: Contest[];
+  summary: Summary;
+};
+
+type ApiResponse = {
+  success: boolean;
+  data?: ProfileData;
+  error?: string;
+};
+
+// Utility functions
+const getDifficultyColor = (difficulty: Difficulty) => {
   const colors = {
-    BEGINNER: 'bg-slate-100 text-slate-700',
-    EASY: 'bg-green-100 text-green-700',
-    MEDIUM: 'bg-yellow-100 text-yellow-700',
-    HARD: 'bg-red-100 text-red-700',
-    VERYHARD: 'bg-purple-100 text-purple-700'
+    BEGINNER: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+    EASY: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+    MEDIUM: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
+    HARD: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
+    VERYHARD: 'bg-red-700/10 text-red-700 hover:bg-red-700/20'
   };
-  return colors[difficulty as keyof typeof colors] || colors.BEGINNER;
+  return colors[difficulty] || 'bg-slate-100 text-slate-700';
 };
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: SubmissionStatus) => {
   const colors = {
-    ACCEPTED: 'text-green-600',
-    WRONG_ANSWER: 'text-red-600',
-    TIME_LIMIT_EXCEEDED: 'text-yellow-600',
-    MEMORY_LIMIT_EXCEEDED: 'text-orange-600',
-    RUNTIME_ERROR: 'text-red-600',
-    COMPILATION_ERROR: 'text-purple-600',
-    PENDING: 'text-blue-600'
-  };
-  return colors[status as keyof typeof colors] || 'text-slate-600';
+    COMPLETED: 'text-green-600',
+    PENDING: 'text-blue-600',
+    FAILED: 'text-red-600'
+  };//@ts-expect-error: it is important here i dont know the types
+  return colors[status] || 'text-slate-600';
 };
 
-export default function Profile() {
+const formatDate = (date: Date): string => {
+  return new Date(date).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const Profile = () => {
   const params = useParams();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const response = await axios.get(`/api/getProfileDetails/${params.username}`);
-        setProfileData(response.data.data);
+        const response = await axios.get<ApiResponse>(`/api/getProfileDetails/${params.username}`);
+        if (response.data.success && response.data.data) {
+          setProfileData(response.data.data);
+        } else {
+          setError(response.data.error || 'Failed to load profile data');
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        setError('An error occurred while fetching profile data');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    if (params.username) {
+      fetchProfile();
+    }
   }, [params.username]);
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  if (error || !profileData) return <div className="flex items-center justify-center min-h-screen">{error || 'Profile not found'}</div>;
 
-  if (!profileData) {
-    return <div className="flex items-center justify-center min-h-screen">Profile not found</div>;
-  }
-
-  const { user } = profileData;
+  const { user, contests, summary } = profileData;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Profile Overview Card */}
-        <Card className="md:col-span-1 bg-white shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="pb-4">
+    <div className="container mx-auto mt-10 px-4 py-8 max-w-7xl">
+      <div className="flex flex-col">
+        {/* Profile Overview */}
+        <Card className="lg:col-span-1">
+          <CardHeader>
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center">
                 <User className="h-8 w-8 text-slate-600" />
               </div>
               <div>
-                <CardTitle className="text-xl">{user.username}</CardTitle>
+                <CardTitle>{user.username}</CardTitle>
                 <CardDescription>{user.email}</CardDescription>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-slate-500" />
-                <span className="text-sm text-slate-600">{user.section} • {user.enrollmentNum}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Trophy className="h-4 w-4 text-amber-500" />
-                <span className="text-sm text-slate-600">Individual Points: {user.individualPoints}</span>
-              </div>
-              {user.group && (
-                <div className="pt-4 border-t">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm font-medium">{user.group.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Award className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm text-slate-600">Group Points: {user.group.groupPoints}</span>
-                  </div>
-                  <div className="flex items-center gap-2 mt-2">
-                    <GitBranch className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600">Coordinator: {user.group.coordinator.username}</span>
-                  </div>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-sm font-medium mb-2">Profile Info</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-sm">{user.section} • {user.enrollmentNum}</span>
                 </div>
-              )}
-              <div className="pt-4 border-t">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-sm font-medium">Platform Usernames</span>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm">Points: {user.individualPoints}</span>
                 </div>
+              </div>
+            </div>
+
+            {user.group && (
+              <div>
+                <h3 className="text-sm font-medium mb-2">Group Information</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600">LeetCode: {user.leetcodeUsername}</span>
+                    <Users className="h-4 w-4" />
+                    <span className="text-sm">{user.group.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-slate-600">CodeForces: {user.codeforcesUsername}</span>
+                    <Medal className="h-4 w-4" />
+                    <span className="text-sm">Group Points: {user.group.groupPoints}</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    <span className="text-sm">Coordinator: {user.group.coordinator.username}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">Problem Statistics</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-green-50 p-2 rounded-lg text-center">
+                  <div className="text-xs text-green-500">Beginner</div>
+                  <div className="font-medium">{summary.problemsByDifficulty.BEGINNER}</div>
+                </div>
+                <div className="bg-green-100 p-2 rounded-lg text-center">
+                  <div className="text-xs text-green-600">Easy</div>
+                  <div className="font-medium">{summary.problemsByDifficulty.EASY}</div>
+                </div>
+                <div className="bg-yellow-50 p-2 rounded-lg text-center">
+                  <div className="text-xs text-yellow-600">Medium</div>
+                  <div className="font-medium">{summary.problemsByDifficulty.MEDIUM}</div>
+                </div>
+                <div className="bg-red-50 p-2 rounded-lg text-center">
+                  <div className="text-xs text-red-600">Hard</div>
+                  <div className="font-medium">{summary.problemsByDifficulty.HARD}</div>
+                </div>
+                <div className="bg-red-100 p-2 rounded-lg text-center">
+                  <div className="text-xs text-red-700">Very Hard</div>
+                  <div className="font-medium">{summary.problemsByDifficulty.VERYHARD}</div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-2">Platform Links</h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  <Link href={`https://leetcode.com/u/${user.leetcodeUsername}/`} target='_blank'>
+                    <span className="text-sm text-blue-700">LeetCode: {user.leetcodeUsername}</span>
+                  </Link>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Code className="h-4 w-4" />
+                  <Link href={`https://codeforces.com/profile/${user.codeforcesUsername}`} target='_blank'>
+                    <span className="text-sm text-blue-700">CodeForces: {user.codeforcesUsername}</span>
+                  </Link>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Submissions */}
-        <div className="md:col-span-2 space-y-4">
-          <h2 className="text-2xl font-semibold text-slate-800 mb-4">Recent Submissions</h2>
-          {user.submissions.map((submission, index) => (
-            <Card key={submission.id} className="bg-white shadow-sm hover:shadow-md transition-all duration-300">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">
-                      {submission.question.slug}
-                    </CardTitle>
-                    <Badge variant="secondary" className={getStatusColor(submission.status)}>
-                      {submission.status === 'ACCEPTED' ? <CheckCircle className="h-3 w-3 mr-1" /> : <XCircle className="h-3 w-3 mr-1" />}
-                      {submission.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                  <Badge variant="secondary" className={getDifficultyColor(submission.question.difficulty)}>
-                    {submission.question.difficulty}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <Trophy className="h-4 w-4 text-amber-500" />
-                      <span className="text-sm text-slate-600">
-                        Points: {submission.question.points}
-                      </span>
+        {/* Main Content */}
+        <div className='mt-2'>
+          <Tabs defaultValue="submissions">
+            <TabsList>
+              <TabsTrigger value="submissions">Submissions</TabsTrigger>
+              <TabsTrigger value="contests">Contests</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="submissions" className="space-y-4">
+              {user.submissions.map((submission) => (
+                <Card key={submission.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-base">{submission.question.slug}</CardTitle>
+                        <Badge variant="secondary" className={getDifficultyColor(submission.question.difficulty)}>
+                          {submission.question.difficulty}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {submission.status === 'ACCEPTED' ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className={getStatusColor(submission.status)}>{submission.status}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Clock className="h-4 w-4 text-slate-500" />
-                      <span className="text-sm text-slate-600">
-                        {new Date(submission.createdAt).toLocaleDateString()}
-                      </span>
+                    <CardDescription>
+                      Score: {submission.score} • {formatDate(submission.createdAt)}
+                      {submission.question.questionTags.length > 0 && (
+                        <div className="flex gap-2 mt-2">
+                          {submission.question.questionTags.map(tag => (
+                            <Badge key={tag.name} variant="outline">{tag.name}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="contests" className="space-y-4">
+              {contests.map((contest) => (
+                <Card key={contest.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base">{contest.name}</CardTitle>
+                      <Badge variant="secondary">
+                        {contest.status}
+                      </Badge>
                     </div>
-                  </div>
-                  <Link 
-                    href={submission.question.leetcodeUrl || submission.question.codeforcesUrl || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button variant="outline" size="sm">
-                      View Question <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    <CardDescription>
+                      {formatDate(contest.startTime)} - {formatDate(contest.endTime)}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <h4 className="text-sm font-medium mb-2">Submissions</h4>
+                        {contest.submissions.map((sub) => (
+                          <div key={sub.id} className="flex items-center justify-between py-1">
+                            <span className="text-sm">{sub.question.slug}</span>
+                            <Badge variant="secondary" className={getDifficultyColor(sub.question.difficulty)}>
+                              {sub.score}/{sub.question.points}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                      {contest.groupPerformance && (
+                        <div>
+                          <h4 className="text-sm font-medium mb-2">Group Performance</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Score</span>
+                              <span className="font-medium">{contest.groupPerformance.score}</span>
+                            </div>
+                            {contest.groupPerformance.rank && (
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm">Rank</span>
+                                <span className="font-medium">#{contest.groupPerformance.rank}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Profile;

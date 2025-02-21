@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import Profile from '@/components/Profile';
+import { useParams } from 'next/navigation';
 
 type UserProfile = {
   username: string;
@@ -41,16 +42,27 @@ const ProfilePage = () => {
     const res = await axios.get('/api/user/getDetails')
     if(!res.data.user) return 
     setProfile(res.data.user)
+    if (Array.isArray(params.username)) return; // Prevents array-related issues
+
+    const username = decodeURIComponent(params.username as string);
+
+    if (res.data.user.username === username) {
+      setIfCurrentUser(true);
+    }
   }, [])
+
+ 
 
   useEffect(() => {
     getInitialDetails()
   }, [getInitialDetails])
 
   const [isEditing, setIsEditing] = useState(false);
+  const params = useParams();
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [ifCurrentUser, setIfCurrentUser] = useState(false)
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -140,16 +152,14 @@ const ProfilePage = () => {
         </div>
       </div>
       <div className="flex justify-end">
-        <Button onClick={() => setIsEditing(true)}>
-          Edit Profile
-        </Button>
+        
       </div>
     </div>
   );
 
   return (
     <>
-    <div className="container mx-auto py-8 max-w-2xl mt-12">
+    {ifCurrentUser && <div className="container mx-auto py-8 max-w-2xl mt-12">
       <Card className="w-full">
         <CardHeader>
           <div className="flex items-center space-x-4">
@@ -170,7 +180,10 @@ const ProfilePage = () => {
           )}
           
           {!isEditing ? (
-            <CurrentDetailsView />
+            // <CurrentDetailsView />
+            <Button onClick={() => setIsEditing(true)}>
+                Edit Profile
+            </Button>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-4">
@@ -336,8 +349,9 @@ const ProfilePage = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+    </div>}
       <Profile/>
+      
     </>
   );
 };

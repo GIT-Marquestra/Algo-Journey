@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Trophy } from "lucide-react";
+import Link from 'next/link';
 
 interface User {
   id: string;
@@ -214,7 +215,9 @@ const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="space-y-1">
-              <h4 className="text-sm font-semibold">{u.username}</h4>
+              <Link href={`/user/updateProfile/${u.username}`} target='_blank'>
+                <h4 className="text-sm font-semibold text-blue-700">{u.username}</h4>
+              </Link>
               <p className="text-sm text-muted-foreground">Section {u.section} • {u.individualPoints} points</p>
               <p className="text-sm text-muted-foreground">{u.email}</p>
             </div>

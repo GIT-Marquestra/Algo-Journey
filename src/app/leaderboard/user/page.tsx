@@ -7,6 +7,7 @@ import { Calendar, User, Users, ChevronLeft, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface User {
   id: string;
@@ -133,7 +134,9 @@ const WeeklyRankings = ({ users }: { users: User[] | undefined }) => {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-gray-500" />
-              <p className="font-medium">{user.username}</p>
+              <Link href={`/user/updateProfile/${user.username}`} target="_blank">
+                <p className="font-medium text-blue-700">{user.username}</p>
+              </Link>
             </div>
           </div>
           <div className="w-24 text-right font-bold">

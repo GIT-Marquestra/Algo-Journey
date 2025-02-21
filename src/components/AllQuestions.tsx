@@ -553,7 +553,7 @@ const handleDeleteQuestion = async (id: string) => {
                             <div className='flex flex-col'>
                             <span className='p-3 absolute top-1'>{(questionOnContest.filter((p) => p.id === q.id)[0].contests.length !== 0 && !questionOnContest.filter((p) => p.id === q.id)[0].contests[0].contestId) && <Swords/>}</span>
                             <Image src={q.leetcodeUrl ? Leetcode : Codeforces} alt='logo' className='size-6 mx-10 absolute top-4'/>
-                            <span className='p-3 absolute top-8'>{!(questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances.length === 1 && questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances[0] === null) && <LucideSword/> }</span>
+                            {/* <span className='p-3 absolute top-8'>{!(questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances.length === 1 && questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances[0] === null) && <LucideSword/> }</span> */}
                             {/* <span className='p-3 absolute bottom-1 font-bold text-[15px]'>Contest {questionOnContest.filter((p) => p.contestAppearances && p.id === q.id) ? questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.map((m) => <span className='font-bold text-[15px]'>{m}</span>): '-'}</span> */}
                             </div>
                         </div>
