@@ -526,7 +526,7 @@ const ContestQuest: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-xl">
-                          Question {index + 1}
+                          {q.question.slug}
                         </CardTitle>
                         <div className='flex flex-col'>
                         {/* <CardDescription>
