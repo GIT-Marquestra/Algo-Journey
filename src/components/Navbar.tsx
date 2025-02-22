@@ -145,7 +145,7 @@ const Navbar = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <UserCog className="mr-2 h-4 w-4"/>
-                  <Link href={`/user/updateProfile/${username}`}><span>Update Profile</span></Link>
+                  <Link href={`/user/updateProfile/${username}`}><span>Profile</span></Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
