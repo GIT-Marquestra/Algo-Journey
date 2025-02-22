@@ -70,7 +70,6 @@ interface CodeForcesSubmission {
 
 const ContestQuest: React.FC = () => {
   const router = useRouter();
-  const [something,some] = useState()
   const { data: session } = useSession();
   const [show, setShow] = useState<boolean>(false);
   const [showModal, setShowModal] = useState(false);
