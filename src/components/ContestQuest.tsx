@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import Leetcode from '@/images/leetcode-svgrepo-com.svg'
+import Codeforces from '@/images/codeforces-svgrepo-com.svg'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,7 @@ import { Difficulty } from '@prisma/client';
 import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
 import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
+import Image from 'next/image';
 
 
 interface Question {
@@ -530,7 +533,7 @@ const ContestQuest: React.FC = () => {
                           {q.question.slug}
                         </CardDescription> */}
                         <CardDescription>
-                          {q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces'}
+                          <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces} alt='nothing' className='size-5'/>
                         </CardDescription>
                         </div>
                         {isVerified && (
