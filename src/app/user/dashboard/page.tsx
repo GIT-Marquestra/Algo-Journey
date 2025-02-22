@@ -55,6 +55,7 @@ interface Contest {
   id: number;
   startTime: string;
   name: string
+  duration: string;
   endTime: string;
   status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED';
 }
@@ -346,7 +347,7 @@ export default function Dashboard(): JSX.Element {
                       </div>
                       <div className="p-4 rounded-lg bg-blue-100/50">
                         <p className="text-sm">Duration</p>
-                        <p className="text-lg font-medium">{calculateDuration(contest.startTime, contest.endTime)}</p>
+                        <p className="text-lg font-medium">{contest.duration} min</p>
                       </div>
                       <div className="p-4 rounded-lg bg-green-100/50">
                         <p className="text-sm">Status</p>
