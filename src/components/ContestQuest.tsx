@@ -513,7 +513,7 @@ const ContestQuest: React.FC = () => {
           </Card>
 
           <div className="grid gap-6">
-            {questions.map((q, index) => {
+            {questions.map((q) => {
               const isVerified = verifiedProblems.has(q.id);
               return (
                 <Card 
