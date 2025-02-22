@@ -372,7 +372,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
                   filteredQuestions.map((q) => (
                     <div key={q.id} className="flex items-center justify-between p-2 rounded-lg border">
                       <div className="flex items-center gap-2">
-                        <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl} target='_blank'>
+                        <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl || ''} target='_blank'>
                           <span className="font-medium text-blue-700">{q.slug}</span>
                         </Link>
                         <span className={`text-xs px-2 py-1 rounded-full ${getDifficultyColor(q.difficulty)}`}>
