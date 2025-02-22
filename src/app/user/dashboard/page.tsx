@@ -85,14 +85,6 @@ interface PlatformData {
   codeforcesRating: number | null;
 }
 
-const calculateDuration = (startTime: string, endTime: string): string => {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const durationMs = end.getTime() - start.getTime();
-  const hours = Math.floor(durationMs / (1000 * 60 * 60));
-  const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-  return `${hours}h ${minutes}m`;
-};
 
 
 
