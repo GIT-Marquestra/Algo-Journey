@@ -203,6 +203,7 @@ const ContestQuest: React.FC = () => {
         contestId: id,
         userEmail: session?.user?.email,
         finalScore: score,
+        timeLeft,
         questions: Array.from(verifiedProblems)
       });
 
@@ -357,7 +358,7 @@ const ContestQuest: React.FC = () => {
           setQuestions(response.data.questions);
           
           // Enhanced success message with time information
-          toast.success(`Test Started! You have ${formatTime(response.data.remainingTime)} to complete it. Good luck!`, {
+          toast.success(`Test Started! You have ${response.data.contest.duration} min to complete it. Good luck!`, {
             duration: 5000,
             icon: '🚀'
           });

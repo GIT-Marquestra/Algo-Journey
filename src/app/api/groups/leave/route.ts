@@ -39,7 +39,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'You are not a member of this group' }, { status: 400 });
     }
 
-    // Remove user from the group
+
+
+  
     await prisma.group.update({
       where: { id: groupId },
       data: {
