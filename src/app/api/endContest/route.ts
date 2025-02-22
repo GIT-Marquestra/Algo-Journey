@@ -12,9 +12,6 @@ export async function POST(req: NextRequest) {
         const { contestId, finalScore, questions } = body;
 
         
-
-       
-
         if (!contestId || !userEmail || typeof finalScore !== "number" || !Array.isArray(questions)) {
             return NextResponse.json({ error: "Invalid request data" }, { status: 400 });
         }
@@ -68,7 +65,7 @@ export async function POST(req: NextRequest) {
             });
 
             const totalUserPoints = userSubmissions.reduce((acc, curr) => acc + (curr.score || 0), 0);
-            console.log(`Total user points: ${totalUserPoints}`);
+
             await prisma.user.update({
                 where: { id: user.id },
                 data: { individualPoints: totalUserPoints },
@@ -88,7 +85,7 @@ export async function POST(req: NextRequest) {
                 const divisor = Math.max(4, totalPermittedMembers);
                 const averageScore = finalScore / divisor;
                 
-                console.log(`Group members with permission: ${totalPermittedMembers}, divisor: ${divisor}, average score: ${averageScore}`);
+
 
                 // Check if this is the first attempt for this contest by the group
                 await prisma.groupOnContest.findUnique({
@@ -169,7 +166,7 @@ export async function POST(req: NextRequest) {
 
             return { message: "Contest submissions recorded successfully" };
         },{
-            timeout: 20000, 
+            timeout: 40000, 
             isolationLevel: "ReadCommitted", // Ensures consistency but improves concurrency
         });
 
