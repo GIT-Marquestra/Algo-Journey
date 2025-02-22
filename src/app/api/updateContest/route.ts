@@ -96,7 +96,6 @@ export async function POST(req: Request) {
             groupId: groupId.id,
             contestId: parsedContestId,
           }));
-          console.log
 
           await tx.groupPermission.createMany({
             data: groupPermissionData,
