@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import Leetcode from '@/images/leetcode-svgrepo-com.svg'
+import Codeforces from '@/images/codeforces-svgrepo-com.svg'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,6 +35,7 @@ import { Difficulty } from '@prisma/client';
 import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
 import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
+import Image from 'next/image';
 
 
 interface Question {
@@ -88,29 +91,6 @@ const ContestQuest: React.FC = () => {
   const [lusername, setLUsername] = useState('')
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const initializeTimer = () => {
-      const savedTimerState = localStorage.getItem(`contest_timer_${id}`);
-      if (savedTimerState) {
-        const { endTime, originalDuration } = JSON.parse(savedTimerState);
-        const now = Date.now();
-        const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-        
-        // If there's still time remaining, set it
-        if (remaining > 0) {
-          setTimeLeft(remaining);
-          setShow(true); // Show the contest interface
-        } else {
-          // If timer has expired, clean up
-          localStorage.removeItem(`contest_timer_${id}`);
-          handleEndTest(); // End the test if timer has expired
-        }
-      }
-    };
-
-    initializeTimer();
-  }, [id]);
 
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
@@ -210,7 +190,17 @@ const ContestQuest: React.FC = () => {
     const loader = toast.loading('Verifying all questions...');
 
     try {
-      // ... existing verification logic ...
+      for (const question of questions) {
+        if (!verifiedProblems.has(question.id)) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          await handleVerify(
+            question.question.leetcodeUrl ? 'Leetcode' : 'Codeforces',
+            question.question.slug,
+            question.id,
+            question.question.points
+          );
+        }
+      }
 
       const res = await axios.post('/api/endContest', {
         contestId: id,
@@ -220,9 +210,6 @@ const ContestQuest: React.FC = () => {
         questions: Array.from(verifiedProblems)
       });
 
-      // Clean up timer state
-      localStorage.removeItem(`contest_timer_${id}`);
-
       if(res.data.status === 200) toast.success('Test ended successfully!');
       router.push('/user/dashboard');
     } catch (error) {
@@ -230,9 +217,9 @@ const ContestQuest: React.FC = () => {
       console.error('End test error:', error);
     } finally {
       setIsEndingTest(false);
-      toast.dismiss(loader);
+      toast.dismiss(loader)
     }
-  }, [handleVerify, id, questions, router, score, session?.user?.email, timeLeft, verifiedProblems]);
+  }, [handleVerify, id, questions, router, score, session?.user?.email, verifiedProblems]);
 
   useEffect(() => {
     const checkIfAdmin = async () => {
@@ -310,20 +297,16 @@ const ContestQuest: React.FC = () => {
     if (show && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft(prev => {
-          const newTime = prev <= 1 ? 0 : prev - 1;
-          
-          // Update stored end time
-          if (newTime === 0) {
-            localStorage.removeItem(`contest_timer_${id}`);
+          if (prev <= 1) {
             handleEndTest();
+            return 0;
           }
-          
-          return newTime;
+          return prev - 1;
         });
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [show, timeLeft, handleEndTest, id]);
+  }, [show, timeLeft, handleEndTest]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -355,6 +338,7 @@ const ContestQuest: React.FC = () => {
       setShowStartConfirmation(false);
       setloadingStartTest(true);
       
+      // Show loading toast
       const loader = toast.loading('Initializing test environment...');
       
       const response = await axios.post(`/api/startContest/${id}`, 
@@ -364,31 +348,25 @@ const ContestQuest: React.FC = () => {
           validateStatus: (status) => status < 500 
         }
       );
+
+      console.log(response.data)
       
       toast.dismiss(loader);
       
       if (response.status === 200) {
-        const duration = response.data.contest.duration * 60 + 10;
-        const endTime = Date.now() + (duration * 1000);
-        
-        // Save timer state to localStorage
-        localStorage.setItem(`contest_timer_${id}`, JSON.stringify({
-          endTime,
-          originalDuration: duration
-        }));
-
-        setTimeLeft(duration);
+        setTimeLeft(response.data.contest.duration*60 + 10)
         
         if (response.data.questions) {
           setShow(true);
           setQuestions(response.data.questions);
           
+          // Enhanced success message with time information
           toast.success(`Test Started! You have ${response.data.contest.duration} min to complete it. Good luck!`, {
             duration: 5000,
             icon: '🚀'
           });
         }
-      }
+      }  
       else {
         const errorMessages: Record<number, string> = {
           420: 'Test Entry Closed!',
@@ -548,14 +526,14 @@ const ContestQuest: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-xl">
-                          Question {index + 1}
+                          {q.question.slug}
                         </CardTitle>
                         <div className='flex flex-col'>
                         {/* <CardDescription>
                           {q.question.slug}
                         </CardDescription> */}
                         <CardDescription>
-                          {q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces'}
+                          <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces} alt='nothing' className='size-5'/>
                         </CardDescription>
                         </div>
                         {isVerified && (
