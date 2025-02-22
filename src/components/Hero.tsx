@@ -6,7 +6,7 @@ import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin } 
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { TextGenerateEffect } from './ui/text-generate-effect';
+// import { TextGenerateEffect } from './ui/text-generate-effect';
 import {
   Collapsible,
   CollapsibleContent,
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/collapsible"
 
 const HeroSection = () => {
-  const sentence = "We are dedicated to providing an exceptional learning experience."
+  // const sentence = "We are dedicated to providing an exceptional learning experience."
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false);
 
@@ -88,7 +88,7 @@ const HeroSection = () => {
             On Algojourney
           </h2>
           <p className="text-gray-400 text-lg md:text-2xl lg:text-3xl mt-2">
-            <TextGenerateEffect words={sentence}/>
+            {/* <TextGenerateEffect words={sentence}/> */}
           </p>
         </div>
       </div>

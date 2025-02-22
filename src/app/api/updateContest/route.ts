@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { contestId, questions, startTime, endTime, duration, permittedGroups } = body;
     
-    console.log("Received request:", body);
+
 
     // Validate required input
     if (!contestId) {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contest not found" }, { status: 404 });
     }
 
-    console.log(1)
+
 
     // Start a transaction to handle all updates atomically
     const result = await prisma.$transaction(async (tx) => {
