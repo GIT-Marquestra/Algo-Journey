@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
-
     const session = await getServerSession();
     if (!session || !session.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -20,7 +19,6 @@ export async function POST(request: Request) {
       );
     }
 
-
     const contest = await prisma.contest.findUnique({
       where: { id: Number(contestId) },
     });
@@ -34,7 +32,6 @@ export async function POST(request: Request) {
     const currentTimeIST = new Date(now.getTime() + istOffset);
     const contestStart = new Date(contest.startTime);
     const contestEnd = new Date(contest.endTime);
-
 
     if (currentTimeIST < contestStart) {
       return NextResponse.json({ 
@@ -50,7 +47,6 @@ export async function POST(request: Request) {
       }, { status: 240 });
     }
 
-
     const currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: {
@@ -59,12 +55,14 @@ export async function POST(request: Request) {
     });
 
     const permittedGroup = await prisma.groupPermission.findUnique({
-      where:{
+      where: {
         groupId: currentUser?.coordinatedGroup?.id
       }
-    })
+    });
 
-    if(!permittedGroup) return NextResponse.json({  message: 'This group is not permitted to enter this contest' }, { status: 440 })
+    if (!permittedGroup) {
+      return NextResponse.json({ message: 'This group is not permitted to enter this contest' }, { status: 440 });
+    }
 
     if (!currentUser || !currentUser.coordinatedGroup) {
       return NextResponse.json(
@@ -72,7 +70,6 @@ export async function POST(request: Request) {
         { status: 403 }
       );
     }
-
 
     if (!prisma.contestPermission) {
       return NextResponse.json(
@@ -84,42 +81,73 @@ export async function POST(request: Request) {
       );
     }
 
-    const existingPermissions = await prisma.contestPermission.findMany({
+    // Find existing permission entry for this contest
+    const existingPermission = await prisma.contestPermission.findFirst({
       where: {
         contestId: Number(contestId),
-        users: {
-          some: {
-            id: {
-              in: memberIds
-            }
-          }
-        }
+      },
+      include: {
+        users: true,
       }
     });
 
-    if (existingPermissions.length > 0) {
-      const membersWithPermissions = existingPermissions.length;
-      return NextResponse.json({
-        error: `${membersWithPermissions} member(s) already have permission for this contest`,
-        existingPermissions
-      }, { status: 409 });
-    }
+    let contestPermission;
 
-    // Create contest permissions
-    const contestPermission = await prisma.contestPermission.create({
-      data: {
-        contestId: Number(contestId),
-        users: {
-          connect: memberIds.map(id => ({ id })),
+    if (existingPermission) {
+      // Get IDs of users who already have permissions
+      const existingUserIds = existingPermission.users.map(user => user.id);
+      
+      // Filter out users who already have permissions
+      const newMemberIds = memberIds.filter(id => !existingUserIds.includes(id));
+
+      if (newMemberIds.length === 0) {
+        return NextResponse.json({
+          success: true,
+          message: 'All selected members already have permission for this contest',
+          data: existingPermission,
+        });
+      }
+
+      // Update existing permission entry by adding new members
+      contestPermission = await prisma.contestPermission.update({
+        where: {
+          id: existingPermission.id,
         },
-      },
-    });
+        data: {
+          users: {
+            connect: newMemberIds.map(id => ({ id })),
+          },
+        },
+        include: {
+          users: true,
+        },
+      });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Contest permission granted to selected members',
-      data: contestPermission,
-    });
+      return NextResponse.json({
+        success: true,
+        message: `Added ${newMemberIds.length} new member(s) to contest permissions`,
+        data: contestPermission,
+      });
+    } else {
+      // Create new permission entry if none exists
+      contestPermission = await prisma.contestPermission.create({
+        data: {
+          contestId: Number(contestId),
+          users: {
+            connect: memberIds.map(id => ({ id })),
+          },
+        },
+        include: {
+          users: true,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Contest permission granted to selected members',
+        data: contestPermission,
+      });
+    }
 
   } catch (error) {
     console.error('Error starting contest for members:', error);

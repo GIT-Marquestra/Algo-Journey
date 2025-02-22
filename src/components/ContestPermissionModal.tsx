@@ -68,21 +68,14 @@ export default function ContestPermissionModal({
 
   const handleCreate = async () => {
     setLoading(true);
-    console.log('creating test')
     try {
-      // Create the test first
-      console.log('sending request to create test')
       const contestId = await onCreateTest(selectedGroups);
-      console.log(contestId)
-      console.log('setting permissions for the contest')
       
-      // Set permissions for the contest
       const response = await axios.post('/api/setPermissionForGroup', {
         contestId,
-        groups: isAllSelected ? [] : selectedGroups, // Empty array means all groups have access
+        groups: isAllSelected ? [] : selectedGroups,
         isAllSelected
       });
-
 
       if(!(response.status === 200)){
         toast.error(response.data.message);
@@ -93,6 +86,29 @@ export default function ContestPermissionModal({
     } catch (error) {
       console.error('Error creating test with permissions:', error);
       toast.error('Failed to create test with permissions');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateForCoordinators = async () => {
+    setLoading(true);
+    try {
+      const contestId = await onCreateTest([]);
+      
+      const response = await axios.post('/api/setPermissionForCoordinators', {
+        contestId
+      });
+
+      if(!(response.status === 200)){
+        toast.error(response.data.message);
+        return;
+      }
+      toast.success('Test created for coordinators');
+      onClose();
+    } catch (error) {
+      console.error('Error creating test for coordinators:', error);
+      toast.error('Failed to create test for coordinators');
     } finally {
       setLoading(false);
     }
@@ -131,7 +147,7 @@ export default function ContestPermissionModal({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
@@ -140,6 +156,13 @@ export default function ContestPermissionModal({
             disabled={loading || (!isAllSelected && selectedGroups.length === 0)}
           >
             {loading ? "Creating..." : "Create Test"}
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={handleCreateForCoordinators}
+            disabled={loading}
+          >
+            Create For Coordinators
           </Button>
         </DialogFooter>
       </DialogContent>

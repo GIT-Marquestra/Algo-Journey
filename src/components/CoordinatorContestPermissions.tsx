@@ -23,17 +23,19 @@ interface TeamMember {
   isCoordinator: boolean;
 }
 
-
-
 export default function CoordinatorContestPermissions({ contestId }: { contestId: number | undefined }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const Router = useRouter()
+  const Router = useRouter();
+
+  // Calculate if all non-coordinator members are selected
+  const nonCoordinatorMembers = members.filter(member => !member.isCoordinator);
+  const isAllSelected = nonCoordinatorMembers.length > 0 && 
+    nonCoordinatorMembers.every(member => selectedMembers.includes(member.id));
 
   useEffect(() => {
-
     const fetchMembers = async () => {
       try {
         const response = await axios.get(`/api/getGroupMembers`);
@@ -59,11 +61,30 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
     fetchMembers();
   }, []);
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      // Get coordinator ID if exists
+      const coordinatorId = members.find(m => m.isCoordinator)?.id;
+      
+      // Select all members
+      const allMemberIds = members.map(member => member.id);
+      
+      // If there's a coordinator, ensure they stay selected
+      setSelectedMembers(coordinatorId ? 
+        Array.from(new Set([...allMemberIds])) : 
+        allMemberIds
+      );
+    } else {
+      // When deselecting all, keep only coordinator selected if they exist
+      const coordinator = members.find(m => m.isCoordinator);
+      setSelectedMembers(coordinator ? [coordinator.id] : []);
+    }
+  };
+
   const handleCheckboxChange = (memberId: string, checked: boolean) => {
     if (checked) {
       setSelectedMembers([...selectedMembers, memberId]);
     } else {
-
       const member = members.find(m => m.id === memberId);
       if (member?.isCoordinator) {
         return;
@@ -80,12 +101,10 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
         memberIds: selectedMembers,
       });
 
-
       if(response.status === 440){
-        toast.error(response.data.message)
-        return 
+        toast.error(response.data.message);
+        return;
       }
-
 
       if (!response.data.success) {
         throw new Error('Failed to update contest permissions');
@@ -96,8 +115,6 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
       }
 
       toast.success('Contest permissions updated successfully');
-
-
 
     } catch (error: unknown) {
       console.error('Error updating contest permissions:', error);
@@ -114,7 +131,7 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
           ) {
             toast.error(error.response.data.message);
             setTimeout(() => {
-              Router.push('/user/dashboard')
+              Router.push('/user/dashboard');
             }, 1000);
           }
         } else {
@@ -146,6 +163,22 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
+          {/* Select All Checkbox */}
+          <div className="flex items-center space-x-3 p-2 rounded hover:bg-muted/50 border-b">
+            <Checkbox
+              id="select-all"
+              checked={isAllSelected}
+              onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+            />
+            <label
+              htmlFor="select-all"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Select All Members
+            </label>
+          </div>
+
+          {/* Individual Member Checkboxes */}
           {members.map((member) => (
             <div key={member.id} className="flex items-center space-x-3 p-2 rounded hover:bg-muted/50">
               <Checkbox
@@ -154,7 +187,7 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
                 onCheckedChange={(checked) => 
                   handleCheckboxChange(member.id, checked as boolean)
                 }
-                disabled={member.isCoordinator} 
+                disabled={member.isCoordinator}
               />
               <label
                 htmlFor={member.id}
