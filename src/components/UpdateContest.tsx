@@ -237,6 +237,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
         duration,
         permittedGroups: selectedGroups
       };
+      console.log(updateData)
       
       const response = await axios.post('/api/updateContest', updateData);
       if(response.status === 200){

@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { contestId, questions, startTime, endTime, duration, permittedGroups } = body;
     
-
+    console.log(body)
 
     // Validate required input
     if (!contestId) {
@@ -38,6 +38,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contest not found" }, { status: 404 });
     }
 
+    console.log(1)
+
 
 
     // Start a transaction to handle all updates atomically
@@ -54,6 +56,8 @@ export async function POST(req: Request) {
         where: { id: parsedContestId },
         data: updateData,
       });
+
+      console.log(2)
 
       // Handle questions update if provided
       if (questions && Array.isArray(questions) && questions.length > 0) {
@@ -89,9 +93,10 @@ export async function POST(req: Request) {
         // Create new group permissions
         if (permittedGroups.length > 0) {
           const groupPermissionData = permittedGroups.map(groupId => ({
-            groupId,
+            groupId: groupId.id,
             contestId: parsedContestId,
           }));
+          console.log
 
           await tx.groupPermission.createMany({
             data: groupPermissionData,
@@ -99,7 +104,7 @@ export async function POST(req: Request) {
         }
       }
 
-      console.log(3)
+
 
       // Fetch updated contest with all relations
       return await tx.contest.findUnique({
