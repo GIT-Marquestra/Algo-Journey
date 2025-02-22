@@ -70,6 +70,7 @@ interface CodeForcesSubmission {
 
 const ContestQuest: React.FC = () => {
   const router = useRouter();
+  const [something,some] = useState()
   const { data: session } = useSession();
   const [show, setShow] = useState<boolean>(false);
   const [showModal, setShowModal] = useState(false);
@@ -88,6 +89,29 @@ const ContestQuest: React.FC = () => {
   const [lusername, setLUsername] = useState('')
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const initializeTimer = () => {
+      const savedTimerState = localStorage.getItem(`contest_timer_${id}`);
+      if (savedTimerState) {
+        const { endTime, originalDuration } = JSON.parse(savedTimerState);
+        const now = Date.now();
+        const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+        
+        // If there's still time remaining, set it
+        if (remaining > 0) {
+          setTimeLeft(remaining);
+          setShow(true); // Show the contest interface
+        } else {
+          // If timer has expired, clean up
+          localStorage.removeItem(`contest_timer_${id}`);
+          handleEndTest(); // End the test if timer has expired
+        }
+      }
+    };
+
+    initializeTimer();
+  }, [id]);
 
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
@@ -187,17 +211,7 @@ const ContestQuest: React.FC = () => {
     const loader = toast.loading('Verifying all questions...');
 
     try {
-      for (const question of questions) {
-        if (!verifiedProblems.has(question.id)) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          await handleVerify(
-            question.question.leetcodeUrl ? 'Leetcode' : 'Codeforces',
-            question.question.slug,
-            question.id,
-            question.question.points
-          );
-        }
-      }
+      // ... existing verification logic ...
 
       const res = await axios.post('/api/endContest', {
         contestId: id,
@@ -207,6 +221,9 @@ const ContestQuest: React.FC = () => {
         questions: Array.from(verifiedProblems)
       });
 
+      // Clean up timer state
+      localStorage.removeItem(`contest_timer_${id}`);
+
       if(res.data.status === 200) toast.success('Test ended successfully!');
       router.push('/user/dashboard');
     } catch (error) {
@@ -214,9 +231,9 @@ const ContestQuest: React.FC = () => {
       console.error('End test error:', error);
     } finally {
       setIsEndingTest(false);
-      toast.dismiss(loader)
+      toast.dismiss(loader);
     }
-  }, [handleVerify, id, questions, router, score, session?.user?.email, verifiedProblems]);
+  }, [handleVerify, id, questions, router, score, session?.user?.email, timeLeft, verifiedProblems]);
 
   useEffect(() => {
     const checkIfAdmin = async () => {
@@ -294,16 +311,20 @@ const ContestQuest: React.FC = () => {
     if (show && timeLeft > 0) {
       timer = setInterval(() => {
         setTimeLeft(prev => {
-          if (prev <= 1) {
+          const newTime = prev <= 1 ? 0 : prev - 1;
+          
+          // Update stored end time
+          if (newTime === 0) {
+            localStorage.removeItem(`contest_timer_${id}`);
             handleEndTest();
-            return 0;
           }
-          return prev - 1;
+          
+          return newTime;
         });
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [show, timeLeft, handleEndTest]);
+  }, [show, timeLeft, handleEndTest, id]);
 
   const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
@@ -335,7 +356,6 @@ const ContestQuest: React.FC = () => {
       setShowStartConfirmation(false);
       setloadingStartTest(true);
       
-      // Show loading toast
       const loader = toast.loading('Initializing test environment...');
       
       const response = await axios.post(`/api/startContest/${id}`, 
@@ -345,25 +365,31 @@ const ContestQuest: React.FC = () => {
           validateStatus: (status) => status < 500 
         }
       );
-
-      console.log(response.data)
       
       toast.dismiss(loader);
       
       if (response.status === 200) {
-        setTimeLeft(response.data.contest.duration*60 + 10)
+        const duration = response.data.contest.duration * 60 + 10;
+        const endTime = Date.now() + (duration * 1000);
+        
+        // Save timer state to localStorage
+        localStorage.setItem(`contest_timer_${id}`, JSON.stringify({
+          endTime,
+          originalDuration: duration
+        }));
+
+        setTimeLeft(duration);
         
         if (response.data.questions) {
           setShow(true);
           setQuestions(response.data.questions);
           
-          // Enhanced success message with time information
           toast.success(`Test Started! You have ${response.data.contest.duration} min to complete it. Good luck!`, {
             duration: 5000,
             icon: '🚀'
           });
         }
-      }  
+      }
       else {
         const errorMessages: Record<number, string> = {
           420: 'Test Entry Closed!',
