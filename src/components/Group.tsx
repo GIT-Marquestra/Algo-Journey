@@ -24,7 +24,6 @@ const AdminGroupCreator = () => {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [coordinator, setCoordinator] = useState<string | null>(null)
   const [groupName, setGroupName] = useState('')
-  const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [mode, setMode] = useState<'create' | 'update'>('create')
@@ -39,13 +38,10 @@ const AdminGroupCreator = () => {
           const usersResponse = await axios.post('/api/getUsersForAdmin')
           if (Array.isArray(usersResponse.data.users)) {
             setUsers(usersResponse.data.users)
-          } else {
-            setError('Invalid users data received')
-          }
+          } 
         }
       } catch (err) {
         console.error('Error:', err)
-        setError('Failed to load admin data')
       } finally {
         setIsLoading(false)
       }
@@ -91,7 +87,6 @@ const AdminGroupCreator = () => {
     }
 
     setIsSubmitting(true)
-    setError('')
 
     try {
       await axios.post('/api/groups/create', {
