@@ -181,10 +181,9 @@ const QuestionSolving = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [questionsRes, cfUsernameRes, lcUsernameRes] = await Promise.all([
+        const [questionsRes, response] = await Promise.all([
           axios.post('/api/questions', topic ? { topic } : {}),
-          axios.post('/api/user/codeforces/username'),
-          axios.post('/api/user/leetcode/username')
+          axios.post('/api/user/username')
         ]);
 
         setQuestions(questionsRes.data.questions);
@@ -192,8 +191,8 @@ const QuestionSolving = () => {
 
         await verifyAllQuestions(
           questionsRes.data.questions,
-          lcUsernameRes.data.leetcodeUsername,
-          cfUsernameRes.data.codeforcesUsername
+          response.data.leetcodeUsername,
+          response.data.codeforcesUsername
         );
       } catch (error) {
         console.error(error);
