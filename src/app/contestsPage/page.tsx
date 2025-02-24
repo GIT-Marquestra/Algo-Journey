@@ -31,6 +31,7 @@ interface Submission {
   id: string;
   score: number;
   status: string;
+  createdAt: string; // Added createdAt field for submission time
   question: {
     id: string;
     slug: string;
@@ -87,6 +88,15 @@ const GroupSubmissionsLoader = () => (
   </div>
 );
 
+// Helper function to get the earliest submission time for a member
+const getEarliestSubmissionTime = (member: Member) => {
+  if (!member.submissions || member.submissions.length === 0) return Infinity;
+  
+  return Math.min(...member.submissions.map(sub => 
+    new Date(sub.createdAt).getTime()
+  ));
+};
+
 const GroupSubmissions = ({ group, questions, isLoading }: { 
   group: Group; 
   questions: Question[];
@@ -96,11 +106,32 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
     return <GroupSubmissionsLoader />;
   }
 
+  // Sort members by points and submission time
+  const sortedMembers = [...group.members].sort((a, b) => {
+    // Calculate total points for each member
+    const aTotal = a.submissions?.reduce((total, sub) => total + sub.score, 0) || 0;
+    const bTotal = b.submissions?.reduce((total, sub) => total + sub.score, 0) || 0;
+    
+    // First sort by participation status
+    if (a.isAllowedToParticipate === false && b.isAllowedToParticipate !== false) return 1;
+    if (a.isAllowedToParticipate !== false && b.isAllowedToParticipate === false) return -1;
+    
+    // Then sort by points (descending)
+    if (aTotal !== bTotal) return bTotal - aTotal;
+    
+    // If points are equal, sort by earliest submission time
+    const aEarliest = getEarliestSubmissionTime(a);
+    const bEarliest = getEarliestSubmissionTime(b);
+    
+    return aEarliest - bEarliest; // Earlier submission comes first
+  });
+
   return (
     <div className="mt-4 overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
+            <TableHead className="w-16 py-4">Rank</TableHead>
             <TableHead className="w-32 py-4">Member</TableHead>
             {questions?.map((q, index) => (
               <TableHead key={q.question.id} className="text-center py-4">
@@ -114,11 +145,14 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {group.members?.map((member) => {
+          {sortedMembers.map((member, index) => {
             const memberTotal = member.submissions?.reduce((total, sub) => total + sub.score, 0) || 0;
             
             return (
               <TableRow key={member.id} className="hover:bg-gray-50 transition-colors">
+                <TableCell className="font-medium py-4">
+                  {member.isAllowedToParticipate === false ? "-" : index + 1}
+                </TableCell>
                 <TableCell className="font-medium py-4">
                   <div className="flex items-center gap-2">
                     {member.username}
@@ -156,6 +190,10 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
                           <span className="text-sm font-medium text-green-600 mt-1">
                             {submission.score}
                           </span>
+                          {/* Display submission time */}
+                          <span className="text-xs text-gray-500">
+                            {new Date(submission.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          </span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center">
@@ -179,7 +217,7 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
             );
           })}
           <TableRow className="bg-gray-50">
-            <TableCell colSpan={questions.length + 1} className="font-bold py-4">
+            <TableCell colSpan={questions.length + 2} className="font-bold py-4">
               Group Total
             </TableCell>
             <TableCell className="text-right font-bold py-4 pr-6">
