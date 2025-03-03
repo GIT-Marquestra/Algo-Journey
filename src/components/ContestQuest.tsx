@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -31,29 +31,12 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Difficulty } from '@prisma/client';
-
 import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
 import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
 import Image from 'next/image';
-
-
-interface Question {
-  id: string;
-  contestId: number;
-  questionId: string;
-  createdAt: Date;
-  question: {
-    id: string;
-    leetcodeUrl: string | null;
-    codeforcesUrl: string | null;
-    difficulty: Difficulty;
-    points: number;
-    slug: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
-}
+import useContestStore from '@/app/store/useContestStore';
+import { useSocketWithStore } from '@/hooks/useSocket';
 
 interface LeetCodeSubmission {
   titleSlug: string;
@@ -69,8 +52,6 @@ interface CodeForcesSubmission {
   creationTimeSeconds: number;
 }
 
-
-
 const ContestQuest: React.FC = () => {
   const router = useRouter();
   const { data: session } = useSession();
@@ -82,7 +63,6 @@ const ContestQuest: React.FC = () => {
   const [loadingStartTest, setloadingStartTest] = useState(false)
   const [score, setScore] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [questions, setQuestions] = useState<Question[]>([]);
   const [verifiedProblems, setVerifiedProblems] = useState<Set<string>>(new Set());
   const [isScoreUpdating, setIsScoreUpdating] = useState<boolean>(false);
   const [isEndingTest, setIsEndingTest] = useState<boolean>(false);
@@ -91,6 +71,12 @@ const ContestQuest: React.FC = () => {
   const [lusername, setLUsername] = useState('')
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
+  
+  // Use Zustand store instead of context
+  const { questions, setQuestions } = useContestStore();
+  
+  // Initialize socket with store
+  // const socket = useSocketWithStore();
 
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
@@ -158,7 +144,6 @@ const ContestQuest: React.FC = () => {
         if (res) {
           let solved = res.find(
             (p: CodeForcesSubmission) => (p.problem.name === problemName && p.verdict === 'OK')
-
           );
           if(solved){
             const r = await checkExistingSubmission(problemName)
@@ -183,7 +168,11 @@ const ContestQuest: React.FC = () => {
     } finally {
       setIsVerifying({ ...isVerifying, [questionId]: false });
     }
-  }, [cusername, lusername, isVerifying, setIsVerifying, setVerifiedProblems, score, verifiedProblems]);
+  }, [cusername, lusername, isVerifying, score, verifiedProblems]);
+
+  useEffect(() => {
+    console.log(questions)
+  });
 
   const handleEndTest = useCallback(async (): Promise<void> => {
     setIsEndingTest(true);
@@ -219,7 +208,7 @@ const ContestQuest: React.FC = () => {
       setIsEndingTest(false);
       toast.dismiss(loader)
     }
-  }, [handleVerify, id, questions, router, score, session?.user?.email, verifiedProblems]);
+  }, [handleVerify, id, questions, router, score, session?.user?.email, timeLeft, verifiedProblems]);
 
   useEffect(() => {
     const checkIfAdmin = async () => {
@@ -242,54 +231,12 @@ const ContestQuest: React.FC = () => {
   }, []);
 
   useEffect(() => {
-     
-    const handleBack = () => {
-      setShowModal(true);
-      window.history.pushState(null, "", window.location.pathname); 
-    };
-
-    window.addEventListener("popstate", handleBack);
-
-    return () => {
-      window.removeEventListener("popstate", handleBack);
-    };
-  }, []);
-
-  useEffect(() => {
     if (questions.length > 0) {
       const completedCount = verifiedProblems.size;
       const newProgress = (completedCount / questions.length) * 100;
       setProgress(newProgress);
     }
   }, [verifiedProblems, questions]);
-
-  useEffect(() => {
-    const handleUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "Are you sure you want to leave? Your test progress will be lost.";
-    };
-
-    window.addEventListener("beforeunload", handleUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleUnload);
-    };
-  }, []);
-
-  
-
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (show && !isEndingTest) {
-        e.preventDefault();
-        e.returnValue = 'You have an ongoing test. Please end the test before leaving.';
-        return e.returnValue;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [show, isEndingTest]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -357,7 +304,7 @@ const ContestQuest: React.FC = () => {
         
         if (response.data.questions) {
           setShow(true);
-          setQuestions(response.data.questions);
+          setQuestions(response.data.questions)
           
           // Enhanced success message with time information
           toast.success(`Test Started! You have ${response.data.contest.duration} min to complete it. Good luck!`, {
@@ -413,6 +360,8 @@ const ContestQuest: React.FC = () => {
     }
   };
 
+  // Rest of the component remains the same...
+  
   return (
     <div className="min-h-screen bg-background">
       {!show ? (
@@ -460,6 +409,7 @@ const ContestQuest: React.FC = () => {
         </>
       ) : (
         <div className="container mx-auto p-4 pt-20 space-y-6">
+          {/* Contest interface remains the same... */}
           <Card className="sticky top-16 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <CardContent className="py-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -528,9 +478,6 @@ const ContestQuest: React.FC = () => {
                           {q.question.slug}
                         </CardTitle>
                         <div className='flex flex-col'>
-                        {/* <CardDescription>
-                          {q.question.slug}
-                        </CardDescription> */}
                         <CardDescription>
                           <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces} alt='nothing' className='size-5'/>
                         </CardDescription>

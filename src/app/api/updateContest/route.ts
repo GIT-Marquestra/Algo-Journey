@@ -15,8 +15,6 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { contestId, questions, startTime, endTime, duration, permittedGroups } = body;
-    
-    console.log(body)
 
     // Validate required input
     if (!contestId) {
@@ -38,10 +36,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Contest not found" }, { status: 404 });
     }
 
-    console.log(1)
-
-
-
     // Start a transaction to handle all updates atomically
     const result = await prisma.$transaction(async (tx) => {
       // Prepare update data
@@ -57,14 +51,16 @@ export async function POST(req: Request) {
         data: updateData,
       });
 
-      console.log(2)
 
       // Handle questions update if provided
       if (questions && Array.isArray(questions) && questions.length > 0) {
+        console.log('in questions update')
         // Delete existing questions
         await tx.questionOnContest.deleteMany({
           where: { contestId: parsedContestId },
         });
+
+        console.log(questions)
 
         // Create new question connections
         const questionConnections = questions
@@ -74,7 +70,10 @@ export async function POST(req: Request) {
             questionId: q.questionId,
           }));
 
-        if (questionConnections.length > 0) {
+          console.log(questionConnections)
+          
+          if (questionConnections.length > 0) {
+          console.log('here')
           await tx.questionOnContest.createMany({
             data: questionConnections,
           });
@@ -103,8 +102,6 @@ export async function POST(req: Request) {
         }
       }
 
-
-
       // Fetch updated contest with all relations
       return await tx.contest.findUnique({
         where: { id: parsedContestId },
@@ -121,13 +118,18 @@ export async function POST(req: Request) {
           },
         },
       });
+    },
+    {
+      timeout: 30000, // Increase timeout to 20 seconds (adjust as needed)
+      maxWait: 5000, // Optional: Set max wait time before transaction starts
     });
 
-    console.log(5)
+    console.log(result?.questions)
+
 
     return NextResponse.json({ 
       message: "Contest updated successfully", 
-      contest: result 
+      questions: result?.questions 
     }, { status: 200 });
 
   } catch (error) {

@@ -5,7 +5,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 import { QueryProvider } from '@/components/QueryWrapper';
-import SessionRedirect from '@/components/SessionRedirect';
+import SocketProvider from '@/app/providers/SocketProvider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,24 +32,24 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        
-        
+      >   
+
         <QueryProvider>     
         <SessionProviderWrapper>
 
         <header className="absolute w-full"><Navbar/></header>
         <main className="w-full flex justify-center min-h-screen overflow-hidden">
           <div className="w-full">
-            <SessionRedirect/>
-              {children}
-        <Toaster/>
+          <SocketProvider>
+            {children}
+          </SocketProvider>
+          <Toaster />
           </div>
         </main>
-
         </SessionProviderWrapper>
         </QueryProvider>
-      <footer></footer>
+
+
       </body>
       
     </html>

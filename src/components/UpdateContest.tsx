@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -9,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Clock, X, Save, Loader2, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Checkbox } from './ui/checkbox';
+import { useSocketWithStore } from '@/hooks/useSocket';
 
 interface QuestionOnContest {
   questionId: string;
@@ -29,6 +28,7 @@ interface Group {
   id: string;
   name: string;
 }
+
 
 interface Contest {
   id: string;
@@ -55,6 +55,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [groupSearchTerm, setGroupSearchTerm] = useState('');
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
+  const socket = useSocketWithStore()
 
   const fetchContestDetails = async () => {
     if (!contestId.trim()) {
@@ -88,11 +89,9 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
       setDuration(contestData.duration);
       setShowForm(true);
       
-      // Set available questions
       setAvailableQuestions(dbQuestions.dbQuestions);
       setFilteredQuestions(dbQuestions.dbQuestions);
 
-      // Set groups
       setAllGroups(groupsResponse.data.groups);
       setFilteredGroups(groupsResponse.data.groups);
       setSelectedGroups(permissionsResponse.data.permittedGroups);
@@ -104,10 +103,44 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     setFetchingContest(false);
   };
 
+  const handleAddinRealTime = (q: Question) => {
+    toast.success('correct')
+    const contestID = parseInt(contestId)
+    socket?.emit('addQuestion', {q, contestId: contestID})
+  }
+
+  const confirmAdd = (q: Question) => {
+    toast((t) => (
+      <div className="flex flex-col">
+        <p className="font-semibold">How to Add?</p>
+        <div className="flex gap-2 mt-2">
+          <button 
+            onClick={() => {
+              toast.dismiss(t.id);
+              handleAddinRealTime(q);
+            }} 
+            className="bg-red-500 text-white px-3 py-1 rounded"
+          >
+            Add in real time
+          </button>
+          <button 
+            onClick={() => {
+              toast.dismiss(t.id)
+              addQuestionToContest(q)
+            }} 
+            className="bg-gray-300 px-3 py-1 rounded"
+          >
+            Add normally
+          </button>
+        </div>
+      </div>
+    ), { duration: 5000 }); 
+  };
+
 
   useEffect(() => {
     if (allGroups.length) {
-      const filtered = allGroups.filter(group => 
+      const filtered = allGroups.filter((group) => 
         group.name.toLowerCase().includes(groupSearchTerm.toLowerCase())
       );
       setFilteredGroups(filtered);
@@ -115,7 +148,6 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   }, [groupSearchTerm, allGroups]);
 
 
-  // Format date for input field
   const formatDateForInput = (dateString: string) => {
     const date = new Date(dateString);
     return date.toISOString().slice(0, 16);
@@ -130,7 +162,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     );
   };
 
-  // Format date for Prisma
+
   const formatDateForPrisma = (dateString: string) => {
     const date = new Date(dateString);
     const offset = date.getTimezoneOffset();
@@ -152,13 +184,13 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     setSelectedGroups(prev => prev.filter(id => !filteredGroupIds.has(id)));
   };
 
-  // Handle duration change
+
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     setDuration(isNaN(value) ? 1 : Math.max(1, value));
   };
 
-  // Validate dates
+
   const validateDates = () => {
     if (!startTime || !endTime) {
       setDateError('Please select both start and end times');
@@ -177,7 +209,6 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     return true;
   };
 
-  // Filter questions based on search term
   useEffect(() => {
     if (availableQuestions.length) {
       const filtered = availableQuestions.filter(q => 
@@ -187,7 +218,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     }
   }, [searchTerm, availableQuestions]);
 
-  // Add question to contest
+
   const addQuestionToContest = (question: Question) => {
     if (!contest) return;
     
@@ -203,7 +234,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     toast.success(`Added ${question.slug} to contest`);
   };
 
-  // Remove question from contest
+
   const removeQuestionFromContest = (questionId: string) => {
     if (!contest) return;
     
@@ -214,7 +245,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     toast.success('Question removed from contest');
   };
 
-  // Update contest
+
   const handleUpdateContest = async () => {
     if (!contest) return;
     
@@ -256,7 +287,8 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
       setLoading(false);
     }
   };
-  // Get difficulty color
+  
+
   const getDifficultyColor = (difficulty: string): string => {
     const colors: Record<string, string> = {
       BEGINNER: 'bg-green-500/10 text-green-500',
@@ -382,11 +414,13 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
                       </div>
                       <Button
                         size="sm"
-                        onClick={() => addQuestionToContest(q)}
+                        onClick={() => confirmAdd(q)}
+                        // onClick={() => addQuestionToContest(q)}
                         disabled={contest.questions.some(cq => cq.questionId === q.id)}
                       >
                         {contest.questions.some(cq => cq.questionId === q.id) ? 'Added' : 'Add'}
                       </Button>
+                      
                     </div>
                   ))
                 )}

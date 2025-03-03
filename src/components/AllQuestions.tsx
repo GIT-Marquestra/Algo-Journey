@@ -44,6 +44,8 @@ const AVAILABLE_TAGS = [
   "String"
 ];
 
+
+
 const DIFFICULTY_LEVELS = [
   { id: "all", value: "all", label: "All Difficulties" },
   { id: "beginner", value: "BEGINNER", label: "Beginner" },
@@ -137,12 +139,12 @@ export default function AllQuestions() {
   useEffect(() => {
     let filtered = questions;
 
-    // Apply difficulty filter first
+
     if (selectedDifficulty !== "all") {
       filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
     }
 
-    // Then apply tag filter
+
     if (selectedTags?.length > 0) {
       filtered = filtered.filter(q => {
         const questionTagNames = q.questionTags.map(tag => tag.name);
@@ -156,6 +158,8 @@ export default function AllQuestions() {
   const handleDifficultyChange = (value: string) => {
     setSelectedDifficulty(value);
   };
+
+  
 
   const addToTest = (question: Question1) => {
     if (selectedQuestions?.some(q => q.id === question.id)) {
@@ -267,7 +271,6 @@ const handleCreateTest = async () => {
 };
 
 const confirm = (id: string) => {
-  //@ts-expect-error: it is important here , that's it 
   toast((t) => (
     <div className="flex flex-col">
       <p className="font-semibold">Are you sure?</p>
