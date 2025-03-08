@@ -28,14 +28,6 @@ interface User {
 }
 
 
-interface Group {
-  id: string;
-  name: string;
-  members: User[];
-  coordinator: User;
-  groupPoints: number;
-}
-
 const StatsCard = ({ title, value, description, loading }: { title: string, value: string, description: string, loading: boolean }) => (
   <Card className="w-full">
     <CardHeader className="flex flex-row items-center justify-between pb-2">
