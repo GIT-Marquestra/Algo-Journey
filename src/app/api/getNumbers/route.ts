@@ -17,72 +17,17 @@ export async function POST() {
                 individualPoints: 'desc'
             }
         })
-        const groupsArray = await prisma.group.findMany({
-            select: {
-                id: true,
-                name: true,
-                coordinator: true,
-                members: {
-                    select: {
-                        id: true,
-                        username: true,
-                        section: true,
-                        individualPoints: true,
-                        createdAt: true,
-                        updatedAt: true
-                    }
-                },
-                groupPoints: true,
-                createdAt: true,
-                updatedAt: true
-            },
-            orderBy: {
-                groupPoints: 'desc'
-            }
-        })
-        const groupsOnContest = await prisma.groupOnContest.findMany({
-            select: {
-                id: true,
-                groupId: true,
-                contestId: true,
-                group: {
-                    select: {
-                        name: true,
-                        groupPoints: true
-                    }
-                },
-                
-            },
-            orderBy: {
-                group: {
-                    groupPoints: 'desc'
-                }
-            }
-        })
+        const totalGroups = await prisma.group.count()
 
-        const contestsArray = await prisma.contest.findMany({
-            select: {
-                id: true,
-                createdAt: true,
-                updatedAt: true
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        })
+        const totalContests = await prisma.contest.count()
         
         const totalUsers = usersArray.length
-        const totalGroups = groupsArray.length
-        const totalContests = contestsArray.length
         
         const response = {
             totalUsers,
             totalGroups,
             totalContests,
             usersArray,
-            groupsArray,
-            contestsArray,
-            groupsOnContest,
         }   
         console.log(response)
         return NextResponse.json(response, {status: 200})
