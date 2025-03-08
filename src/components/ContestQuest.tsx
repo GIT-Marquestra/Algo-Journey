@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -293,12 +293,10 @@ const ContestQuest: React.FC = () => {
         }
       );
 
-      console.log(response.data)
       
       toast.dismiss(loader);
       
       if (response.status === 200) {
-        console.log(response.data.contest.remainingTime)
         setTimeLeft(response.data.contest.remainingTime*60 + 10)
         
         if (response.data.questions) {
