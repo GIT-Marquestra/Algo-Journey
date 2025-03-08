@@ -55,12 +55,13 @@ const DIFFICULTY_LEVELS = [
   { id: "veryhard", value: "VERYHARD", label: "Very Hard" }
 ];
 type Difficulty = 'BEGINNER' | 'EASY' | 'MEDIUM' | 'HARD' | 'VERYHARD';
-interface Question1 {
+interface Question {
   id: string;
   leetcodeUrl: string;
   codeforcesUrl: string;
   questionTags: QuestionTag[];
   slug: string;
+  points: number;
   difficulty: Difficulty
 }
 
@@ -80,28 +81,28 @@ interface QuestionOnContest {
 }
 
 export default function AllQuestions() {
-  const [questions, setQuestions] = useState<Question1[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
-  const [selectedQuestions, setSelectedQuestions] = useState<Question1[]>([]);
+  const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [dateError, setDateError] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState("all");
-  const [filteredQuestions, setFilteredQuestions] = useState<Question1[]>([]);
+  const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
   const [questionOnContest, setQuestionOnContest] = useState<QuestionOnContest[]>([])
   const [loadingArena, setLoadingArena] = useState(false)
-  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question1[]>([])
+  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
   const [show, setShow] = useState(true)
 
 
   const fetchQuestions = useCallback(async () => {
     try {
       const res = await axios.post('/api/checkIfAdmin')
-      const response = await axios.post<{ questions: Question1[] }>("/api/getQuestions");
+      const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
       const response2 = await axios.post('/api/getQuestionOnContest')
       if(!(response2.status === 200)) {
         toast.error(response2.data.message)
@@ -161,7 +162,7 @@ export default function AllQuestions() {
 
   
 
-  const addToTest = (question: Question1) => {
+  const addToTest = (question: Question) => {
     if (selectedQuestions?.some(q => q.id === question.id)) {
       toast.error("Question already added to test");
       return;
@@ -176,7 +177,7 @@ export default function AllQuestions() {
     toast.success("Question removed from test");
   };
 
-  const addToArena = (question: Question1) => {
+  const addToArena = (question: Question) => {
     if (selectedArenaQuestions?.some(q => q.id === question.id)) {
       toast.error("Question already added to Arena");
       return;
