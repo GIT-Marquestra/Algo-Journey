@@ -233,11 +233,6 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   const addQuestionToContest = (question: Question) => {
     if (!contest) return;
     
-    if (contest.questions.some(q => q.questionId === question.id)) {
-      toast.error('This question is already in the contest');
-      return;
-    }
-    
     setContest({
       ...contest,
       questions: [...contest.questions, { questionId: question.id, question: question }]
