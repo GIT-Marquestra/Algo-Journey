@@ -107,7 +107,6 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   };
 
   const handleAddinRealTime = (q: Question) => {
-    toast.success('correct')
     const contestID = parseInt(contestId)
     socket?.emit('addQuestion', {q, contestId: contestID})
   }
