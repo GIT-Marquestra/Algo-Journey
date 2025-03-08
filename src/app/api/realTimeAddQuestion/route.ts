@@ -34,46 +34,47 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No questions provided" }, { status: 400 });
     }
 
+    // Filter and validate question IDs
+    const validQuestionIds = questions
+      .filter((q: QuestionItem) => q && typeof q.questionId === "string")
+      .map((q: QuestionItem) => q.questionId);
+
+    if (validQuestionIds.length === 0) {
+      return NextResponse.json({ error: "No valid question IDs provided" }, { status: 400 });
+    }
+
     // Start transaction
     const result = await prisma.$transaction(async (tx) => {
-      console.log("Adding new questions...");
+      // Create connections for new questions
+      const questionConnections = validQuestionIds.map((questionId) => ({
+        contestId: parsedContestId,
+        questionId,
+      }));
 
-      const questionConnections = questions
-        .filter((q: QuestionItem) => q && typeof q.questionId === "string")
-        .map((q: QuestionItem) => ({
+      // Add only new questions (ignore existing ones)
+      await tx.questionOnContest.createMany({
+        data: questionConnections,
+        skipDuplicates: true, // Prevent duplicate entries
+      });
+
+      // Fetch only the newly added questions
+      const addedQuestions = await tx.questionOnContest.findMany({
+        where: {
           contestId: parsedContestId,
-          questionId: q.questionId,
-        }));
-
-      console.log("Questions to add:", questionConnections);
-
-      if (questionConnections.length > 0) {
-        // Add only new questions (ignore existing ones)
-        await tx.questionOnContest.createMany({
-          data: questionConnections,
-          skipDuplicates: true, // Prevent duplicate entries
-        });
-      }
-
-      // Fetch updated contest with all questions
-      return await tx.contest.findUnique({
-        where: { id: parsedContestId },
+          questionId: { in: validQuestionIds },
+        },
         include: {
-          questions: {
-            include: {
-              question: true,
-            },
-          },
+          question: true,
         },
       });
-    });
 
-    console.log("Updated Questions:", result?.questions);
+      return addedQuestions;
+    });
 
     return NextResponse.json(
       {
         message: "Questions added successfully",
-        questions: result?.questions,
+        questions: result,
       },
       { status: 200 }
     );

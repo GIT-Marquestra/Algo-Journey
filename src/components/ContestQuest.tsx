@@ -35,8 +35,7 @@ import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from
 import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
 import Image from 'next/image';
-import useContestStore from '@/app/store/useContestStore';
-import { useSocketWithStore } from '@/hooks/useSocket';
+import { useSocket } from '@/hooks/SocketContext';
 
 interface LeetCodeSubmission {
   titleSlug: string;
@@ -73,7 +72,7 @@ const ContestQuest: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
   
   // Use Zustand store instead of context
-  const { questions, setQuestions } = useContestStore();
+  const { questions, setQuestions } = useSocket()
   
   // Initialize socket with store
   // const socket = useSocketWithStore();
@@ -170,9 +169,7 @@ const ContestQuest: React.FC = () => {
     }
   }, [cusername, lusername, isVerifying, score, verifiedProblems]);
 
-  useEffect(() => {
-    console.log(questions)
-  });
+  
 
   const handleEndTest = useCallback(async (): Promise<void> => {
     setIsEndingTest(true);

@@ -137,6 +137,7 @@ export default function ContestPermissionModal({
                 <div key={group.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={group.id}
+
                     checked={selectedGroups.includes(group.id)}
                     onCheckedChange={() => handleGroupSelect(group.id)}
                   />

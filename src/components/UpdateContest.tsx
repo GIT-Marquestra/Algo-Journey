@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Clock, X, Save, Loader2, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Checkbox } from './ui/checkbox';
-import { useSocketWithStore } from '@/hooks/useSocket';
+import { useSocket } from '@/hooks/SocketContext';
 
 interface QuestionOnContest {
   questionId: string;
@@ -55,7 +55,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [groupSearchTerm, setGroupSearchTerm] = useState('');
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
-  const socket = useSocketWithStore()
+  const { socket } = useSocket()
 
   const fetchContestDetails = async () => {
     if (!contestId.trim()) {
