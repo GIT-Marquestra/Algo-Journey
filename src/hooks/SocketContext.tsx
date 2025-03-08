@@ -71,7 +71,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!socketRef.current) {
       // Create socket connection
-      const socketInstance: SocketType = io("http://algojourneywebsocket-production.up.railway.app", {
+      const socketInstance: SocketType = io("https://algojourneywebsocket-production.up.railway.app", {
         autoConnect: true,
         reconnection: true,
         reconnectionAttempts: 5,
