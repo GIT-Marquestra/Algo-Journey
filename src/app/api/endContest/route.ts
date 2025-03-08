@@ -2,14 +2,12 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
-
-
 export async function POST(req: NextRequest) {
     try {
         const session = await getServerSession()
         const userEmail = session?.user?.email
         const body = await req.json();
-        const { contestId, finalScore, questions } = body;
+        const { contestId, finalScore, questions, questionsFromDb } = body;
 
         
         if (!contestId || !userEmail || typeof finalScore !== "number" || !Array.isArray(questions)) {
@@ -35,28 +33,57 @@ export async function POST(req: NextRequest) {
         }
 
         const result = await prisma.$transaction(async (prisma) => {
-            await Promise.all(
-                questions.map(async (questionId) => {
-                    const question = await prisma.questionOnContest.findFirst({
-                        where: { id: questionId },
-                        include: { question: true },
-                    });
-
-                    if (!question || !question.question) {
-                        throw new Error(`Invalid questionId: ${questionId}`);
-                    }
-
+            // Delete the TempContestTime entry for this user and contest
+            await prisma.tempContestTime.deleteMany({
+                where: {
+                    userId: user.id,
+                    contestId: contestID
+                }
+            });
+            
+            // Handle empty questions array by creating a dummy submission
+            if (questions.length === 0 && Array.isArray(questionsFromDb) && questionsFromDb.length > 0) {
+                // Select a random question from questionsFromDb
+                const randomIndex = Math.floor(Math.random() * questionsFromDb.length);
+                const randomQuestion = questionsFromDb[randomIndex];
+                
+                // Create a dummy submission with zero score
+                if (randomQuestion && randomQuestion.question && randomQuestion.question.id) {
                     await prisma.submission.create({
                         data: {
                             userId: user.id,
-                            questionId: question.question.id,
+                            questionId: randomQuestion.question.id,
                             contestId: contestID,
-                            status: "ACCEPTED",
-                            score: question.question.points,
+                            status: 'PENDING', // or use a different status like "PENDING" if preferred
+                            score: 0, // Zero score for dummy submission
                         },
                     });
-                })
-            );
+                }
+            } else {
+                // Process normal submissions if questions array is not empty
+                await Promise.all(
+                    questions.map(async (questionId) => {
+                        const question = await prisma.questionOnContest.findFirst({
+                            where: { id: questionId },
+                            include: { question: true },
+                        });
+
+                        if (!question || !question.question) {
+                            throw new Error(`Invalid questionId: ${questionId}`);
+                        }
+
+                        await prisma.submission.create({
+                            data: {
+                                userId: user.id,
+                                questionId: question.question.id,
+                                contestId: contestID,
+                                status: "ACCEPTED",
+                                score: question.question.points,
+                            },
+                        });
+                    })
+                );
+            }
 
             // Update individual points
             const userSubmissions = await prisma.submission.findMany({
@@ -85,8 +112,6 @@ export async function POST(req: NextRequest) {
                 const divisor = Math.max(4, totalPermittedMembers);
                 const averageScore = finalScore / divisor;
                 
-
-
                 // Check if this is the first attempt for this contest by the group
                 await prisma.groupOnContest.findUnique({
                     where: { groupId_contestId: { groupId: user.groupId, contestId: contestID } },
@@ -109,7 +134,6 @@ export async function POST(req: NextRequest) {
                     });
                    }
                 }
-
 
                 // Update rankings for all groups in this contest
                 const groupsInContest = await prisma.groupOnContest.findMany({

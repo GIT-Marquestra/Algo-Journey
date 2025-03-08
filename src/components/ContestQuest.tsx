@@ -193,6 +193,7 @@ const ContestQuest: React.FC = () => {
         userEmail: session?.user?.email,
         finalScore: score,
         timeLeft,
+        questionsFromDb: questions,
         questions: Array.from(verifiedProblems)
       });
 
@@ -297,7 +298,8 @@ const ContestQuest: React.FC = () => {
       toast.dismiss(loader);
       
       if (response.status === 200) {
-        setTimeLeft(response.data.contest.duration*60 + 10)
+        console.log(response.data.contest.remainingTime)
+        setTimeLeft(response.data.contest.remainingTime*60 + 10)
         
         if (response.data.questions) {
           setShow(true);
@@ -476,7 +478,7 @@ const ContestQuest: React.FC = () => {
                         </CardTitle>
                         <div className='flex flex-col'>
                         <CardDescription>
-                          <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces} alt='nothing' className='size-5'/>
+                          <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces || ''} alt='nothing' className='size-5'/>
                         </CardDescription>
                         </div>
                         {isVerified && (

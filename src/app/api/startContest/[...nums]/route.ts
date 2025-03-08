@@ -162,15 +162,38 @@ export async function POST(
                 },
             });
         }
+        
+        // Handle time calculation and TempContestTime entry
+        let remainingTime = 0;
+        let contestEndTime;
+        
+        const existingTimeEntry = await prisma.tempContestTime.findFirst({
+            where: {
+                contestId,
+                userId: user.id
+            }
+        });
 
-        const duration = getDurationUlt(contest.startTime, contest.endTime);
-        if (!duration) {
-            return NextResponse.json({ message: "Invalid contest duration" }, { status: 400 });
+        if (existingTimeEntry) {
+            // If entry exists, calculate remaining time
+            const endTimeDate = new Date(existingTimeEntry.endTime);
+            remainingTime = Math.max(0, endTimeDate.getTime() - now.getTime());
+            contestEndTime = endTimeDate;
+        } else {
+            // If no entry exists, create one with now + duration
+            const contestDurationMs = contestData.duration * 60 * 1000; // Convert to milliseconds
+            contestEndTime = new Date(now.getTime() + contestDurationMs);
+            
+            await prisma.tempContestTime.create({
+                data: {
+                    contestId,
+                    userId: user.id,
+                    endTime: contestEndTime
+                }
+            });
+            
+            remainingTime = contestDurationMs;
         }
-
-        const expiryTime = new Date(contestStart.getTime() + (duration * 60 * 60 * 1000)); // Convert hours to milliseconds
-
-        console.log(contest.questions)
 
         return NextResponse.json({
             message: isLatestContest ? "Starting active contest" : "Starting practice contest",
@@ -180,7 +203,8 @@ export async function POST(
                 startTime: contestStart,
                 endTime: contestEnd,
                 joiningWindowEnd,
-                expiryTime,
+                remainingTime: Math.floor(remainingTime/60000),
+                contestEndTime,
                 isPractice: !isLatestContest
             },
             questions: contest.questions,

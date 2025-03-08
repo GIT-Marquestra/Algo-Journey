@@ -2,31 +2,32 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, SetStateAction, Dispatch } from "react";
 import { Difficulty } from "@prisma/client";
 import { io, Socket } from "socket.io-client";
+import useStore from "@/store/store";
 
-interface QuestionPar {
+// export interface Contest {
+//   id: string;
+//   questions: QuestionOnContest[];
+//   startTime: string;
+//   endTime: string;
+//   duration: number;
+// }
+
+export interface QuestionPar {
   id: string;
   contestId: number;
   questionId: string;
   createdAt: Date;
-  question: {
-    id: string;
-    leetcodeUrl: string | null;
-    codeforcesUrl: string | null;
-    difficulty: Difficulty;
-    points: number;
-    slug: string;
-    createdAt: Date;
-    updatedAt: Date;
-  };
+  question: Question
 }
 
 interface Question {
   id: string;
-  leetcodeUrl: string;
-  codeforcesUrl: string;
+  leetcodeUrl: string | null;
+  codeforcesUrl: string | null;
   questionTags: { id: string; name: string; }[];
   slug: string;
-  difficulty: string;
+  points: number
+  difficulty: Difficulty;
 }
 
 // Define types for socket communication
@@ -55,10 +56,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const socketRef = useRef<SocketType | null>(null);
   const [questions, setQuestions] = useState<QuestionPar[]>([]);
   const [isConnected, setIsConnected] = useState(false);
+  const { setAddedQuestions } = useStore()
 
   const handleContestUpdate = useCallback((data: { questions: { questions: QuestionPar[] } }) => {
-    console.log("Received contest update:", data);
+
     setQuestions((prev) => [...prev, ...data.questions.questions]); 
+
+    data.questions.questions.forEach((p) => {
+      setAddedQuestions(p)
+    })
+    
   }, []);
 
   useEffect(() => {

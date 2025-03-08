@@ -8,21 +8,23 @@ import { Clock, X, Save, Loader2, Search, Users } from 'lucide-react';
 import Link from 'next/link';
 import { Checkbox } from './ui/checkbox';
 import { useSocket } from '@/hooks/SocketContext';
+import useStore from '@/store/store';
+import { Difficulty } from '@prisma/client';
 
 interface QuestionOnContest {
   questionId: string;
   question: Question;
 }
 
-interface Question {
+export interface Question {
   id: string;
-  leetcodeUrl: string;
-  codeforcesUrl: string;
+  leetcodeUrl: string | null;
+  codeforcesUrl: string | null;
   questionTags: { id: string; name: string; }[];
   slug: string;
-  difficulty: string;
+  points: number;
+  difficulty: Difficulty;
 }
-
 
 interface Group {
   id: string;
@@ -30,7 +32,7 @@ interface Group {
 }
 
 
-interface Contest {
+export interface Contest {
   id: string;
   questions: QuestionOnContest[];
   startTime: string;
@@ -42,7 +44,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   const [contestId, setContestId] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchingContest, setFetchingContest] = useState(false);
-  const [contest, setContest] = useState<Contest | null>(null);
+  const { contest, setContest } = useStore()
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [duration, setDuration] = useState(2);
@@ -51,6 +53,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
   const [availableQuestions, setAvailableQuestions] = useState<Question[]>([]);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { addedQuestions } = useStore()
   const [allGroups, setAllGroups] = useState<Group[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [groupSearchTerm, setGroupSearchTerm] = useState('');
@@ -162,6 +165,14 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
     );
   };
 
+  useEffect(() => {
+    addedQuestions.forEach((p) => {
+      const questionToAdd = dbQuestions.dbQuestions.find((d) =>  d.id === p.question.id)
+      if(!questionToAdd) return 
+      addQuestionToContest(questionToAdd)
+    })
+  }, [addedQuestions])
+
 
   const formatDateForPrisma = (dateString: string) => {
     const date = new Date(dateString);
@@ -268,7 +279,7 @@ export default function UpdateContestCard(dbQuestions: { dbQuestions: Question[]
         duration,
         permittedGroups: selectedGroups
       };
-      console.log(updateData)
+
       
       const response = await axios.post('/api/updateContest', updateData);
       if(response.status === 200){

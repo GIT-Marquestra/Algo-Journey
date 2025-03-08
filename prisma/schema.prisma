@@ -30,6 +30,7 @@ model User {
   applications        GroupApplication[]   @relation("GroupApplications")
   coordinatedGroup    Group?              @relation("GroupCoordinator") 
   contestPermissions  ContestPermission[]
+  contestTime         TempContestTime[]
   
   @@index([groupId]) 
 }
@@ -93,6 +94,15 @@ enum ContestStatus {
   UPCOMING
   ACTIVE
   COMPLETED
+}
+
+model TempContestTime {
+  id                 String               @id @default(uuid())
+  contestId          Int                  
+  endTime            DateTime     
+  userId             String               
+  user               User                 @relation(fields: [userId], references: [id])                
+
 }
 
 model GroupOnContest {
