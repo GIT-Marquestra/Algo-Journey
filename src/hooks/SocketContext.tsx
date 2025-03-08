@@ -20,6 +20,15 @@ interface QuestionPar {
   };
 }
 
+interface Question {
+  id: string;
+  leetcodeUrl: string;
+  codeforcesUrl: string;
+  questionTags: { id: string; name: string; }[];
+  slug: string;
+  difficulty: string;
+}
+
 // Define types for socket communication
 interface ServerToClientEvents {
   contestUpdate: (data: { questions: { questions: QuestionPar[] } }) => void;
@@ -27,8 +36,8 @@ interface ServerToClientEvents {
 }
 
 interface ClientToServerEvents {
-  addQuestion: ({ q, contestId }: { q: any; contestId: number }) => void;
-  submitEntry: (data: { questions: any[] }) => void;
+  addQuestion: ({ q, contestId }: { q: Question; contestId: number }) => void;
+  submitEntry: (data: { questions: Question[] }) => void;
 }
 
 export type SocketType = Socket<ServerToClientEvents, ClientToServerEvents>;
