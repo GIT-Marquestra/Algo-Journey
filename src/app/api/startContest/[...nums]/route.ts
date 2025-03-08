@@ -111,18 +111,18 @@ export async function POST(
             }
 
            
-            // const existingSubmission = await prisma.submission.findFirst({
-            //     where: {
-            //         userId: user.id,
-            //         contestId: contest.id
-            //     }
-            // });
+            const existingSubmission = await prisma.submission.findFirst({
+                where: {
+                    userId: user.id,
+                    contestId: contest.id
+                }
+            });
             
-            // if (existingSubmission) {
-            //     return NextResponse.json({
-            //         message: "User has already participated in this contest"
-            //     }, { status: 430 });
-            // }
+            if (existingSubmission) {
+                return NextResponse.json({
+                    message: "User has already participated in this contest"
+                }, { status: 430 });
+            }
 
         
             if (currentTimeIST < contestStart) {
