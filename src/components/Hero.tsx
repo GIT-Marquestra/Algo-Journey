@@ -161,20 +161,20 @@ const HeroSection = () => {
                       ))}
                     </div>
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 mt-4">
-                      <a
+                      <Link
                         href={contributor.github}
                         target="_blank"
                         className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
                       >
                         <Code className="h-4 w-4 mr-1" /> GitHub
-                      </a>
-                      <a
+                      </Link>
+                      <Link
                         href={contributor.linkedin}
                         target="_blank"
                         className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
                       >
                         <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 ))}
