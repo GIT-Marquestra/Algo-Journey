@@ -1,11 +1,12 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, ProjectorIcon, Paperclip, X, Globe, Code, FileText, CheckCircle } from 'lucide-react';
+import { Send, User, Bot, ProjectorIcon, Paperclip, X, Globe, Code, FileText, CheckCircle, Github } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useParams } from 'next/navigation';
 import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
+import { Octokit } from "@octokit/core";
 
 interface Message {
   id: string;
@@ -20,6 +21,8 @@ interface ProjectDetails {
   projectType: string;
   demoUrl: string;
   description: string;
+  filePath: string;
+  demoCode: string
 }
 
 const ChatComponent: React.FC = () => {
@@ -27,17 +30,22 @@ const ChatComponent: React.FC = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [repos, setRepos] = useState([])
-  const params = useParams()
-  const [githubConnected, setGithubConnected] = useState(false)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const Router = useRouter()
+  const [repos, setRepos] = useState<string[]>([]);
+  const [isLoadingRepos, setIsLoadingRepos] = useState(false);
+  const [selectedRepo, setSelectedRepo] = useState('');
+  const params = useParams();
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const Router = useRouter();
+  const [githubUsername, setGithubUsername] = useState<string | null>(null)
   const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
     githubUrl: '',
     techStack: '',
     projectType: '',
     demoUrl: '',
-    description: ''
+    description: '',
+    filePath: '',
+    demoCode: ''
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -46,48 +54,71 @@ const ChatComponent: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
   const getRepos = async () => {
     try {
+      setIsLoadingRepos(true);
       const res = await axios.post('/api/fetchRepos', {
         accessToken
-      })
+      });
+      
       if(res.status === 235){
-        toast.error(res.data.message)
-        return 
+        toast.error(res.data.message);
+        setIsLoadingRepos(false);
+        return;
       }
+      
       if(res.status === 200){
-        toast.success('Github Connected')
+        toast.success('Repositories loaded successfully');
+        setRepos(res.data.repos);
+        setGithubUsername(res.data.githubUsername)
       }
-      console.log(res.data.repos)
+      
+      setIsLoadingRepos(false);
     } catch (error) {
-      console.error('Error in getRepos', error)
-      toast.error('Some unexpected error occured')
+      console.error('Error in getRepos', error);
+      toast.error('Token Expired, Reconnect Github');
+      setIsLoadingRepos(false);
     }
   }
 
   useEffect(() => {
     if(params && params.array && params.array.length > 0){
-      const a = params.array[1]
-      const b = params.array[0]
-      setAccessToken(a as string)
+      const a = params.array[1];
+      const b = params.array[0];
+      if(a){
+        setAccessToken(a as string);
+      } else{
+        toast.success('Getting token from local storage')
+        const c = localStorage.getItem('githubAccessToken')
+        setAccessToken(c)
+      }
       if(b === 'true'){
-        setGithubConnected(true)
+        setGithubConnected(true);
       } else {
-        setGithubConnected(false)
+        setGithubConnected(false);
         if(a){
-          localStorage.setItem('githubAccessToken', accessToken as string)
-          Router.replace('/chat/true')
+          localStorage.setItem('githubAccessToken', accessToken as string);
+          Router.replace('/chat/true');
         }
         if(b === 'false') {
-          toast.error('Github not connected')
-          return 
+          toast.error('Github not connected');
+          return;
         }
-     
-        toast.success('Github connected')
-        
+        toast.success('Github connected');
       }
     }
-  }, [])
+  }, []);
+  
+  // Update GitHub URL when a repo is selected
+  useEffect(() => {
+    if (selectedRepo) {
+      setProjectDetails(prev => ({
+        ...prev,
+        githubUrl: `https://github.com/${githubUsername}/${selectedRepo}`
+      }));
+    }
+  }, [selectedRepo]);
   
   // Auto-resize textarea
   useEffect(() => {
@@ -149,40 +180,89 @@ const ChatComponent: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleProjectSubmit = (e: React.FormEvent) => {
+  const handleProjectSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const octokit = new Octokit({
+      auth: accessToken
+    });
+
+    if(!githubUsername) {
+      toast.error('Github Username No Found')
+      return 
+    }
+
+    let formattedMessage = `
+    GitHub Repository: ${projectDetails.githubUrl}
+    Tech Stack: ${projectDetails.techStack}
+    Project Type: ${projectDetails.projectType}
+    Live Demo: ${projectDetails.demoUrl}
+    Description: ${projectDetails.description}
+        `.trim();
+
+    try {
+      const response = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+        owner: githubUsername,
+        repo: selectedRepo,
+        path: projectDetails.filePath,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      });
+  
+      //@ts-expect-error: dont know what to do here
+      const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+      setProjectDetails({...projectDetails, demoCode: content})
+      formattedMessage = `
+    GitHub Repository: ${projectDetails.githubUrl}
+    Tech Stack: ${projectDetails.techStack}
+    Project Type: ${projectDetails.projectType}
+    Live Demo: ${projectDetails.demoUrl}
+    Description: ${projectDetails.description}
+    Demo Code: ${content}
+        `.trim();
+    } catch (error) {
+      console.error(`Error fetching file content: ${error}`);
+    }
     
-    // Generate a formatted message from the project details
-    const formattedMessage = `
-GitHub Repository: ${projectDetails.githubUrl}
-Tech Stack: ${projectDetails.techStack}
-Project Type: ${projectDetails.projectType}
-Live Demo: ${projectDetails.demoUrl}
-Description: ${projectDetails.description}
-    `.trim();
     
     // Close modal
     setShowModal(false);
-    
-    // Send the formatted message
     handleSendMessage(e, formattedMessage);
+
+    try{
+      const response = await axios.post("/api/geminiRate", {
+       formattedMessage
+      });
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        text: response.data.insights,
+        sender: 'ai',
+        timestamp: new Date(),
+      };
+      setMessages((p) => [...p, aiMessage])
+
+    } catch(error){
+      console.error('Error while getting rating from ai: ', error)
+    }
+
   };
 
   const modalOpen = () => {
     if(githubConnected){
       setShowModal(true);
     } else {
-      connect()
+      connect();
     }
   };
 
   const connectGithub = async () => {
     try {
-      window.location.href = "/api/auth/github/login"
+      window.location.href = "/api/auth/github/login";
     } catch (error) {
-      console.log('Error in connectGithub function', error)
+      console.log('Error in connectGithub function', error);
     }
-  }
+  };
 
   const connect = () => {
     toast((t) => (
@@ -191,8 +271,8 @@ Description: ${projectDetails.description}
         <div className="flex gap-2 mt-2 justify-center">
           <button 
             onClick={() => {
-              toast.dismiss(t.id)
-              connectGithub()
+              toast.dismiss(t.id);
+              connectGithub();
             }} 
             className="bg-green-400 px-3 py-1 rounded"
           >
@@ -201,6 +281,10 @@ Description: ${projectDetails.description}
         </div>
       </div>
     ), { duration: 5000 }); 
+  };
+
+  const selectRepository = (repo: string) => {
+    setSelectedRepo(repo);
   };
 
   return (
@@ -265,7 +349,7 @@ Description: ${projectDetails.description}
       {/* Project Details Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full transform transition-all">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full transform transition-all max-h-[90vh] overflow-y-auto">
             <div className="p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-medium text-gray-900 flex items-center">
@@ -283,18 +367,70 @@ Description: ${projectDetails.description}
               <form onSubmit={handleProjectSubmit}>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 items-center">
-                      <ProjectorIcon size={16} className="mr-1 text-gray-500" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
+                      <Github size={16} className="mr-1 text-gray-500" />
                       GitHub Repository URL <span className="text-red-500">*</span>
                     </label>
-                    <Button onClick={getRepos}>Import from your github</Button>
-                    {repos && repos.map((r) => (
-                      <span></span>
-                    ))}
+                    
+                    <div className="mb-2">
+                      <input
+                        type="url"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                        placeholder="https://github.com/username/repo"
+                        value={projectDetails.githubUrl}
+                        readOnly
+                        onChange={(e) => setProjectDetails({...projectDetails, githubUrl: e.target.value})}
+                      />
+                    </div>
+                    
+                    <div className="flex items-center gap-2 mb-2">
+                      <Button 
+                        onClick={getRepos} 
+                        className="flex items-center gap-1 bg-gray-100 hover:bg-gray-200 text-gray-800"
+                        disabled={isLoadingRepos}
+                      >
+                        <Github size={16} />
+                        {isLoadingRepos ? 'Loading...' : 'Import from GitHub'}
+                      </Button>
+                      
+                      {selectedRepo && (
+                        <div className="text-sm text-green-600 flex items-center">
+                          <CheckCircle size={14} className="mr-1" />
+                          Selected: {selectedRepo.split('/')[1]}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {repos.length > 0 && (
+                      <div className="border border-gray-200 rounded-lg p-2 max-h-40 overflow-y-auto">
+                        <div className="text-sm mb-2 text-gray-500">Select a repository:</div>
+                        <div className="grid grid-cols-1 gap-1">
+                          {repos.map((repo) => (
+                            <button
+                              type="button"
+                              key={repo}
+                              onClick={() => selectRepository(repo)}
+                              className={`text-left px-3 py-2 rounded-md text-sm flex items-center ${
+                                selectedRepo === repo
+                                  ? 'bg-blue-100 text-blue-700 font-medium'
+                                  : 'hover:bg-gray-100'
+                              }`}
+                            >
+                              <Github size={14} className="mr-2 text-gray-500" />
+                              {repo}
+                              {selectedRepo === repo && (
+                                <CheckCircle size={14} className="ml-auto text-blue-500" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 items-center">
+                    <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
                       <Code size={16} className="mr-1 text-gray-500" />
                       Tech Stack <span className="text-red-500">*</span>
                     </label>
@@ -309,7 +445,22 @@ Description: ${projectDetails.description}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 items-center">
+                    <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
+                      <Code size={16} className="mr-1 text-gray-500" />
+                      Main File Path <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="/src/index.js"
+                      value={projectDetails.filePath}
+                      onChange={(e) => setProjectDetails({...projectDetails, filePath: e.target.value})}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
                       <FileText size={16} className="mr-1 text-gray-500" />
                       Project Type <span className="text-red-500">*</span>
                     </label>
@@ -324,13 +475,12 @@ Description: ${projectDetails.description}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 items-center">
+                    <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
                       <Globe size={16} className="mr-1 text-gray-500" />
                       Live Demo URL <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="url"
-                      required
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
                       placeholder="https://project.vercel.app"
                       value={projectDetails.demoUrl}
@@ -339,7 +489,7 @@ Description: ${projectDetails.description}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 items-center">
+                    <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
                       <FileText size={16} className="mr-1 text-gray-500" />
                       Project Description <span className="text-red-500">*</span>
                     </label>
@@ -357,7 +507,7 @@ Description: ${projectDetails.description}
                 <div className="mt-5">
                   <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+                    className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-300 transition-colors flex items-center justify-center"
                   >
                     <CheckCircle size={18} className="mr-1" />
                     Submit Project for Analysis

@@ -6,16 +6,16 @@ export async function POST(req: Request) {
   const request = await req.json()
 
   const { accessToken } = request
+
+  console.log(accessToken)
  
   if (!accessToken) {
-    return NextResponse.json({ message: "GitHub not connected" }, { status: 401 });
+    return NextResponse.json({ message: "GitHub not connected" }, { status: 235 });
   }
 
   try {
-    // ✅ Initialize Octokit with the received access token
     const octokit = new Octokit({ auth: accessToken });
 
-    // ✅ Fetch the authenticated user's repositories
     const response = await octokit.request("GET /user/repos", {
       headers: { "X-GitHub-Api-Version": "2022-11-28" },
     });
@@ -23,12 +23,14 @@ export async function POST(req: Request) {
 
     console.log(repos)
 
-    return NextResponse.json({ success: true, repos });
-  } catch (error: any) {
-    console.error("❌ GitHub API Error:", error.response?.data || error.message);
+    const githubUsername = response.data[0].owner.login
+
+    return NextResponse.json({ success: true, repos, githubUsername });
+  } catch (error) {
+    console.error("❌ GitHub API Error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch repositories", details: error.response?.data },
-      { status: error.response?.status || 500 }
+      { error: "Failed to fetch repositories" },
+      { status: 500 }
     );
   }
 }
