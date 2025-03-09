@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-import { Loader2, Search, Users, UserPlus, AlertCircle } from "lucide-react"
+import { Loader2, Search, Users, UserPlus, AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -28,6 +28,8 @@ const AdminGroupCreator = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [mode, setMode] = useState<'create' | 'update'>('create')
   const [newGroupName, setNewGroupName] = useState('')
+  const [isFetchingGroup, setIsFetchingGroup] = useState(false)
+  const [groupFetched, setGroupFetched] = useState(false)
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -50,6 +52,49 @@ const AdminGroupCreator = () => {
     checkAdminStatus()
   }, [])
 
+  const fetchGroupMembers = async () => {
+    if (!groupName.trim()) {
+      toast.error('Please enter an existing group name')
+      return
+    }
+
+    setIsFetchingGroup(true)
+    
+    try {
+      const response = await axios.post('/api/getGroupMembersToUpdate', {
+        groupName: groupName.trim()
+      })
+
+      const { data } = response
+
+      if (data.members && Array.isArray(data.members)) {
+        setSelectedUsers(data.members.map((user: User) => user.id))
+        
+        // Merge members with existing users, avoiding duplicates
+        setUsers(prevUsers => {
+          const existingUserIds = new Set(prevUsers.map(user => user.id))
+          const newUsers = data.members.filter((user: User) => !existingUserIds.has(user.id))
+          return [...prevUsers, ...newUsers]
+        })
+        
+        // Set coordinator if it exists in the response
+        if (data.coordinator) {
+          setCoordinator(data.coordinator)
+        }
+        
+        setGroupFetched(true)
+        toast.success('Group members loaded successfully')
+      } else {
+        toast.error('Failed to fetch group members')
+      }
+    } catch (err) {
+      console.error('Error fetching group members:', err)
+      toast.error('Group not found or error fetching members')
+    } finally {
+      setIsFetchingGroup(false)
+    }
+  }
+
   const handleUserSelect = (userId: string) => {
     setSelectedUsers(prev => 
       prev.includes(userId) 
@@ -68,6 +113,7 @@ const AdminGroupCreator = () => {
     setGroupName('')
     setNewGroupName('')
     setSearchTerm('')
+    setGroupFetched(false)
   }
 
   const handleSubmit = async () => {
@@ -81,7 +127,7 @@ const AdminGroupCreator = () => {
       return
     }
 
-    if (!coordinator) {
+    if (!coordinator && mode === 'create') {
       toast.error('Please select a coordinator')
       return
     }
@@ -92,8 +138,9 @@ const AdminGroupCreator = () => {
       await axios.post('/api/groups/create', {
         name: groupName.trim(),
         users: selectedUsers,
-        newGroupName: newGroupName.trim(),
-        coordinator
+        newGroupName: mode === 'update' ? newGroupName.trim() : undefined,
+        coordinator,
+        mode
       })
       toast.success(`Group ${mode === 'create' ? 'created' : 'updated'} successfully`)
       resetForm()
@@ -105,6 +152,12 @@ const AdminGroupCreator = () => {
     }
   }
 
+  const handleModeChange = (value: string) => {
+    setMode(value as 'create' | 'update')
+    resetForm()
+  }
+
+  // Fix: Properly filter users based on search term
   const filteredUsers = users.filter(user => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   )
@@ -137,7 +190,7 @@ const AdminGroupCreator = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue="create" className="space-y-6" onValueChange={(value) => setMode(value as 'create' | 'update')}>
+        <Tabs defaultValue="create" className="space-y-6" onValueChange={handleModeChange}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="create">Create New Group</TabsTrigger>
             <TabsTrigger value="update">Update Existing Group</TabsTrigger>
@@ -146,15 +199,39 @@ const AdminGroupCreator = () => {
           <div className="space-y-4">
             <div className="grid gap-4">
               <div>
-                <Input
-                  placeholder={mode === 'create' ? "Enter new group name" : "Enter existing group name"}
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  className="mb-2"
-                />
-                {mode === 'update' && (
+                {mode === 'update' ? (
+                  <div className="flex gap-2 mb-2">
+                    <Input
+                      placeholder="Enter existing group name"
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={fetchGroupMembers} 
+                      disabled={isFetchingGroup}
+                      variant="secondary"
+                    >
+                      {isFetchingGroup ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                      )}
+                      Fetch Group
+                    </Button>
+                  </div>
+                ) : (
                   <Input
                     placeholder="Enter new group name"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    className="mb-2"
+                  />
+                )}
+                
+                {mode === 'update' && groupFetched && (
+                  <Input
+                    placeholder="Enter new group name (leave blank to keep current name)"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
                   />
@@ -229,7 +306,7 @@ const AdminGroupCreator = () => {
             <Button 
               className="w-full"
               onClick={handleSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || (mode === 'update' && !groupFetched)}
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === 'create' ? 'Create Group' : 'Update Group'}
