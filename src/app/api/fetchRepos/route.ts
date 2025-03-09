@@ -1,24 +1,34 @@
-import { authOptions } from "@/lib/authOptions";
-import axios from "axios";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
+import { Octokit } from "@octokit/core";
 
-export async function POST() {
+export async function POST(req: Request) {
 
-  const session = await getServerSession(authOptions)
+  const request = await req.json()
 
-  console.log(session)
+  const { accessToken } = request
+ 
+  if (!accessToken) {
+    return NextResponse.json({ message: "GitHub not connected" }, { status: 401 });
+  }
 
-  const accessToken = session?.user.githubAccessToken
+  try {
+    // ✅ Initialize Octokit with the received access token
+    const octokit = new Octokit({ auth: accessToken });
 
-  console.log('accessToken', accessToken)
-  
-  if (!accessToken) return NextResponse.json({ message: "GitHub not connected" }, { status: 235 });
+    // ✅ Fetch the authenticated user's repositories
+    const response = await octokit.request("GET /user/repos", {
+      headers: { "X-GitHub-Api-Version": "2022-11-28" },
+    });
+    const repos = response.data.map((p) => p.name)
 
-  const response = await axios.post("https://api.github.com/user/repos", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  console.log(response)
-  const repos = response.data.repos
-  NextResponse.json({ repos }, { status: 200 });
+    console.log(repos)
+
+    return NextResponse.json({ success: true, repos });
+  } catch (error: any) {
+    console.error("❌ GitHub API Error:", error.response?.data || error.message);
+    return NextResponse.json(
+      { error: "Failed to fetch repositories", details: error.response?.data },
+      { status: error.response?.status || 500 }
+    );
+  }
 }

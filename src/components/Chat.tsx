@@ -5,6 +5,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useParams } from 'next/navigation';
 import { Button } from './ui/button';
+import { useRouter } from 'next/navigation';
 
 interface Message {
   id: string;
@@ -28,7 +29,9 @@ const ChatComponent: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [repos, setRepos] = useState([])
   const params = useParams()
-  const { githubConnected } = params
+  const [githubConnected, setGithubConnected] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const Router = useRouter()
   const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
     githubUrl: '',
     techStack: '',
@@ -45,7 +48,9 @@ const ChatComponent: React.FC = () => {
   }, [messages]);
   const getRepos = async () => {
     try {
-      const res = await axios.post('/api/fetchRepos')
+      const res = await axios.post('/api/fetchRepos', {
+        accessToken
+      })
       if(res.status === 235){
         toast.error(res.data.message)
         return 
@@ -61,14 +66,28 @@ const ChatComponent: React.FC = () => {
   }
 
   useEffect(() => {
-    if(githubConnected !== 'true') {
-      toast.error('Github not connected')
-      return 
+    if(params && params.array && params.array.length > 0){
+      const a = params.array[1]
+      const b = params.array[0]
+      setAccessToken(a as string)
+      if(b === 'true'){
+        setGithubConnected(true)
+      } else {
+        setGithubConnected(false)
+        if(a){
+          localStorage.setItem('githubAccessToken', accessToken as string)
+          Router.replace('/chat/true')
+        }
+        if(b === 'false') {
+          toast.error('Github not connected')
+          return 
+        }
+     
+        toast.success('Github connected')
+        
+      }
     }
- 
-    toast.success('Github connected')
-    
-  }, [githubConnected])
+  }, [])
   
   // Auto-resize textarea
   useEffect(() => {
@@ -150,7 +169,7 @@ Description: ${projectDetails.description}
   };
 
   const modalOpen = () => {
-    if(githubConnected === 'true'){
+    if(githubConnected){
       setShowModal(true);
     } else {
       connect()

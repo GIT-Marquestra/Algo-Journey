@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { getToken } from "next-auth/jwt";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -38,10 +37,8 @@ export async function GET(req: Request) {
     }
 
     session.user.githubAccessToken = accessToken;
-
-    console.log(session)
     
-    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/chat/true`);
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/chat/true/${accessToken}`);
   } catch (error) {
     console.error("🔥 GitHub OAuth error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
