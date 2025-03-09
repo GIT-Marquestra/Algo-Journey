@@ -164,14 +164,14 @@ const HeroSection = () => {
                       <Link
                         href={contributor.github}
                         target="_blank"
-                        className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                        className="inline-flex z-10 items-center text-blue-400 hover:text-blue-300 text-sm"
                       >
                         <Code className="h-4 w-4 mr-1" /> GitHub
                       </Link>
                       <Link
                         href={contributor.linkedin}
                         target="_blank"
-                        className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm"
+                        className="inline-flex z-10 items-center text-blue-400 hover:text-blue-300 text-sm"
                       >
                         <Linkedin className="h-4 w-4 mr-1" /> LinkedIn
                       </Link>
