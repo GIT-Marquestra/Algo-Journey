@@ -46,15 +46,8 @@ export async function POST(req: Request) {
     });
 
     if (existingGroup) {
-      const currentMemberIds = existingGroup.members.map(member => member.id);
-      let allUserIds = [...currentMemberIds];
-
       const updatedGroup = await prisma.$transaction(async (tx) => {
-        const updateData: Data = {
-          members: {
-            set: allUserIds.map(id => ({ id }))
-          }
-        };
+        const updateData: Data = {};
 
         if (newGroupName) {
           updateData.name = newGroupName;
@@ -69,21 +62,27 @@ export async function POST(req: Request) {
           }
         }
 
-        if (users && users.length > 0) {
-          const newUserIds = users.filter((id: string) => !currentMemberIds.includes(id));
-          allUserIds = [...currentMemberIds, ...newUserIds];
-          
-          updateData.members = {
-            set: allUserIds.map(id => ({ id }))
-          };
+        // Replace existing members with new ones
+        updateData.members = {
+          set: users.map((id: string) => ({ id }))
+        };
 
-          if (newUserIds.length > 0) {
-            await tx.user.updateMany({
-              where: { id: { in: newUserIds } },
-              data: { groupId: existingGroup.id },
-            });
-          }
+        // Reset groupId for members that are no longer in the group
+        const currentMemberIds = existingGroup.members.map(member => member.id);
+        const removedMemberIds = currentMemberIds.filter(id => !users.includes(id));
+        
+        if (removedMemberIds.length > 0) {
+          await tx.user.updateMany({
+            where: { id: { in: removedMemberIds } },
+            data: { groupId: null },
+          });
         }
+
+        // Update groupId for new members
+        await tx.user.updateMany({
+          where: { id: { in: users } },
+          data: { groupId: existingGroup.id },
+        });
 
         return await tx.group.update({
           where: { id: existingGroup.id },
@@ -96,7 +95,7 @@ export async function POST(req: Request) {
       }, { timeout: 30000 });
 
       let updateMessage = "Group updated successfully:";
-      if (users) updateMessage += ` ${users.length} members processed.`;
+      updateMessage += ` ${users.length} members set.`;
       if (coordinator) updateMessage += " Coordinator updated.";
       if (newGroupName) updateMessage += " Name updated.";
 
@@ -104,7 +103,7 @@ export async function POST(req: Request) {
         group: updatedGroup, 
         message: updateMessage,
         updates: {
-          membersProcessed: users?.length || 0,
+          membersProcessed: users.length,
           nameUpdated: !!newGroupName,
           coordinatorUpdated: !!coordinator
         }
