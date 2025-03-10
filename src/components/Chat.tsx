@@ -8,7 +8,7 @@ import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
 import { Octokit } from "@octokit/core";
 import ThinkingLoader from './ThinkingLoader';
-import { AITypingEffect } from './AITypingEffect';
+// import { AITypingEffect } from './AITypingEffect';
 import gemini from '@/images/google-gemini-icon.svg'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Image from 'next/image';
@@ -50,6 +50,7 @@ const ChatComponent: React.FC = () => {
   const Router = useRouter();
   const [githubUsername, setGithubUsername] = useState<string | null>(null)
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [latestAIMessageId, setLatestAIMessageId] = useState<string | null>(null);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
     githubUrl: '',
     techStack: '',
@@ -70,7 +71,7 @@ const ChatComponent: React.FC = () => {
       if (!userMessage.trim()) throw new Error("Message cannot be empty.");
   
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const responseStream = await model.generateContentStream(userMessage);
+      const responseStream = await model.generateContentStream('be to the point, avoid answering in long way, if the answer expects the code provide the code and answer the following message: ' + userMessage);
   
       let accumulatedText = "";
       let codeBuffer = "";
@@ -168,16 +169,20 @@ const ChatComponent: React.FC = () => {
     setMessages((prev) => [...prev, userMessageObj]);
   
     // Create separate messages for each content type
+    setIsLoading(true)
     await sendToGeminiStream(userMessage, (chunk) => {
       // Create a new message for each chunk received
       const newMessage: Message = {
         id: Date.now().toString(),
         sender: "ai",
-        text: chunk.text,
+        text: chunk.text.trim(),
         isCode: chunk.isCode,
         language: chunk.language || "",
         timestamp: new Date(),
       };
+      setLatestAIMessageId(newMessage.id);
+
+      setIsLoading(false)
       
       setMessages((prev) => [...prev, newMessage]);
     });
@@ -270,15 +275,6 @@ const ChatComponent: React.FC = () => {
     
     const messageText = customText || input;
     if (!messageText.trim()) return;
-    
-    // Add user message
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: messageText,
-      sender: 'user',
-      timestamp: new Date(),
-      isCode: false
-    };
     
     setInput('');
     
@@ -498,10 +494,15 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
                   {/* Message Text */}
                   <div className="w-full p-3">
                     {message.sender === "ai" ? (
-                      message.isCode ? ( 
+                      message.isCode ? (
                         <CodeBlock code={message.text} language={message.language || "javascript"} />
                       ) : (
-                        <AITypingEffect text={message.text} /> 
+                        latestAIMessageId === message.id ? (
+                          // <AITypingEffect text={message.text} /> // ✅ Apply effect only for the latest AI message
+                          message.text
+                        ) : (
+                          <div className="whitespace-pre-wrap">{message.text}</div>
+                        )
                       )
                     ) : (
                       <div className="whitespace-pre-wrap">{message.text}</div>
