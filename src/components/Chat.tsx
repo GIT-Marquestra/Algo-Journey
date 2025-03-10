@@ -356,6 +356,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
       // Reset copied state after 2 seconds
       setTimeout(() => setCopiedMessageId(null), 2000);
     } catch (err) {
+      console.error(err)
       toast.error("Failed to copy! ❌");
     }
   };
