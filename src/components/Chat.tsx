@@ -93,7 +93,6 @@ const ChatComponent: React.FC = () => {
       if(a){
         setAccessToken(a as string);
       } else{
-        toast.success('Getting token from local storage')
         const c = localStorage.getItem('githubAccessToken')
         setAccessToken(c)
       }
