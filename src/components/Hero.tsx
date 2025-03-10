@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import img1 from '@/images/landing.jpg'
 import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin, Star, Award, BarChart3, BookOpen } from "lucide-react";
@@ -18,21 +18,9 @@ const HeroSection = () => {
   const sentence = "We are dedicated to providing an exceptional learning experience."
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
-  const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.6 }
-  };
+
 
   return (
     <div className="bg-gradient-to-b from-white via-white to-gray-50 relative w-screen h-auto flex flex-col items-center overflow-hidden">
