@@ -333,7 +333,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             <Bot size={48} className="mb-4 text-blue-300" />
-            <p className="text-center">Start a conversation with the AI assistant</p>
+            <p className="text-center">Evaluate your project by Gemini</p>
           </div>
         ) : (
           messages.map((message) => (
