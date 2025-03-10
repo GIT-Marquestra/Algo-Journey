@@ -432,7 +432,7 @@ export default function Dashboard(): JSX.Element {
           </>
         )}
       </div>
-      <ProjectRatingNotification 
+      {showRatingNotification && <ProjectRatingNotification 
         onClose={() => setShowRatingNotification(false)}
         onGetRated={() => {
           setShowRatingNotification(false);
@@ -442,7 +442,7 @@ export default function Dashboard(): JSX.Element {
             router.push('/chat/false')
           }
         }}
-      />
+      />}
     </div>
   );
 }
