@@ -10,6 +10,14 @@ export default {
   theme: {
   	extend: {
   		keyframes: {
+			thinking: {
+				'0%, 100%': { width: '0%', marginLeft: '0%' },
+				'50%': { width: '70%', marginLeft: '30%' },
+			  },
+			  fadeInOut: {
+				'0%, 100%': { opacity: '0.4' },
+				'50%': { opacity: '1' },
+			  },
   			buttonPulse: {
   				'0%': {
   					transform: 'scale(1)'
@@ -54,7 +62,10 @@ export default {
   			buttonPulse: 'buttonPulse 1000s infinite',
   			borderMove: 'borderMove 3s infinite alternate ease-in-out',
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+			'thinking-progress': 'thinking 2.5s ease-in-out infinite',
+			'fade-in-out': 'fadeInOut 4s ease-in-out infinite',
+			
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -98,6 +109,7 @@ export default {
   				'5': 'hsl(var(--chart-5))'
   			}
   		},
+		
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',

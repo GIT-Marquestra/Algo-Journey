@@ -17,6 +17,7 @@ import {
   Home, 
   Users, 
   Trophy, 
+  Brain,
   Swords, 
   LogOut, 
   UserCircle,
@@ -31,6 +32,7 @@ const Navbar = () => {
   const { status } = useSession();
   const [isAdmin, setIsAdmin] = useState(false);
   const [username, setUsername] = useState('');
+  const [token, setToken] = useState<string | null>(null)
   
   useEffect(() => {
     const checkIfAdmin = async () => {
@@ -51,6 +53,13 @@ const Navbar = () => {
       checkIfAdmin();
     }
   }, [status]);
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('githubAccessToken')
+    if(accessToken){
+      setToken(accessToken)
+    }
+  })
 
   const navigationItems = [
     { href: '/user/dashboard', label: 'Home', icon: Home },
@@ -134,6 +143,12 @@ const Navbar = () => {
                     <DropdownMenuItem>
                       <ChartNoAxesColumnIcon className="mr-2 h-4 w-4" />
                       <span>Stats</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href={token ? '/chat/true' : '/chat/false'}>
+                    <DropdownMenuItem>
+                      <Brain className="mr-2 h-4 w-4" />
+                      <span>Get your Project rating</span>
                     </DropdownMenuItem>
                   </Link>
                   </>

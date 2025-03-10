@@ -7,6 +7,7 @@ import { useParams } from 'next/navigation';
 import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
 import { Octokit } from "@octokit/core";
+import ThinkingLoader from './ThinkingLoader';
 
 interface Message {
   id: string;
@@ -33,6 +34,7 @@ const ChatComponent: React.FC = () => {
   const [repos, setRepos] = useState<string[]>([]);
   const [isLoadingRepos, setIsLoadingRepos] = useState(false);
   const [selectedRepo, setSelectedRepo] = useState('');
+  const [loading, setLoading] = useState(false)
   const params = useParams();
   const [githubConnected, setGithubConnected] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
@@ -78,6 +80,7 @@ const ChatComponent: React.FC = () => {
     } catch (error) {
       console.error('Error in getRepos', error);
       toast.error('Token Expired, Reconnect Github');
+      connect()
       setIsLoadingRepos(false);
     }
   }
@@ -159,7 +162,7 @@ const ChatComponent: React.FC = () => {
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thanks for submitting your project details! I'll analyze your repository and provide feedback shortly.",
+        text: "Thanks for submitting your project details! I&apos;ll analyze your repository and provide feedback shortly.",
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -230,6 +233,8 @@ const ChatComponent: React.FC = () => {
     setShowModal(false);
     handleSendMessage(e, formattedMessage);
 
+    setLoading(true)
+
     try{
       const response = await axios.post("/api/geminiRate", {
        formattedMessage
@@ -244,6 +249,8 @@ const ChatComponent: React.FC = () => {
 
     } catch(error){
       console.error('Error while getting rating from ai: ', error)
+    } finally{
+      setLoading(false)
     }
 
   };
@@ -290,6 +297,7 @@ const ChatComponent: React.FC = () => {
   return (
     <div className="flex mt-24 flex-col w-full h-[90vh] max-w-[70%] mx-auto relative">
       {/* Messages area */}
+      {loading && <ThinkingLoader/>}
       <div className="flex-1 p-4 pb-24 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
