@@ -274,7 +274,7 @@ const ChatComponent: React.FC = () => {
   const connect = () => {
     toast((t) => (
       <div className="flex flex-col">
-        <p className="font-semibold">You're Github isn't connected</p>
+        <p className="font-semibold">You&apos;re Github isn&apos;t connected</p>
         <div className="flex gap-2 mt-2 justify-center">
           <button 
             onClick={() => {
