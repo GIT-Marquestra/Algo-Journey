@@ -461,7 +461,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             {/* <Bot size={48} className="mb-4 text-blue-300" /> */}
-            <p className="text-center">Evaluate your project by</p>
+            <p className="text-center">Chat/Rate with</p>
             <span className='flex items-center justify-center'><Image src={gemini} alt='gemini' className='size-8'/>Gemini</span>
             
           </div>

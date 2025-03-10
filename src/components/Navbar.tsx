@@ -149,7 +149,7 @@ const Navbar = () => {
                   <Link href={token ? '/chat/true' : '/chat/false'}>
                     <DropdownMenuItem>
                       <Brain className="mr-2 h-4 w-4" />
-                      <span>Get your Project rating</span>
+                      <span>Chat/Rate with Gemini</span>
                     </DropdownMenuItem>
                   </Link>
                   <Link href='/about'>
