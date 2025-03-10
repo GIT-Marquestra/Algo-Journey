@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
       also tell them to make a readme.md if not made already in github
 
-      give the rating as Final Rating: <your rating>
+      give the rating as Final Rating: <your rating as sum of all ratings>
 
       **Provide specific feedback and suggestions for improvement. in short, 1 point for each, your whole response should not exceed 7 lines**
     `;
