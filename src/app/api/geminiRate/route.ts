@@ -20,14 +20,18 @@ export async function POST(req: Request) {
 
       🚀 **Evaluation Criteria:**
       1️⃣ Advance Tech Used, as the user using this tool is a first year undergrad (0-20)
-      2️⃣ Code Efficiency (0-20)
+      2️⃣ Knowledge level (0-20)
       3️⃣ Use case of project (0-20)
       4️⃣ Security Practices (0-20)
       5️⃣ Overall Rating (0-20)
 
+      do consider it is built by a first year undergrad who has code for less than a year 
+
+      also tell them to make a readme.md if not made already in github
+
       give the rating as Final Rating: <your rating>
 
-      **Provide specific feedback and suggestions for improvement. in short, 5 points**
+      **Provide specific feedback and suggestions for improvement. in short, 1 point for each, your whole response should not exceed 7 lines**
     `;
 
     // 🔥 Send request to Gemini Pro

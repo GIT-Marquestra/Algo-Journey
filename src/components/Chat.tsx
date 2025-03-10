@@ -8,6 +8,7 @@ import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
 import { Octokit } from "@octokit/core";
 import ThinkingLoader from './ThinkingLoader';
+import { AITypingEffect } from './AITypingEffect';
 
 interface Message {
   id: string;
@@ -40,6 +41,8 @@ const ChatComponent: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const Router = useRouter();
   const [githubUsername, setGithubUsername] = useState<string | null>(null)
+  const [aiResponse, setAiResponse] = useState(""); // AI response in progress
+  const [isTyping, setIsTyping] = useState(false);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
     githubUrl: '',
     techStack: '',
@@ -162,7 +165,7 @@ const ChatComponent: React.FC = () => {
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thanks for submitting your project details! I&apos;ll analyze your repository and provide feedback shortly.",
+        text: "Thanks for submitting your project details! I'll analyze your repository and provide feedback shortly.",
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -183,77 +186,108 @@ const ChatComponent: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleProjectSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Replace the handleProjectSubmit function with this simplified version
+const handleProjectSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const octokit = new Octokit({
-      auth: accessToken
+  const octokit = new Octokit({
+    auth: accessToken
+  });
+
+  if(!githubUsername) {
+    toast.error('Github Username Not Found')
+    return 
+  }
+
+  let formattedMessage = `
+  GitHub Repository: ${projectDetails.githubUrl}
+  Tech Stack: ${projectDetails.techStack}
+  Project Type: ${projectDetails.projectType}
+  Live Demo: ${projectDetails.demoUrl}
+  Description: ${projectDetails.description}
+      `.trim();
+
+  try {
+    const response = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+      owner: githubUsername,
+      repo: selectedRepo,
+      path: projectDetails.filePath,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
     });
 
-    if(!githubUsername) {
-      toast.error('Github Username No Found')
-      return 
-    }
-
-    let formattedMessage = `
-    GitHub Repository: ${projectDetails.githubUrl}
-    Tech Stack: ${projectDetails.techStack}
-    Project Type: ${projectDetails.projectType}
-    Live Demo: ${projectDetails.demoUrl}
-    Description: ${projectDetails.description}
-        `.trim();
-
-    try {
-      const response = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-        owner: githubUsername,
-        repo: selectedRepo,
-        path: projectDetails.filePath,
-        headers: {
-          'X-GitHub-Api-Version': '2022-11-28'
-        }
-      });
+    //@ts-expect-error: dont know what to do here
+    const content = Buffer.from(response.data.content, 'base64').toString('utf8');
+    setProjectDetails({...projectDetails, demoCode: content})
+    formattedMessage = `
+  GitHub Repository: ${projectDetails.githubUrl}
+  Tech Stack: ${projectDetails.techStack}
+  Project Type: ${projectDetails.projectType}
+  Live Demo: ${projectDetails.demoUrl}
+  Description: ${projectDetails.description}
+  Demo Code: ${content}
+      `.trim();
+  } catch (error) {
+    console.error(`Error fetching file content: ${error}`);
+  }
   
-      //@ts-expect-error: dont know what to do here
-      const content = Buffer.from(response.data.content, 'base64').toString('utf8');
-      setProjectDetails({...projectDetails, demoCode: content})
-      formattedMessage = `
-    GitHub Repository: ${projectDetails.githubUrl}
-    Tech Stack: ${projectDetails.techStack}
-    Project Type: ${projectDetails.projectType}
-    Live Demo: ${projectDetails.demoUrl}
-    Description: ${projectDetails.description}
-    Demo Code: ${content}
-        `.trim();
-    } catch (error) {
-      console.error(`Error fetching file content: ${error}`);
-    }
-    
-    
-    // Close modal
-    setShowModal(false);
-    handleSendMessage(e, formattedMessage);
-
-    setLoading(true)
-
-    try{
-      const response = await axios.post("/api/geminiRate", {
-       formattedMessage
-      });
-      const aiMessage: Message = {
-        id: Date.now().toString(),
-        text: response.data.insights,
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages((p) => [...p, aiMessage])
-
-    } catch(error){
-      console.error('Error while getting rating from ai: ', error)
-    } finally{
-      setLoading(false)
-    }
-
+  // Close modal
+  setShowModal(false);
+  
+  // Add user message
+  const userMessage: Message = {
+    id: Date.now().toString(),
+    text: formattedMessage,
+    sender: 'user',
+    timestamp: new Date(),
   };
+  setMessages(prev => [...prev, userMessage]);
+  
+  // Add initial AI message
+  const initialAiMessage: Message = {
+    id: (Date.now() + 1).toString(),
+    text: "Thanks for submitting your project details! I'll analyze your repository and provide feedback shortly.",
+    sender: 'ai',
+    timestamp: new Date(),
+  };
+  setMessages(prev => [...prev, initialAiMessage]);
+
+  setLoading(true);
+
+  try {
+    const response = await axios.post("/api/geminiRate", {
+      formattedMessage
+    }, { timeout: 25000 });
+
+    // Replace the initial AI message with the full response
+    const aiMessage: Message = {
+      id: (Date.now() + 2).toString(),
+      text: response.data.insights || "AI response error!",
+      sender: 'ai',
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => {
+      // Replace the last message (which is the initial AI response)
+      const newMessages = [...prev.slice(0, -1), aiMessage];
+      return newMessages;
+    });
+
+  } catch(error) {
+    console.error('Error while getting rating from ai: ', error);
+    // Add error message
+    const errorMessage: Message = {
+      id: Date.now().toString(),
+      text: "Sorry, I encountered an error while analyzing your project. Please try again later.",
+      sender: 'ai',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev.slice(0, -1), errorMessage]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const modalOpen = () => {
     if(githubConnected){
@@ -311,13 +345,14 @@ const ChatComponent: React.FC = () => {
               className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div 
-                className={`flex max-w-3/4 rounded-lg p-3 ${
+                className={`max-w-3/4 rounded-lg p-3 ${
                   message.sender === 'user' 
                     ? 'bg-blue-200 text-blue-900 rounded-br-none' 
                     : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none shadow-sm'
                 }`}
+                style={{ width: message.sender === 'ai' ? '75%' : 'auto' }}
               >
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full">
                   <div className="flex items-center mb-1">
                     {message.sender === 'ai' ? (
                       <Bot size={16} className="mr-1 text-blue-400" />
@@ -328,7 +363,12 @@ const ChatComponent: React.FC = () => {
                       {message.sender === 'ai' ? 'AI Assistant' : 'You'} • {formatTime(message.timestamp)}
                     </span>
                   </div>
-                  <div className="whitespace-pre-wrap">{message.text}</div>
+                  <div className="w-full">
+                    {message.sender === "ai" ? 
+                      <AITypingEffect text={message.text} /> : 
+                      <div className="whitespace-pre-wrap">{message.text}</div>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
