@@ -86,9 +86,6 @@ interface PlatformData {
   codeforcesRating: number | null;
 }
 
-
-
-
 const fetchDashboardData = async (): Promise<DashboardData> => {
   const contestsResponse = await axios.get<{
     latestContests: Contest[];

@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Bot, ProjectorIcon, X, Clipboard, Globe, Code, FileText, CheckCircle, Github, Check } from 'lucide-react';
+import { User, ProjectorIcon, X, Clipboard, Globe, Code, FileText, CheckCircle, Github, Check } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useParams } from 'next/navigation';
@@ -9,7 +9,10 @@ import { useRouter } from 'next/navigation';
 import { Octokit } from "@octokit/core";
 import ThinkingLoader from './ThinkingLoader';
 import { AITypingEffect } from './AITypingEffect';
+import gemini from '@/images/google-gemini-icon.svg'
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import Image from 'next/image';
+import CodeBlock from './CodeBlock';
 
 
 interface Message {
@@ -17,6 +20,8 @@ interface Message {
   text: string;
   sender: 'user' | 'ai';
   timestamp: Date;
+  isCode: boolean;
+  language?: string
 }
 
 interface ProjectDetails {
@@ -57,24 +62,126 @@ const ChatComponent: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  async function sendToGemini(formattedMessage: string) {
+  async function sendToGeminiStream(
+    userMessage: string,
+    onStreamUpdate: (chunk: { text: string; isCode: boolean; language?: string }) => void
+  ) {
     try {
-      if (!formattedMessage) {
-        throw new Error("No project data provided.");
-      }
+      if (!userMessage.trim()) throw new Error("Message cannot be empty.");
   
-      // 🔥 Send request to Gemini Flash
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const result = await model.generateContent(formattedMessage);
-      const aiResponse = await result.response;
-      const insights = aiResponse.text();
+      const responseStream = await model.generateContentStream(userMessage);
   
-      return insights;
+      let accumulatedText = "";
+      let codeBuffer = "";
+      let inCodeBlock = false;
+      let codeLanguage = "javascript"; // Default language
+  
+      for await (const chunk of responseStream.stream) {
+        const text = chunk.text();
+        
+        // Check for code block markers
+        if (text.includes("```")) {
+          const segments = text.split("```");
+          
+          for (let i = 0; i < segments.length; i++) {
+            // Toggle code block state for each marker
+            if (i > 0) {
+              inCodeBlock = !inCodeBlock;
+              
+              // When we enter a code block
+              if (inCodeBlock) {
+                // First, send any accumulated regular text
+                if (accumulatedText.trim()) {
+                  const cleanText = accumulatedText.replace(/\*/g, "");
+                  onStreamUpdate({ text: cleanText, isCode: false });
+                  accumulatedText = "";
+                }
+                
+                // Check for language specification
+                const langMatch = segments[i].match(/^(\w+)\n/);
+                if (langMatch) {
+                  codeLanguage = langMatch[1];
+                  // Remove language part from the segment
+                  segments[i] = segments[i].substring(langMatch[0].length);
+                }
+                
+                // Start collecting code
+                codeBuffer = segments[i];
+              } 
+              // When we exit a code block
+              else {
+                // Send complete code block
+                onStreamUpdate({ text: codeBuffer, isCode: true, language: codeLanguage });
+                codeBuffer = "";
+                
+                // Start collecting regular text again
+                accumulatedText = segments[i];
+              }
+            } 
+            // First segment or when in existing state
+            else {
+              if (inCodeBlock) {
+                codeBuffer += segments[i];
+              } else {
+                accumulatedText += segments[i];
+              }
+            }
+          }
+        } 
+        // No code markers in this chunk
+        else {
+          if (inCodeBlock) {
+            codeBuffer += text;
+          } else {
+            accumulatedText += text;
+          }
+        }
+      }
+      
+      // Send any remaining content
+      if (inCodeBlock && codeBuffer.trim()) {
+        onStreamUpdate({ text: codeBuffer, isCode: true, language: codeLanguage });
+      } else if (accumulatedText.trim()) {
+        const cleanText = accumulatedText.replace(/\*/g, "");
+        onStreamUpdate({ text: cleanText, isCode: false });
+      }
+      
     } catch (error) {
-      console.error("🔥 AI Analysis Error:", error);
-      return "Error: Unable to process request.";
+      console.error("🔥 AI Streaming Error:", error);
+      onStreamUpdate({ text: "⚠️ Error: Unable to process request.", isCode: false });
     }
   }
+  
+  const handleAIResponse = async (userMessage: string) => {
+    if (!userMessage.trim()) return;
+  
+    // Add user message to state
+    const userMessageObj: Message = {
+      id: Date.now().toString(),
+      sender: "user",
+      text: userMessage,
+      isCode: false,
+      language: "",
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessageObj]);
+  
+    // Create separate messages for each content type
+    await sendToGeminiStream(userMessage, (chunk) => {
+      // Create a new message for each chunk received
+      const newMessage: Message = {
+        id: Date.now().toString(),
+        sender: "ai",
+        text: chunk.text,
+        isCode: chunk.isCode,
+        language: chunk.language || "",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, newMessage]);
+    });
+  };
   
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -170,29 +277,18 @@ const ChatComponent: React.FC = () => {
       text: messageText,
       sender: 'user',
       timestamp: new Date(),
+      isCode: false
     };
     
-    setMessages(prev => [...prev, userMessage]);
     setInput('');
-    setIsLoading(true);
     
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
     }
 
-    const aiResponse = await sendToGemini(messageText)
-    
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: aiResponse,
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, aiMessage]);
-      setIsLoading(false);
-    }, 3000);
+    await handleAIResponse(messageText)
+
+   
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -260,6 +356,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
     text: formattedMessage,
     sender: 'user',
     timestamp: new Date(),
+    isCode: false
   };
   setMessages(prev => [...prev, userMessage]);
   
@@ -268,6 +365,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
     text: "Thanks for submitting your project details! I'll analyze your repository and provide feedback shortly.",
     sender: 'ai',
     timestamp: new Date(),
+    isCode: false
   };
   setMessages(prev => [...prev, initialAiMessage]);
 
@@ -283,6 +381,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
       text: response.data.insights || "AI response error!",
       sender: 'ai',
       timestamp: new Date(),
+      isCode: false
     };
 
     setMessages(prev => {
@@ -297,6 +396,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
       text: "Sorry, I encountered an error while analyzing your project. Please try again later.",
       sender: 'ai',
       timestamp: new Date(),
+      isCode: false
     };
     setMessages(prev => [...prev.slice(0, -1), errorMessage]);
   } finally {
@@ -364,13 +464,15 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
       <div className="flex-1 p-4 pb-24 overflow-y-auto relative">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <Bot size={48} className="mb-4 text-blue-300" />
-            <p className="text-center">Evaluate your project by Gemini</p>
+            {/* <Bot size={48} className="mb-4 text-blue-300" /> */}
+            <p className="text-center">Evaluate your project by</p>
+            <span className='flex items-center justify-center'><Image src={gemini} alt='gemini' className='size-8'/>Gemini</span>
+            
           </div>
         ) : (
           messages.map((message) => (
             <div 
-              key={message.id} 
+              key={message.id + Math.random().toString()} 
               className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div 
@@ -384,21 +486,26 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
                 <div className="flex flex-col w-full">
                   <div className="flex items-center mb-1">
                     {message.sender === 'ai' ? (
-                      <Bot size={16} className="mr-1 text-blue-400" />
+                      <Image src={gemini} alt='gemini' className='size-5'/>
                     ) : (
                       <User size={16} className="mr-1 text-blue-600" />
                     )}
-                    <span className="text-xs opacity-70">
-                      {message.sender === 'ai' ? 'AI Assistant' : 'You'} • {formatTime(message.timestamp)}
+                    <span className="text-xs opacity-70 mx-1">
+                      {message.sender === 'ai' ? 'Gemini' : 'You'} • {formatTime(message.timestamp)}
                     </span>
                   </div>
                   
                   {/* Message Text */}
-                  <div className="w-full">
-                    {message.sender === "ai" ? 
-                      <AITypingEffect text={message.text} /> : 
+                  <div className="w-full p-3">
+                    {message.sender === "ai" ? (
+                      message.isCode ? ( 
+                        <CodeBlock code={message.text} language={message.language || "javascript"} />
+                      ) : (
+                        <AITypingEffect text={message.text} /> 
+                      )
+                    ) : (
                       <div className="whitespace-pre-wrap">{message.text}</div>
-                    }
+                    )}
                   </div>
     
                   {/* Copy Button */}
@@ -423,7 +530,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
           <div className="flex mb-4 justify-start">
             <div className="flex max-w-3/4 rounded-lg p-4 bg-white text-gray-800 border border-gray-100 rounded-bl-none shadow-sm">
               <div className="flex items-center space-x-2">
-                <Bot size={16} className="mr-1 text-blue-400" />
+              <Image src={gemini} alt='gemini' className='size-5'/>
                 <div className="flex space-x-1">
                   <div className="w-2 h-2 bg-blue-200 rounded-full animate-pulse"></div>
                   <div className="w-2 h-2 bg-blue-200 rounded-full animate-pulse delay-100"></div>
@@ -619,7 +726,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
               className="p-2 text-gray-400 rounded-full hover:bg-gray-100 mt-1"
               onClick={modalOpen}
             >
-              <ProjectorIcon size={20} />
+              <Image src={gemini} alt='gemini' className='size-5'/>
             </button>
             
             <div className="flex-1 mx-2">
