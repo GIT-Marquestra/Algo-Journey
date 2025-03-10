@@ -1,5 +1,5 @@
 'use client'
-import React, { JSX, useEffect } from 'react';
+import React, { JSX, useEffect, useState } from 'react';
 import {
   Card,
   CardContent,
@@ -26,6 +26,7 @@ import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
+import ProjectRatingNotification from '@/components/Notification';
 
 interface GroupMember {
   username: string;
@@ -154,6 +155,8 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
 export default function Dashboard(): JSX.Element {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [token, setToken] = useState<string | null>(null)
+  const [showRatingNotification, setShowRatingNotification] = useState(true)
 
   const { 
     data: dashboardData,
@@ -183,6 +186,13 @@ export default function Dashboard(): JSX.Element {
     retry: false
   });
 
+   useEffect(() => {
+      const accessToken = localStorage.getItem('githubAccessToken')
+      if(accessToken){
+        setToken(accessToken)
+      }
+    })
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       redirect('/auth/signin');
@@ -200,6 +210,7 @@ export default function Dashboard(): JSX.Element {
   };
 
   const isLoading = isDashboardLoading || isPlatformLoading;
+
 
   return (
     <div className="min-h-screen">
@@ -421,6 +432,17 @@ export default function Dashboard(): JSX.Element {
           </>
         )}
       </div>
+      <ProjectRatingNotification 
+        onClose={() => setShowRatingNotification(false)}
+        onGetRated={() => {
+          setShowRatingNotification(false);
+          if(token){
+            router.push('/chat/true')
+          } else{
+            router.push('/chat/false')
+          }
+        }}
+      />
     </div>
   );
 }
