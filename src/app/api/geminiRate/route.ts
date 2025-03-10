@@ -25,7 +25,7 @@ export async function POST(req: Request) {
       4️⃣ Security Practices (0-20)
       5️⃣ Overall Rating (0-20)
 
-      do consider it is built by a first year undergrad who has code for less than a year 
+      do consider it is built by a first year undergrad who has coded for less than a year 
 
       also tell them to make a readme.md if not made already in github
 
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
     `;
 
     // 🔥 Send request to Gemini Pro
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const result = await model.generateContent(aiPrompt);
     const aiResponse = await result.response;
     const insights = aiResponse.text();
