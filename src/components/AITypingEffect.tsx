@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 export const AITypingEffect = ({
   text,
-  duration = 0.01, // Faster effect for typing animation
+  duration = 0.03, // Faster effect for typing animation
 }: {
   text: string;
   className?: string;
