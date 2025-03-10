@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, ProjectorIcon, Paperclip, X, Globe, Code, FileText, CheckCircle, Github } from 'lucide-react';
+import { User, Bot, ProjectorIcon, X, Globe, Code, FileText, CheckCircle, Github } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useParams } from 'next/navigation';
@@ -576,39 +576,21 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
               <ProjectorIcon size={20} />
             </button>
             
-            <div className="flex-1 mx-2">
+            <div className="flex-1 mx-2" onClick={modalOpen}>
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Message..."
+                placeholder="Click here to start evaluation"
                 className="w-full p-2 bg-transparent outline-none resize-none min-h-14 max-h-32"
                 rows={1}
+                readOnly
                 disabled={isLoading}
-              />
+                />
             </div>
             
-            <div className="flex items-center">
-              <button 
-                type="button" 
-                className="p-2 text-gray-400 rounded-full hover:bg-gray-100 mr-1"
-              >
-                <Paperclip size={20} />
-              </button>
-              
-              <button
-                type="submit"
-                className={`p-2 rounded-full flex items-center justify-center ${
-                  !input.trim() || isLoading
-                    ? 'bg-gray-100 text-gray-400'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
-                }`}
-                disabled={!input.trim() || isLoading}
-              >
-                <Send size={18} />
-              </button>
-            </div>
+            
           </div>
         </form>
       </div>
