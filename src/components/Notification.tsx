@@ -53,7 +53,7 @@ const ProjectRatingNotification = ({ onClose, onGetRated }) => {
               
               {/* Content */}
               <p className="text-gray-600 mb-3">
-                Curious about your project's quality? Submit your GitHub repo for a comprehensive AI evaluation and get personalized feedback!
+                Curious about your project&apos;s quality? Submit your GitHub repo for a comprehensive AI evaluation and get personalized feedback!
               </p>
               
               {/* Rating preview */}

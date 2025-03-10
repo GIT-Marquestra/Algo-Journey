@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 
 export const AITypingEffect = ({
   text,
-  className,
   duration = 0.01, // Faster effect for typing animation
 }: {
   text: string;
@@ -21,7 +20,7 @@ export const AITypingEffect = ({
     
     const characters = text.split("");
     let currentText = "";
-    let timeouts: NodeJS.Timeout[] = [];
+    const timeouts: NodeJS.Timeout[] = [];
 
     // Animate typing effect one character at a time
     characters.forEach((char, index) => {
