@@ -41,8 +41,6 @@ const ChatComponent: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const Router = useRouter();
   const [githubUsername, setGithubUsername] = useState<string | null>(null)
-  const [aiResponse, setAiResponse] = useState(""); // AI response in progress
-  const [isTyping, setIsTyping] = useState(false);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
     githubUrl: '',
     techStack: '',
