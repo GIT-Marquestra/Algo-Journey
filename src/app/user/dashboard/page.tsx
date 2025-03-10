@@ -432,7 +432,7 @@ export default function Dashboard(): JSX.Element {
           </>
         )}
       </div>
-      {showRatingNotification && <ProjectRatingNotification 
+      {showRatingNotification && !token && <ProjectRatingNotification 
         onClose={() => setShowRatingNotification(false)}
         onGetRated={() => {
           setShowRatingNotification(false);
