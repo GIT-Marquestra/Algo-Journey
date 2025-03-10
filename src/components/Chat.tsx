@@ -193,7 +193,7 @@ const ChatComponent: React.FC = () => {
       
       setMessages(prev => [...prev, aiMessage]);
       setIsLoading(false);
-    }, 1500);
+    }, 3000);
   };
   
   const handleKeyDown = (e: React.KeyboardEvent) => {
