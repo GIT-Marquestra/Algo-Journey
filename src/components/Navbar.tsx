@@ -19,6 +19,7 @@ import {
   Trophy, 
   Brain,
   Swords, 
+  Info,
   LogOut, 
   UserCircle,
   ShieldCheck,
@@ -149,6 +150,12 @@ const Navbar = () => {
                     <DropdownMenuItem>
                       <Brain className="mr-2 h-4 w-4" />
                       <span>Get your Project rating</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <Link href='/about'>
+                    <DropdownMenuItem>
+                      <Info className="mr-2 h-4 w-4" />
+                      <span>About AlgoJourney</span>
                     </DropdownMenuItem>
                   </Link>
                   </>
