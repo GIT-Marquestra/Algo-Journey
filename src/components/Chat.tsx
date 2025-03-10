@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 import { Octokit } from "@octokit/core";
 import ThinkingLoader from './ThinkingLoader';
 import { AITypingEffect } from './AITypingEffect';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 interface Message {
   id: string;
@@ -28,6 +30,7 @@ interface ProjectDetails {
 }
 
 const ChatComponent: React.FC = () => {
+  const genAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -52,6 +55,25 @@ const ChatComponent: React.FC = () => {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  async function sendToGemini(formattedMessage: string) {
+    try {
+      if (!formattedMessage) {
+        throw new Error("No project data provided.");
+      }
+  
+      // 🔥 Send request to Gemini Flash
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const result = await model.generateContent(formattedMessage);
+      const aiResponse = await result.response;
+      const insights = aiResponse.text();
+  
+      return insights;
+    } catch (error) {
+      console.error("🔥 AI Analysis Error:", error);
+      return "Error: Unable to process request.";
+    }
+  }
   
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -157,12 +179,14 @@ const ChatComponent: React.FC = () => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
     }
+
+    const aiResponse = await sendToGemini(messageText)
     
     // Simulate AI response (replace with actual API call)
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Thanks for submitting your project details! I'll analyze your repository and provide feedback shortly.",
+        text: aiResponse,
         sender: 'ai',
         timestamp: new Date(),
       };
@@ -241,7 +265,6 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
   };
   setMessages(prev => [...prev, userMessage]);
   
-  // Add initial AI message
   const initialAiMessage: Message = {
     id: (Date.now() + 1).toString(),
     text: "Thanks for submitting your project details! I'll analyze your repository and provide feedback shortly.",
@@ -257,7 +280,6 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
       formattedMessage
     }, { timeout: 25000 });
 
-    // Replace the initial AI message with the full response
     const aiMessage: Message = {
       id: (Date.now() + 2).toString(),
       text: response.data.insights || "AI response error!",
@@ -266,7 +288,6 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
     };
 
     setMessages(prev => {
-      // Replace the last message (which is the initial AI response)
       const newMessages = [...prev.slice(0, -1), aiMessage];
       return newMessages;
     });
@@ -576,16 +597,15 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
               <ProjectorIcon size={20} />
             </button>
             
-            <div className="flex-1 mx-2" onClick={modalOpen}>
+            <div className="flex-1 mx-2">
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Click here to start evaluation"
+                placeholder="Message..."
                 className="w-full p-2 bg-transparent outline-none resize-none min-h-14 max-h-32"
                 rows={1}
-                readOnly
                 disabled={isLoading}
                 />
             </div>
