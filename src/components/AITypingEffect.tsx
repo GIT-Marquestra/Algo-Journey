@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 
 export const AITypingEffect = ({
   text,
-  duration = 0.03, // Faster effect for typing animation
+  duration = 0.03,
 }: {
   text: string;
   className?: string;
@@ -13,7 +13,6 @@ export const AITypingEffect = ({
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    // Reset text when new text is provided
     setDisplayedText("");
     
     if (!text) return;
@@ -22,23 +21,20 @@ export const AITypingEffect = ({
     let currentText = "";
     const timeouts: NodeJS.Timeout[] = [];
 
-    // Animate typing effect one character at a time
     characters.forEach((char, index) => {
       const timeout = setTimeout(() => {
         currentText += char;
         setDisplayedText(currentText);
         
-        // Auto-adjust textarea height if needed
         if (textAreaRef.current) {
           textAreaRef.current.style.height = "auto";
           textAreaRef.current.style.height = `${textAreaRef.current.scrollHeight}px`;
         }
-      }, index * (duration * 1000)); // Control typing speed
+      }, index * (duration * 1000));
       
       timeouts.push(timeout);
     });
 
-    // Cleanup function to clear timeouts if component unmounts during animation
     return () => {
       timeouts.forEach(timeout => clearTimeout(timeout));
     };

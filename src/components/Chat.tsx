@@ -176,14 +176,12 @@ const ChatComponent: React.FC = () => {
     setInput('');
     setIsLoading(true);
     
-    // Reset textarea height
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
     }
 
     const aiResponse = await sendToGemini(messageText)
     
-    // Simulate AI response (replace with actual API call)
     setTimeout(() => {
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -208,7 +206,6 @@ const ChatComponent: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  // Replace the handleProjectSubmit function with this simplified version
 const handleProjectSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
 
@@ -254,10 +251,10 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
     console.error(`Error fetching file content: ${error}`);
   }
   
-  // Close modal
+
   setShowModal(false);
   
-  // Add user message
+
   const userMessage: Message = {
     id: Date.now().toString(),
     text: formattedMessage,
@@ -295,7 +292,6 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
 
   } catch(error) {
     console.error('Error while getting rating from ai: ', error);
-    // Add error message
     const errorMessage: Message = {
       id: Date.now().toString(),
       text: "Sorry, I encountered an error while analyzing your project. Please try again later.",
@@ -572,7 +568,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1  items-center">
                       <Globe size={16} className="mr-1 text-gray-500" />
-                      Live Demo URL <span className="text-red-500">*</span>
+                      Live Demo URL 
                     </label>
                     <input
                       type="url"
