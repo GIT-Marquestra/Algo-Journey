@@ -216,21 +216,104 @@ export default function Dashboard(): JSX.Element {
     <div className="min-h-screen">
       <div className="container mx-auto p-8 pt-20 space-y-8">
         {isLoading ? (
-          <div className="space-y-8 animate-pulse">
-            <div className="grid gap-4 md:grid-cols-3">
-              {[...Array(3)].map((_, i) => (
-                <Card key={i} className="bg-white/60 backdrop-blur-sm">
-                  <CardHeader>
-                    <div className="h-4 w-32 bg-slate-200 rounded" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-8 w-24 bg-slate-200 rounded" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+    <div className="min-h-screen">
+      <div className="container mx-auto p-8 pt-20 space-y-8">
+        <div className="space-y-8 animate-pulse">
+          {/* Username placeholder */}
+          <div className="h-8 w-48 bg-slate-200 rounded" />
+          
+          {/* Stats cards placeholder */}
+          <div className="grid gap-4 md:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <Card key={i} className="bg-white/60 backdrop-blur-sm">
+                <CardHeader>
+                  <div className="h-6 w-40 bg-slate-200 rounded" />
+                </CardHeader>
+                <CardContent>
+                  <div className="h-10 w-24 bg-slate-200 rounded" />
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        ) : (
+          
+          {/* Your Data card placeholder */}
+          <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-8 w-32 bg-slate-200 rounded" />
+                  <div className="h-4 w-64 bg-slate-200 rounded" />
+                </div>
+                <div className="h-10 w-10 bg-slate-200 rounded-md" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
+                <div className="grid md:grid-cols-2 gap-4">
+                  {[...Array(2)].map((_, i) => (
+                    <div key={i} className="p-4 rounded-lg bg-slate-100">
+                      <div className="h-4 w-32 bg-slate-200 rounded mb-2" />
+                      <div className="h-6 w-48 bg-slate-200 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Latest Contests card placeholder */}
+          <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="h-8 w-40 bg-slate-200 rounded" />
+                  <div className="h-4 w-56 bg-slate-200 rounded" />
+                </div>
+                <div className="h-10 w-10 bg-slate-200 rounded-md" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {[...Array(2)].map((_, index) => (
+                <div key={index} className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
+                  <div className="grid md:grid-cols-5 gap-4">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="p-4 rounded-lg bg-slate-100">
+                        <div className="h-4 w-20 bg-slate-200 rounded mb-2" />
+                        <div className="h-6 w-full bg-slate-200 rounded" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          
+          {/* Team Members card placeholder */}
+          <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
+            <CardHeader>
+              <div className="h-6 w-36 bg-slate-200 rounded" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4 pb-2 border-b border-slate-200">
+                  <div className="h-5 w-20 bg-slate-200 rounded" />
+                  <div className="h-5 w-16 bg-slate-200 rounded" />
+                  <div className="h-5 w-12 bg-slate-200 rounded ml-auto" />
+                </div>
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100">
+                    <div className="h-6 w-28 bg-slate-200 rounded" />
+                    <div className="h-6 w-14 bg-slate-200 rounded" />
+                    <div className="h-6 w-10 bg-slate-200 rounded ml-auto" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  ): (
           <>
             <div className='text-pretty text-2xl font-sans'>Hi, {dashboardData?.username}</div>
             {dashboardData?.isAdmin && <Button onClick={handleReset}>Reset all tests</Button>}
