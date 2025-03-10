@@ -1,6 +1,6 @@
 'use client'
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Bot, ProjectorIcon, X, Globe, Code, FileText, CheckCircle, Github } from 'lucide-react';
+import { User, Bot, ProjectorIcon, X, Clipboard, Globe, Code, FileText, CheckCircle, Github, Check } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { useParams } from 'next/navigation';
@@ -44,6 +44,7 @@ const ChatComponent: React.FC = () => {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const Router = useRouter();
   const [githubUsername, setGithubUsername] = useState<string | null>(null)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails>({
     githubUrl: '',
     techStack: '',
@@ -346,11 +347,24 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
     setSelectedRepo(repo);
   };
 
+  const copyToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(id); // Mark message as copied
+      toast.success("Copied to clipboard! 📋");
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopiedMessageId(null), 2000);
+    } catch (err) {
+      toast.error("Failed to copy! ❌");
+    }
+  };
+
   return (
     <div className="flex mt-24 flex-col w-full h-[90vh] max-w-[70%] mx-auto relative">
       {/* Messages area */}
       {loading && <ThinkingLoader/>}
-      <div className="flex-1 p-4 pb-24 overflow-y-auto">
+      <div className="flex-1 p-4 pb-24 overflow-y-auto relative">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             <Bot size={48} className="mb-4 text-blue-300" />
@@ -363,7 +377,7 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
               className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div 
-                className={`max-w-3/4 rounded-lg p-3 ${
+                className={`relative max-w-3/4 rounded-lg p-3 ${
                   message.sender === 'user' 
                     ? 'bg-blue-200 text-blue-900 rounded-br-none' 
                     : 'bg-white text-gray-800 border border-gray-100 rounded-bl-none shadow-sm'
@@ -381,12 +395,26 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
                       {message.sender === 'ai' ? 'AI Assistant' : 'You'} • {formatTime(message.timestamp)}
                     </span>
                   </div>
+                  
+                  {/* Message Text */}
                   <div className="w-full">
                     {message.sender === "ai" ? 
                       <AITypingEffect text={message.text} /> : 
                       <div className="whitespace-pre-wrap">{message.text}</div>
                     }
                   </div>
+    
+                  {/* Copy Button */}
+                  <button 
+                    className="absolute bottom-2 right-2 p-1 rounded-md text-gray-500 hover:text-blue-500 transition-all"
+                    onClick={() => copyToClipboard(message.text, message.id)}
+                  >
+                    {copiedMessageId === message.id ? (
+                      <Check size={16} className="text-green-500" /> // Show checkmark when copied
+                    ) : (
+                    <Clipboard size={16}/>
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
