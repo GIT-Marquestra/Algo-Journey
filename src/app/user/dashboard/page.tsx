@@ -49,6 +49,7 @@ import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
 import DashboardSkeleton from '@/components/DashboardLoader';
+import ProjectRatingNotification from '@/components/Notification';
 
 // Interfaces (same as before)
 interface GroupMember {
@@ -205,7 +206,9 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const [notification, setNotification] = useState<boolean>(true);
   const [showTeamMembers, setShowTeamMembers] = useState(false);
+  const [token, setToken] = useState<string | null>(null)
 
   const { 
     data: dashboardData,
@@ -254,6 +257,13 @@ export default function Dashboard() {
     //@ts-expect-error: don't know about this 
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
+
+  useEffect(() => {
+    const accessToken = localStorage.getItem('githubAccessToken');
+    if (accessToken) {
+      setToken(accessToken);
+    }
+  }, []);
 
   // Format time function
   const formatTime = (timeString: string) => {
@@ -721,5 +731,10 @@ export default function Dashboard() {
     </>
     )}
   </div>
+  {notification && <ProjectRatingNotification onGetRated={() => {
+    router.push(token ? '/chat/true' : '/chat/false')
+  }} onClose={() => {
+    setNotification(false)
+  }}/>}
 </div> );
 }
