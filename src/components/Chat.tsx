@@ -71,7 +71,7 @@ const ChatComponent: React.FC = () => {
       if (!userMessage.trim()) throw new Error("Message cannot be empty.");
   
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const responseStream = await model.generateContentStream('be to the point, avoid answering in long way, if the answer expects the code provide the code and answer the following message: ' + userMessage);
+      const responseStream = await model.generateContentStream('be to the point and answer the following message: ' + userMessage);
   
       let accumulatedText = "";
       let codeBuffer = "";
