@@ -205,8 +205,6 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [token, setToken] = useState<string | null>(null);
-  const [showRatingNotification, setShowRatingNotification] = useState(true);
   const [showTeamMembers, setShowTeamMembers] = useState(false);
 
   const { 
@@ -236,13 +234,6 @@ export default function Dashboard() {
     gcTime: 2 * 60 * 60 * 1000,
     retry: false
   });
-
-  useEffect(() => {
-    const accessToken = localStorage.getItem('githubAccessToken');
-    if (accessToken) {
-      setToken(accessToken);
-    }
-  }, []);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -282,7 +273,7 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold text-gray-800">
             Welcome back, <span className="text-indigo-600">{dashboardData?.username}</span>
           </h1>
-          <p className="text-gray-600 mt-1">Let's continue your coding journey!</p>
+          <p className="text-gray-600 mt-1">Let&apos;s continue your coding journey!</p>
         </div>
         <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xl">
           {dashboardData?.username?.charAt(0)?.toUpperCase() || "U"}

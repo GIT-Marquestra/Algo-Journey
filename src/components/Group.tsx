@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Trash2, Users, UserPlus, User, Info, 
-  ChevronDown, ChevronRight, Search, AlertCircle, RefreshCw, Loader2, Check 
+  ChevronDown, ChevronRight, Search, AlertCircle, RefreshCw, Loader2 
 } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import axios from 'axios';
