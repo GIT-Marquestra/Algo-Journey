@@ -11,7 +11,6 @@ export async function GET() {
 
         const userEmail = session.user.email;
 
-        console.log('grgw')
 
         const user = await prisma.user.findUnique({
             where: { email: userEmail },

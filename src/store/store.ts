@@ -7,6 +7,8 @@ interface StoreState {
   flag: boolean;
   setFlag: (value: boolean) => void;
   contest: Contest | null;
+  isAdmin: boolean;
+  setIsAdmin: (value: boolean) => void; 
   addedQuestions: QuestionPar[];
   setAddedQuestions: (v: QuestionPar) => void;
   setContest: (v: Contest | null) => void;
@@ -14,6 +16,8 @@ interface StoreState {
 
 const useStore = create<StoreState>((set) => ({
   flag: false, // Initial state
+  isAdmin: false,
+  setIsAdmin: (value) => set({ isAdmin: value }),
   addedQuestions: [],
   contest: null,
   setAddedQuestions: (v) => set((state) => ({ addedQuestions: [...state.addedQuestions, v] })),

@@ -27,11 +27,12 @@ import {
   UserCog, 
   LucideSword
 } from 'lucide-react';
+import useStore from '@/store/store';
 
 const Navbar = () => {
   const router = useRouter();
   const { status } = useSession();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin, setIsAdmin } = useStore();
   const [username, setUsername] = useState('');
   const [token, setToken] = useState<string | null>(null)
   

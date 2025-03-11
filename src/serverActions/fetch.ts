@@ -46,7 +46,11 @@ export async function fetchLatestSubmissionsCodeForces(username: string){
 export async function fetchUserStats(username: string) {
     try {
       const response = await axios.get(`https://leetcode-stats-api.herokuapp.com/${username}`);
-      return response.data
+      const returnData = {
+        ...response.data,   
+        leetcodeUsername: username  
+      }
+      return returnData;
     } catch (error) {
       console.error('Error fetching user stats:', error);
     }
@@ -71,7 +75,7 @@ export async function fetchCodeforcesUserData(username: string) {
             const user = userInfo.result[0];
 
             return {
-                handle: user.handle,
+                codeforcesUsername: username,
                 rating: user.rating ?? "Unrated",
                 maxRating: user.maxRating ?? "Unrated",
                 rank: user.rank ?? "N/A",

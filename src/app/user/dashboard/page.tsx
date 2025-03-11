@@ -6,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
+  CardFooter,
 } from "@/components/ui/card"
 import {
   Table,
@@ -16,7 +17,28 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Trophy, Users, Target, ChevronRight, Award, Clock } from "lucide-react"
+import { 
+  Trophy, 
+  Users, 
+  Target, 
+  ChevronRight, 
+  Award, 
+  Clock, 
+  ChevronDown, 
+  Calendar, 
+  Timer, 
+  Check, 
+  AlertTriangle,
+  Code,
+  Activity,
+  ExternalLink,
+  ArrowUpRight,
+  Crown,
+  Settings,
+  UsersIcon,
+  Plus,
+  ArrowRight,
+} from "lucide-react"
 import axios from 'axios';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -26,8 +48,9 @@ import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
-import ProjectRatingNotification from '@/components/Notification';
+import DashboardSkeleton from '@/components/DashboardLoader';
 
+// Interfaces (same as before)
 interface GroupMember {
   username: string;
   individualPoints: number;
@@ -75,17 +98,24 @@ interface LeetCodeStats {
   easySolved: number;
   totalEasy: number;
   mediumSolved: number;
+  leetcodeUsername: string;
   totalMedium: number;
   hardSolved: number;
   totalHard: number;
   ranking: number;
 }
 
-interface PlatformData {
-  leetcodeData: LeetCodeStats | null;
-  codeforcesRating: number | null;
+interface CodeForcesStats {
+  codeforcesUsername: string; 
+  rating: number;
 }
 
+interface PlatformData {
+  leetcodeData: LeetCodeStats | null;
+  codeforcesData: CodeForcesStats | null;
+}
+
+// Fetch functions (same as before)
 const fetchDashboardData = async (): Promise<DashboardData> => {
   const contestsResponse = await axios.get<{
     latestContests: Contest[];
@@ -104,6 +134,7 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
   const adminResponse = await axios.post<{
     isAdmin: boolean;
   }>('/api/checkIfAdmin');
+
 
   return {
     contests: contestsResponse.data.latestContests,
@@ -133,27 +164,50 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
     throw new Error('Usernames not set');
   }
 
-  
-
   const [leetcodeData, codeforcesData] = await Promise.all([
     fetchUserStats(leetcodeResponse.data.leetcodeUsername) as Promise<LeetCodeStats>,
     fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername),
   ]);
 
-
-
-
   return {
     leetcodeData: leetcodeData,
-    codeforcesRating: codeforcesData?.rating || null
+    codeforcesData: codeforcesData || null
   };
 };
+type StatusType = "ACTIVE" | "INACTIVE" | "COMPLETED";
+const StatusBadge = ({ status }: { status: StatusType }) => {
+  const statusConfig: Record<StatusType, { color: string; icon: JSX.Element }> = {
+    ACTIVE: {
+      color: "bg-green-100 text-green-800 border-green-200",
+      icon: <Check className="h-3 w-3 mr-1" />,
+    },
+    INACTIVE: {
+      color: "bg-purple-100 text-purple-800 border-purple-200",
+      icon: <Clock className="h-3 w-3 mr-1" />,
+    },
+    COMPLETED: {
+      color: "bg-gray-100 text-gray-800 border-gray-200",
+      icon: <AlertTriangle className="h-3 w-3 mr-1" />,
+    },
+  };
 
-export default function Dashboard(): JSX.Element {
+  const config = statusConfig[status] || statusConfig.INACTIVE;
+
+  return (
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${config.color}`}>
+      {config.icon}
+      {status}
+    </span>
+  );
+};
+
+
+export default function Dashboard() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [token, setToken] = useState<string | null>(null)
-  const [showRatingNotification, setShowRatingNotification] = useState(true)
+  const [token, setToken] = useState<string | null>(null);
+  const [showRatingNotification, setShowRatingNotification] = useState(true);
+  const [showTeamMembers, setShowTeamMembers] = useState(false);
 
   const { 
     data: dashboardData,
@@ -171,7 +225,7 @@ export default function Dashboard(): JSX.Element {
     isLoading: isPlatformLoading,
   } = useQuery({
     queryKey: ['platformData'],
-    queryFn: () => fetchPlatformData().catch((error: Error) => {
+    queryFn: () => fetchPlatformData().catch((error) => {
       if (error.message === 'Usernames not set') {
         toast.error('Please set your leetcode and codeforces usernames in settings');
       }
@@ -183,12 +237,12 @@ export default function Dashboard(): JSX.Element {
     retry: false
   });
 
-   useEffect(() => {
-      const accessToken = localStorage.getItem('githubAccessToken')
-      if(accessToken){
-        setToken(accessToken)
-      }
-    })
+  useEffect(() => {
+    const accessToken = localStorage.getItem('githubAccessToken');
+    if (accessToken) {
+      setToken(accessToken);
+    }
+  }, []);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -196,333 +250,485 @@ export default function Dashboard(): JSX.Element {
     }
   }, [status]);
 
-  const handleReset = async (): Promise<void> => {
-    try {
-      await axios.post('/api/reset');
-      toast.success('Reset successful');
-    } catch (error) {
-      console.error('Reset failed:', error);
-      toast.error('Reset failed');
-    }
+  const isLoading = isDashboardLoading || isPlatformLoading;
+
+  // Calculate difficulty percentages for LeetCode
+  const getLeetCodeDifficultyPercentage = (solved: number, total: number) => {
+    return solved && total ? Math.round((solved / total) * 100) : 0;
   };
 
-  const isLoading = isDashboardLoading || isPlatformLoading;
+  // Format date function
+  const formatDate = (dateString: string) => {
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    //@ts-expect-error: don't know about this 
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Format time function
+  const formatTime = (timeString: string) => {
+    const time = timeString.split('T')[1].split('.000Z')[0];
+    return time;
+  };
 
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto p-8 pt-20 space-y-8">
-        {isLoading ? (
-    <div className="min-h-screen">
-      <div className="container mx-auto p-8 pt-20 space-y-8">
-        <div className="space-y-8 animate-pulse">
-          {/* Username placeholder */}
-          <div className="h-8 w-48 bg-slate-200 rounded" />
-          
-          {/* Stats cards placeholder */}
-          <div className="grid gap-4 md:grid-cols-3">
-            {[...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-white/60 backdrop-blur-sm">
-                <CardHeader>
-                  <div className="h-6 w-40 bg-slate-200 rounded" />
-                </CardHeader>
-                <CardContent>
-                  <div className="h-10 w-24 bg-slate-200 rounded" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          
-          {/* Your Data card placeholder */}
-          <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="h-8 w-32 bg-slate-200 rounded" />
-                  <div className="h-4 w-64 bg-slate-200 rounded" />
-                </div>
-                <div className="h-10 w-10 bg-slate-200 rounded-md" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
-                <div className="grid md:grid-cols-2 gap-4">
-                  {[...Array(2)].map((_, i) => (
-                    <div key={i} className="p-4 rounded-lg bg-slate-100">
-                      <div className="h-4 w-32 bg-slate-200 rounded mb-2" />
-                      <div className="h-6 w-48 bg-slate-200 rounded" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* Latest Contests card placeholder */}
-          <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="space-y-2">
-                  <div className="h-8 w-40 bg-slate-200 rounded" />
-                  <div className="h-4 w-56 bg-slate-200 rounded" />
-                </div>
-                <div className="h-10 w-10 bg-slate-200 rounded-md" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {[...Array(2)].map((_, index) => (
-                <div key={index} className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
-                  <div className="grid md:grid-cols-5 gap-4">
-                    {[...Array(5)].map((_, i) => (
-                      <div key={i} className="p-4 rounded-lg bg-slate-100">
-                        <div className="h-4 w-20 bg-slate-200 rounded mb-2" />
-                        <div className="h-6 w-full bg-slate-200 rounded" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          
-          {/* Team Members card placeholder */}
-          <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
-            <CardHeader>
-              <div className="h-6 w-36 bg-slate-200 rounded" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-4 pb-2 border-b border-slate-200">
-                  <div className="h-5 w-20 bg-slate-200 rounded" />
-                  <div className="h-5 w-16 bg-slate-200 rounded" />
-                  <div className="h-5 w-12 bg-slate-200 rounded ml-auto" />
-                </div>
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="grid grid-cols-3 gap-4 py-2 border-b border-slate-100">
-                    <div className="h-6 w-28 bg-slate-200 rounded" />
-                    <div className="h-6 w-14 bg-slate-200 rounded" />
-                    <div className="h-6 w-10 bg-slate-200 rounded ml-auto" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="min-h-screen bg-gray-50">
+  <div className="container mx-auto p-8 pt-20 space-y-8">
+    {isLoading ? <DashboardSkeleton/> : (
+    <>
+      {/* Welcome header with avatar */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Welcome back, <span className="text-indigo-600">{dashboardData?.username}</span>
+          </h1>
+          <p className="text-gray-600 mt-1">Let's continue your coding journey!</p>
+        </div>
+        <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xl">
+          {dashboardData?.username?.charAt(0)?.toUpperCase() || "U"}
         </div>
       </div>
-    </div>
-  ): (
-          <>
-            <div className='text-pretty text-2xl font-sans'>Hi, {dashboardData?.username}</div>
-            {dashboardData?.isAdmin && <Button onClick={handleReset}>Reset all tests</Button>}
-            
-            <div className="grid gap-4 md:grid-cols-3">
-              <Card className="bg-white/60 backdrop-blur-sm border-purple-100 hover:border-purple-200 transition-colors">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5" />
-                    Total Submissions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold">{dashboardData?.userStats.totalSubmissions}</p>
-                </CardContent>
-              </Card>
+      
+      {/* Stats cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-white border-l-4 border-l-blue-400 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Target className="h-4 w-4 text-blue-500" />
+              Submissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-800">{dashboardData?.userStats.totalSubmissions}</p>
+            <p className="text-xs text-gray-500 mt-1">Total problems attempted</p>
+          </CardContent>
+        </Card>
 
-              <Card className="bg-white/60 backdrop-blur-sm border-green-100 hover:border-green-200 transition-colors">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-green-700">
-                    <Trophy className="h-5 w-5" />
-                    Individual Points
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-3xl font-bold text-green-900">{dashboardData?.userStats.totalPoints}</p>
-                </CardContent>
-              </Card>
+        <Card className="bg-white border-l-4 border-l-teal-400 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Trophy className="h-4 w-4 text-teal-500" />
+              Individual Score
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-800">{dashboardData?.userStats.totalPoints}</p>
+            <p className="text-xs text-gray-500 mt-1">Your personal points</p>
+          </CardContent>
+        </Card>
 
-              <Card className="bg-white/60 backdrop-blur-sm border-indigo-100 hover:border-indigo-200 transition-colors">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-indigo-700">
-                    <Users className="h-5 w-5" />
-                    Team: {dashboardData?.userStats.groupName || 'Null'}
-                  </CardTitle>
-                </CardHeader>
-                {dashboardData?.userStats.groupName && (
-                  <CardContent>
-                    <p className="text-3xl font-bold text-indigo-900">
-                      {dashboardData.userStats.groupPoints}
-                    </p>
-                  </CardContent>
-                )}
-              </Card>
+        <Card className="bg-white border-l-4 border-l-amber-400 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Users className="h-4 w-4 text-amber-500" />
+              Team
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xl font-bold text-gray-800 truncate">
+              {dashboardData?.userStats.groupName || 'No Team'}
+            </p>
+            {dashboardData?.userStats.groupName && (
+              <p className="text-xs text-gray-500 mt-1">
+                {dashboardData.userStats.groupMembers.length} team members
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-l-4 border-l-rose-400 shadow-sm hover:shadow-md transition-all">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              <Award className="h-4 w-4 text-rose-500" />
+              Team Score
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-800">
+              {dashboardData?.userStats.groupPoints || 0}
+            </p>
+            <p className="text-xs text-gray-500 mt-1">Combined team points</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Platform Statistics */}
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+        {/* LeetCode card */}
+        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+          <CardHeader className="border-b border-gray-100 pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Code className="h-5 w-5 text-indigo-500" />
+                LeetCode Progress
+              </CardTitle>
+              <ExternalLink className="h-4 w-4 text-gray-500" />
             </div>
-
-            <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                      <Award className="h-6 w-6" />
-                      Your Data
-                    </CardTitle>
-                    <CardDescription>
-                      Be Consistent, and watch your rating rise!
-                    </CardDescription>
+            <CardDescription className="text-gray-500">
+              Track your problem-solving journey
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-700">
+                  Problems Solved
+                </span>
+                <span className="text-lg font-bold text-gray-800">
+                  {platformData?.leetcodeData?.totalSolved || 0} / {platformData?.leetcodeData?.totalQuestions || 0}
+                </span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2.5">
+                {platformData?.leetcodeData && <div 
+                  className="bg-indigo-500 h-2.5 rounded-full" 
+                  style={{ width: `${(platformData?.leetcodeData?.totalSolved / platformData?.leetcodeData?.totalQuestions * 100) || 0}%` }}
+                ></div>}
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2 mt-4">
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <div className="text-xs text-green-700">Easy</div>
+                  <div className="text-lg font-semibold text-green-800">
+                    {platformData?.leetcodeData?.easySolved || 0} 
+                    <span className="text-xs text-green-600">/{platformData?.leetcodeData?.totalEasy || 0}</span>
                   </div>
-                  <Button variant="outline" size="icon" className="border-purple-200 hover:bg-purple-50">
-                    <Clock className="h-4 w-4" />
-                  </Button>
+                  <div className="w-full bg-green-200 rounded-full h-1.5 mt-1">
+                    {platformData?.leetcodeData && <div 
+                      className="bg-green-500 h-1.5 rounded-full" 
+                      style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.easySolved, platformData?.leetcodeData?.totalEasy)}%` }}
+                    ></div>}
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="p-4 rounded-lg bg-purple-100/50">
-                      <p className='text-sm'>Leetcode Data </p>
-                      <div className='grid grid-cols-2 p-2'>
-                      <div>
-                      <p className="text-md font-medium">Total {platformData?.leetcodeData?.totalSolved} questions solved.</p>
-                     
-                      </div>
-                      </div>
-                    </div>
-                    <div className="p-4 rounded-lg bg-purple-100/50">
-                      <p className="text-sm">Codeforces Rating</p>
-                      <p className="text-lg font-medium">{platformData?.codeforcesRating}</p>
-                    </div>
+                <div className="p-3 bg-amber-50 rounded-lg">
+                  <div className="text-xs text-amber-700">Medium</div>
+                  <div className="text-lg font-semibold text-amber-800">
+                    {platformData?.leetcodeData?.mediumSolved || 0}
+                    <span className="text-xs text-amber-600">/{platformData?.leetcodeData?.totalMedium || 0}</span>
+                  </div>
+                  <div className="w-full bg-amber-200 rounded-full h-1.5 mt-1">
+                    {platformData?.leetcodeData && <div 
+                      className="bg-amber-500 h-1.5 rounded-full" 
+                      style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.mediumSolved, platformData?.leetcodeData?.totalMedium)}%` }}
+                    ></div>}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white/60 backdrop-blur-sm border-purple-100">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-2xl flex items-center gap-2">
-                      <Award className="h-6 w-6" />
-                      Latest Contests
-                    </CardTitle>
-                    <CardDescription>
-                      Ready for your next challenge?
-                    </CardDescription>
+                <div className="p-3 bg-red-50 rounded-lg">
+                  <div className="text-xs text-red-700">Hard</div>
+                  <div className="text-lg font-semibold text-red-800">
+                    {platformData?.leetcodeData?.hardSolved || 0}
+                    <span className="text-xs text-red-600">/{platformData?.leetcodeData?.totalHard || 0}</span>
                   </div>
-                  <Button variant="outline" size="icon" className="border-purple-200 hover:bg-purple-50">
-                    <Clock className="h-4 w-4" />
-                  </Button>
+                  <div className="w-full bg-red-200 rounded-full h-1.5 mt-1">
+                    {platformData?.leetcodeData && <div 
+                      className="bg-red-500 h-1.5 rounded-full" 
+                      style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.hardSolved, platformData?.leetcodeData?.totalHard)}%` }}
+                    ></div>}
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                {dashboardData?.contests.map((contest) => (
-                  <div key={contest.startTime} className="space-y-6 mt-2 border-slate-200 p-2 rounded-lg border-[0.5px]">
-                    <div className="grid md:grid-cols-5 gap-4">
-                      <div className="p-4 rounded-lg bg-purple-100/50">
-                        <p className="text-sm">Contest #{contest.id}</p>
-                        <p className="text-lg font-medium">{contest.name}</p>
-                      </div>
-                      <div className="p-4 rounded-lg bg-purple-100/50">
-                        <p className="text-sm">Date</p>
-                        <p className="text-lg font-medium">{contest.startTime.split('T')[0]}</p>
-                      </div>
-                      <div className="p-4 rounded-lg bg-slate-200/50">
-                        <p className="text-sm">Time</p>
-                        <p className="text-lg font-medium">{contest.startTime.split('T')[1].split('.000Z')[0]}</p>
-                      </div>
-                      <div className="p-4 rounded-lg bg-blue-100/50">
-                        <p className="text-sm">Duration</p>
-                        <p className="text-lg font-medium">{contest.duration} min</p>
-                      </div>
-                      <div className="p-4 rounded-lg bg-green-100/50">
-                        <p className="text-sm">Status</p>
-                        <p className="text-lg font-medium">{contest.status}</p>
-                      </div>
-                      {dashboardData.isCoordinator && contest.status === 'ACTIVE' && (
-                        <Button 
-                          size="lg"
-                          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
-                          asChild
-                        >
-                          <Link href={`/contest/${contest.id}`} target='_blank'>
-                            Start Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      )}
-                      {!dashboardData.isCoordinator && contest.status === 'ACTIVE' && (
-                        <Button 
-                          size="lg" 
-                          className="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white" 
-                          onClick={() => router.push(`/contest/${contest.id}`)}
-                        >
-                          Start Contest {contest.id}<ChevronRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      )}
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-gray-100 pt-4">
+            <div className="flex justify-between items-center w-full">
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Global Rank:</span> #{platformData?.leetcodeData?.ranking || 'N/A'}
+              </div>
+              <Link href={`https://leetcode.com/u/${platformData?.leetcodeData?.leetcodeUsername}/`} target='_blank'>
+              <Button variant="outline" size="sm" className="border-gray-200 hover:bg-indigo-50 text-indigo-600">
+                View Profile <ArrowUpRight className="ml-1 h-3 w-3" />
+              </Button>
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+
+        {/* Codeforces card */}
+        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+          <CardHeader className="border-b border-gray-100 pb-4">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Activity className="h-5 w-5 text-teal-500" />
+                Codeforces Rating
+              </CardTitle>
+              <ExternalLink className="h-4 w-4 text-gray-500" />
+            </div>
+            <CardDescription className="text-gray-500">
+              Track your competitive programming progress
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="flex flex-col items-center justify-center p-6">
+              <div className="relative w-32 h-32 rounded-full flex items-center justify-center mb-4">
+                {/* Outer ring */}
+                <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+                {/* Progress ring */}
+                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                  <circle 
+                    cx="50" cy="50" r="46" 
+                    fill="none" 
+                    stroke="rgb(20, 184, 166)" 
+                    strokeWidth="8" 
+                    strokeDasharray="289.27"
+                    strokeDashoffset={(289.27 * (1 - Math.min((platformData?.codeforcesData?.rating || 0) / 2000, 1)))}
+                    transform="rotate(-90 50 50)"
+                  />
+                </svg>
+                {/* Rating value */}
+                <div className="text-3xl font-bold text-gray-800">
+                  {platformData?.codeforcesData?.rating || 0}
+                </div>
+              </div>
+
+              <div className="text-sm text-center text-gray-600 mt-2">
+                Keep practicing to improve your rating!
+              </div>
+
+              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-6">
+                <div 
+                  className="bg-teal-500 h-1.5 rounded-full" 
+                  style={{ width: `${Math.min((platformData?.codeforcesData?.rating || 0) / 20, 100)}%` }}
+                ></div>
+              </div>
+
+              <div className="flex justify-between w-full text-xs text-gray-500 mt-1">
+                <span>0</span>
+                <span>500</span>
+                <span>1000</span>
+                <span>1500</span>
+                <span>2000+</span>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="border-t border-gray-100 pt-4">
+          <Link href={`https://codeforces.com/profile/${platformData?.codeforcesData?.codeforcesUsername}`} target='_blank'>
+            <Button variant="outline" size="sm" className="ml-auto border-gray-200 hover:bg-teal-50 text-teal-600">
+              View Profile <ArrowUpRight className="ml-1 h-3 w-3" />
+            </Button>
+          </Link>
+          </CardFooter>
+        </Card>
+      </div>
+
+      {/* Latest Contests */}
+      <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+        <CardHeader className="border-b border-gray-100 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Award className="h-5 w-5 text-indigo-500" />
+                Latest Contests
+              </CardTitle>
+              <CardDescription className="text-gray-500">
+                Ready for your next challenge?
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="icon" className="border-gray-200 hover:bg-gray-50">
+              <Clock className="h-4 w-4 text-gray-500" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-4">
+          <div className="space-y-4">
+            {dashboardData?.contests.map((contest) => (
+              <div key={contest.id} className="rounded-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                      #{contest.id}
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-800">{contest.name}</h3>
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> 
+                        {formatDate(contest.startTime)}
+                        <span className="mx-1">•</span>
+                        <Timer className="h-3 w-3" /> 
+                        {formatTime(contest.startTime)}
+                      </p>
                     </div>
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  <StatusBadge status={contest.status} />
+                </div>
+                <div className="px-4 py-3 bg-white flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="px-3 py-2 bg-blue-50 rounded-lg">
+                      <p className="text-xs text-blue-600">Duration</p>
+                      <p className="text-sm font-medium text-blue-800">{contest.duration} min</p>
+                    </div>
+                    {contest.status === 'COMPLETED' && (
+                      <div className="px-3 py-2 bg-green-50 rounded-lg">
+                        <p className="text-xs text-green-600">Completed</p>
+                        <p className="text-sm font-medium text-green-800"><Check className='size-5'/></p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {contest.status === 'ACTIVE' && (
+                    <Button 
+                      className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-md transition-all"
+                      onClick={() => router.push(`/contest/${contest.id}`)}
+                    >
+                      Start Contest <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  )}
+                  {contest.status === 'COMPLETED' && (
+                    <Button 
+                      variant="outline"
+                      className="border-gray-200 hover:bg-indigo-50 text-indigo-600"
+                      onClick={() => router.push(`/contestsPage`)}
+                    >
+                      View Results <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  )}
+                  {contest.status === 'INACTIVE' && (
+                    <Button 
+                      variant="outline"
+                      className="border-gray-200 hover:bg-gray-50 text-gray-600 opacity-50 cursor-not-allowed"
+                      disabled
+                    >
+                      Coming Soon <Clock className="ml-1 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
-            {dashboardData?.userStats.groupName ? (
-              <Card className="bg-white/60 backdrop-blur-sm border-indigo-100">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Team Members
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-indigo-100">
-                        <TableHead>Member</TableHead>
-                        <TableHead>Points</TableHead>
-                        <TableHead className="text-right">Rank</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {dashboardData.userStats.groupMembers
-                        .sort((a, b) => b.individualPoints - a.individualPoints)
-                        .map((member, index) => (
-                          <TableRow key={index} className="border-b border-indigo-50">
-                            <Link href={`/user/updateProfile/${member.username}`} target="_blank">
-                              <TableCell className="font-medium text-indigo-900">{member.username}</TableCell>
-                            </Link>
-                            <TableCell className="text-indigo-800">{member.individualPoints}</TableCell>
-                            <TableCell className="text-right">
-                              <span className={cn(
-                                "px-2 py-1 rounded-full text-xs font-medium",
-                                index === 0 && "bg-purple-100 text-purple-700",
-                                index === 1 && "bg-green-100 text-green-700",
-                                index === 2 && "bg-indigo-100 text-indigo-700"
-                              )}>
-                                #{index + 1}
-                              </span>
+      {/* Team Members */}
+      {dashboardData?.userStats.groupName ? (
+        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+          <CardHeader className="border-b border-gray-100 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-amber-500" />
+                  Team: {dashboardData.userStats.groupName}
+                </CardTitle>
+                <CardDescription className="text-gray-500">
+                  Team score: {dashboardData.userStats.groupPoints} points
+                </CardDescription>
+              </div>
+              <Button 
+                variant="ghost" 
+                className="p-0 hover:bg-transparent"
+                onClick={() => setShowTeamMembers(!showTeamMembers)}
+              >
+                <ChevronDown className={`h-5 w-5 text-gray-600 transition-transform ${showTeamMembers ? 'transform rotate-180' : ''}`} />
+              </Button>
+            </div>
+          </CardHeader>
+          {showTeamMembers && (
+            <CardContent className="pt-4">
+              <div className="overflow-hidden rounded-lg border border-gray-100">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50 border-b border-gray-100">
+                      <TableHead className="text-gray-700">Rank</TableHead>
+                      <TableHead className="text-gray-700">Member</TableHead>
+                      <TableHead className="text-right text-gray-700">Points</TableHead>
+                      <TableHead className="text-right text-gray-700">Contribution</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dashboardData.userStats.groupMembers
+                      .sort((a, b) => b.individualPoints - a.individualPoints)
+                      .map((member, index) => {
+                        const totalPoints = dashboardData.userStats.groupPoints || 1;
+                        const contribution = Math.round((member.individualPoints / totalPoints) * 100);
+                        
+                        return (
+                          <TableRow 
+                            key={member.username} 
+                            className={cn(
+                              "border-b border-gray-50",
+                              member.username === dashboardData.username ? "bg-amber-50" : ""
+                            )}
+                          >
+                            <TableCell className="py-3 text-center">
+                              <div className="flex justify-center items-center">
+                                {index === 0 ? (
+                                  <Crown className="h-5 w-5 text-amber-500" />
+                                ) : (
+                                  <span className="font-medium text-gray-700">
+                                    {index + 1}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3">
+                              <div className="flex items-center gap-2">
+                                <div className="h-8 w-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-bold">
+                                  {member.username.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-700">{member.username}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="py-3 text-right font-medium text-gray-700">
+                              {member.individualPoints}
+                            </TableCell>
+                            <TableCell className="py-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <span className="text-sm font-medium text-gray-700">{contribution}%</span>
+                                <div className="w-16 bg-gray-100 rounded-full h-1.5">
+                                  <div 
+                                    className="bg-amber-500 h-1.5 rounded-full" 
+                                    style={{ width: `${contribution}%` }}
+                                  ></div>
+                                </div>
+                              </div>
                             </TableCell>
                           </TableRow>
-                        ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="text-center text-purple-700 font-medium">
-                You are not part of a Group
+                        );
+                      })}
+                  </TableBody>
+                </Table>
               </div>
-            )}
-          </>
-        )}
-      </div>
-      {showRatingNotification && !token && <ProjectRatingNotification 
-        onClose={() => setShowRatingNotification(false)}
-        onGetRated={() => {
-          setShowRatingNotification(false);
-          if(token){
-            router.push('/chat/true')
-          } else{
-            router.push('/chat/false')
-          }
-        }}
-      />}
-    </div>
-  );
+            </CardContent>
+          )}
+          <CardFooter className="border-t border-gray-100 pt-4 flex justify-between">
+            <Button onClick={() => {
+              router.push('/groupCreation')
+            }} variant="outline" size="sm" className="border-gray-200 hover:bg-amber-50 text-amber-600">
+              Team Settings <Settings className="ml-1 h-4 w-4" />
+            </Button>
+          </CardFooter>
+        </Card>
+      ) : (
+        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-500" />
+              Join a Team
+            </CardTitle>
+            <CardDescription className="text-gray-500">
+              Teams can earn more points and unlock special challenges
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4 flex flex-col items-center justify-center p-8">
+            <div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+              <UsersIcon className="h-12 w-12 text-blue-300" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Collaborate with others</h3>
+            <p className="text-gray-600 text-center mb-6 max-w-md">
+              Join a team to collaborate with other developers, participate in team challenges, and climb the leaderboard together.
+            </p>
+            <div className="flex gap-4">
+              <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+                Create Team <Plus className="ml-1 h-4 w-4" />
+              </Button>
+              <Button variant="outline" className="border-gray-200 hover:bg-blue-50 text-blue-600">
+                Join Existing Team <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </>
+    )}
+  </div>
+</div> );
 }

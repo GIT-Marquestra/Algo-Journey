@@ -6,7 +6,6 @@ export async function POST() {
     const users = await prisma.user.findMany({
       where:{
         groupId: null,
-        coordinatedGroup: null
       }
     });
 
