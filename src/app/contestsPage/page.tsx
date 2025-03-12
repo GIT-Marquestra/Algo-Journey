@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Calendar, Users, CheckCircle, X, ChevronDown, ChevronUp, Ban, Award, Code, Target, ExternalLink } from "lucide-react";
+import { Trophy, Calendar, Users, CheckCircle, X, ChevronDown, ChevronUp, Ban, Award, Code } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -424,7 +424,7 @@ const ContestsPage = () => {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Contest History</h1>
-          <p className="text-gray-600 mt-1">Track your team's performance across competitions</p>
+          <p className="text-gray-600 mt-1">Track your team&apos;s performance across competitions</p>
         </div>
       </div>
 
