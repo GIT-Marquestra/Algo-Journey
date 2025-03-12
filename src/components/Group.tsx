@@ -843,19 +843,14 @@ const UnifiedGroupManagement = () => {
     </div>
   </Card>) :
     (<Card className="max-w-6xl mx-auto shadow-md border border-gray-100 mt-20">
-      <CardHeader className="bg-gradient-to-r from-indigo-500 to-indigo-700 text-white">
-        <div className="flex items-center">
-          <div className="bg-white/20 p-2 rounded-full mr-3">
-            <Users className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <CardTitle>Group Management</CardTitle>
-            <CardDescription className="text-indigo-100">
-              Create, join, and manage groups
-            </CardDescription>
-          </div>
+      <div className="flex items-center justify-between mb-8">
+        <div className='flex p-2 items-center justify-evenly'>
+          <h1 className="text-3xl font-bold text-gray-800 p-2">
+            Group <span className="text-indigo-600">Management</span>
+          </h1>
+          <p className="text-gray-600 mt-1">Collaborate and Improve together!</p>
         </div>
-      </CardHeader>
+      </div>
       <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
       <CardContent className="col-span-1 md:col-span-2 p-4">
         {showAddMembers && selectedGroupId ? (

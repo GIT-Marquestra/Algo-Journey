@@ -87,16 +87,6 @@ const QuestionSolving = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
 
-  // const getDifficultyColor = (difficulty: Difficulty): string => {
-  //   const colors: Record<Difficulty, string> = {
-  //     BEGINNER: 'bg-green-500/10 text-green-500',
-  //     EASY: 'bg-green-500/10 text-green-500',
-  //     MEDIUM: 'bg-yellow-500/10 text-yellow-500',
-  //     HARD: 'bg-red-500/10 text-red-500',
-  //     VERYHARD: 'bg-red-700/10 text-red-700'
-  //   };
-  //   return colors[difficulty] || 'bg-gray-500/10 text-gray-500';
-  // };
 
   const verifySubmission = async (
     platform: 'Leetcode' | 'Codeforces',
