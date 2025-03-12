@@ -280,9 +280,6 @@ export default function Dashboard() {
           </h1>
           <p className="text-gray-600 mt-1">Let&apos;s continue your coding journey!</p>
         </div>
-        <div className="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-bold text-xl">
-          {dashboardData?.username?.charAt(0)?.toUpperCase() || "U"}
-        </div>
       </div>
       
       {/* Stats cards */}

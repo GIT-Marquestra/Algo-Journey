@@ -81,10 +81,6 @@ export async function POST(req: Request) {
       orderBy: { contest: { startTime: 'desc' } },
     });
 
-    
-
-
-
     // **Filter out duplicate questions based on `slug`**
     const uniqueQuestions: QuestionOnContestWithDetails = [];
     const seenSlugs = new Set<string>();

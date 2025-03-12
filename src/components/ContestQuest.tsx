@@ -25,7 +25,6 @@ import {
   CheckCircle,
   Check,
   Loader2,
-  Trophy,
   AlertTriangle,
   Play
 } from 'lucide-react';
@@ -357,84 +356,96 @@ const ContestQuest: React.FC = () => {
     }
   };
 
-  // Rest of the component remains the same...
+
   
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50">
       {!show ? (
         <>
-        {id && isCoord && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
-        <div className="container mx-auto p-4 pt-20">
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-              <CardTitle className="text-2xl text-center">Welcome to the Contest</CardTitle>
-              <CardDescription className="text-center">
-                Ready to test your algorithmic skills? Click start when you&apos;re ready.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center space-y-4">
-              <div className="rounded-full bg-primary/10 p-6">
-                <Play className="h-12 w-12 text-primary" />
-              </div>
-              <Button size="lg" onClick={handleStartTestClick} className="w-full max-w-sm">
-                {loadingStartTest ? <span>Starting...</span> : <span>Start Test</span>}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-        
-        {/* Start Test Confirmation Dialog */}
-        <AlertDialog open={showStartConfirmation}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle className="flex items-center gap-2">
-                <Play className="h-5 w-5 text-primary" />
-                Start Test?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you ready to begin? Once started, the timer cannot be paused. Make sure you have enough time to complete the test.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setShowStartConfirmation(false)}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleStartTest} className="bg-primary text-primary-foreground">
-                Start Test
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          {id && isCoord && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
+          <div className="container mx-auto p-4 pt-20">
+            <Card className="max-w-2xl mx-auto border border-gray-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-md">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center text-indigo-800">Welcome to the Contest</CardTitle>
+                <CardDescription className="text-center text-gray-600">
+                  Ready to test your algorithmic skills? Click start when you&apos;re ready.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col items-center space-y-4">
+                <div className="rounded-full bg-indigo-100 p-6">
+                  <Play className="h-12 w-12 text-indigo-600" />
+                </div>
+                <Button 
+                  size="lg" 
+                  onClick={handleStartTestClick} 
+                  className="w-full max-w-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+                >
+                  {loadingStartTest ? (
+                    <span className="flex items-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                      Starting...
+                    </span>
+                  ) : (
+                    <span>Start Test</span>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Start Test Confirmation Dialog */}
+          <AlertDialog open={showStartConfirmation}>
+            <AlertDialogContent className="border border-indigo-200">
+              <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2 text-indigo-800">
+                  <Play className="h-5 w-5 text-indigo-600" />
+                  Start Test?
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-gray-600">
+                  Are you ready to begin? Once started, the timer cannot be paused. Make sure you have enough time to complete the test.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setShowStartConfirmation(false)} className="border-gray-200 text-gray-700">Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleStartTest} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                  Start Test
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </>
       ) : (
         <div className="container mx-auto p-4 pt-20 space-y-6">
-          {/* Contest interface remains the same... */}
-          <Card className="sticky top-16 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          {/* Contest Status Bar */}
+          <Card className="sticky top-16 z-10 bg-white border border-gray-100 shadow-sm">
             <CardContent className="py-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center space-x-4">
-                  <div className="p-3 rounded-full bg-primary/10">
-                    <Timer className="h-5 w-5 text-primary" />
+                  <div className="p-3 rounded-full bg-indigo-100">
+                    <Timer className="h-5 w-5 text-indigo-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Time Remaining</p>
-                    <span className={`text-2xl font-bold ${timeLeft < 300 ? 'text-destructive animate-pulse' : ''}`}>
+                    <p className="text-sm text-gray-600">Time Remaining</p>
+                    <span className={`text-2xl font-bold ${timeLeft < 300 ? 'text-red-500 animate-pulse' : 'text-indigo-800'}`}>
                       {formatTime(timeLeft)}
                     </span>
                   </div>
                 </div>
-
+  
                 <div className="flex flex-col space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Progress</span>
-                    <span className="text-sm font-medium">{Math.round(progress)}%</span>
+                    <span className="text-sm text-gray-600">Progress</span>
+                    <span className="text-sm font-medium text-indigo-800">{Math.round(progress)}%</span>
                   </div>
-                  <Progress value={progress} className="h-2" />
+                  {/* @ts-expect-error: don't know what to do here */}
+                  <Progress value={progress} className="h-2 bg-indigo-100" indicatorClassName="bg-indigo-600" />
                 </div>
-
+  
                 <div className="flex items-center justify-end space-x-4">
                   <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Current Score</p>
+                    <p className="text-sm text-gray-600">Current Score</p>
                     <p className={`text-2xl font-bold transition-colors duration-200 ${
-                      isScoreUpdating ? 'text-green-500' : ''
+                      isScoreUpdating ? 'text-green-600' : 'text-indigo-800'
                     }`}>
                       {score}
                     </p>
@@ -443,6 +454,7 @@ const ContestQuest: React.FC = () => {
                     variant="destructive"
                     onClick={() => setShowModal(true)}
                     disabled={isEndingTest}
+                    className="bg-red-500 hover:bg-red-600 text-white"
                   >
                     {isEndingTest ? (
                       <>
@@ -457,90 +469,117 @@ const ContestQuest: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-
+  
+          {/* Question List */}
           <div className="grid gap-6">
             {questions.map((q) => {
               const isVerified = verifiedProblems.has(q.id);
+              const difficultyColor = 
+                q.question.difficulty === 'EASY' ? 'bg-green-500/10 text-green-500' :
+                q.question.difficulty === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-500' :
+                'bg-red-500/10 text-red-500';
+                
               return (
                 <Card 
                   key={q.id}
-                  className={`transition-all duration-300 ${
-                    isVerified ? 'bg-green-500/5 border-green-500/20 shadow-green-500/10' : 'hover:shadow-lg'
+                  className={`transition-all duration-300 hover:shadow-md ${
+                    isVerified 
+                      ? 'bg-green-50/50 border-green-200' 
+                      : 'bg-white border-gray-100 hover:border-indigo-200'
                   }`}
                 >
-                  <CardHeader className="pb-2">
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-xl">
+                        <CardTitle className={`text-xl ${isVerified ? 'text-green-800' : 'text-indigo-800'}`}>
                           {q.question.slug}
                         </CardTitle>
-                        <div className='flex flex-col'>
-                        <CardDescription>
-                          <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces || ''} alt='nothing' className='size-5'/>
-                        </CardDescription>
-                        </div>
                         {isVerified && (
-                          <Badge variant="secondary" className="bg-green-500/10 text-green-500">
-                            <Check className="h-3 w-3 mr-1" />
-                            Solved
-                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <Check className="h-5 w-5 text-green-600" />
+                            <span className="text-xs font-medium text-green-600">Solved</span>
+                          </div>
                         )}
+                        <div className="ml-2">
+                          <Image src={q.question.leetcodeUrl ? Leetcode : Codeforces} alt="platform" className="size-5" />
+                        </div>
                       </div>
                       <Badge 
                         variant="secondary" 
-                        className={`${getDifficultyColor(q.question.difficulty)} ${
+                        className={`${difficultyColor} ${
                           isVerified ? 'opacity-75' : ''
-                        }`}
+                        } px-3 py-1 rounded-full text-xs font-medium`}
                       >
                         {q.question.difficulty}
                       </Badge>
                     </div>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {q.question.questionTags?.map((tag) => (
+                        <Badge
+                          key={tag.id}
+                          variant="outline"
+                          className="text-xs bg-white border-gray-200 text-gray-600"
+                        >
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
                   </CardHeader>
-                  <CardContent className="pt-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                      <div className="flex items-center space-x-2">
-                        <Trophy className="h-4 w-4 text-primary" />
-                        <span className="text-sm text-muted-foreground">
-                          Points: {q.question.points}
-                        </span>
+                  <CardContent className="pt-0 pb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                          isVerified ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
+                        }`}>
+                          <span className="text-sm font-bold">{q.question.points}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Points
+                        </p>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex gap-2 w-full sm:w-auto">
                         <Link 
                           href={q.question.leetcodeUrl || q.question.codeforcesUrl || '#'}
                           target="_blank"
                           rel="noopener noreferrer"
+                          className="w-full sm:w-auto"
                         >
                           <Button 
-                            variant="outline" 
+                            variant={isVerified ? "outline" : "default"}
                             size="sm"
-                            className={`${isVerified ? 'opacity-75' : ''} transition-all`}
+                            className={`w-full ${
+                              isVerified 
+                                ? 'border-green-200 text-green-700 hover:bg-green-50' 
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                            }`}
                           >
-                            Solve <ExternalLink className="ml-2 h-4 w-4" />
+                            {isVerified ? 'View Problem' : 'Solve Now'} 
+                            <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button
-                          variant={isVerified ? "ghost" : "outline"}
-                          size="sm"
-                          disabled={isVerified}
-                          onClick={() => handleVerify(
-                            q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces',
-                            q.question.slug,
-                            q.id,
-                            q.question.points
-                          )}
-                          className={`${isVerified ? 'bg-green-500/10 text-green-500 hover:bg-green-500/20' : ''} transition-all`}
-                        >
-                          {isVerifying[q.id] ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Verifying...
-                            </>
-                          ) : (isVerified) ? (
-                            <>Verified <Check className="ml-2 h-4 w-4" /></>
-                          ) : (
-                            <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>
-                          )}
-                        </Button>
+                        {!isVerified && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleVerify(
+                              q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces',
+                              q.question.slug,
+                              q.id,
+                              q.question.points
+                            )}
+                            disabled={isVerifying[q.id]}
+                            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full sm:w-auto"
+                          >
+                            {isVerifying[q.id] ? (
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Verifying...
+                              </>
+                            ) : (
+                              <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
@@ -548,22 +587,29 @@ const ContestQuest: React.FC = () => {
               );
             })}
           </div>
-
+  
+          {/* Showing count */}
+          {questions.length > 0 && (
+            <div className="mt-6 text-center text-sm text-gray-600">
+              Showing {questions.length} questions
+            </div>
+          )}
+  
           {/* End Test Confirmation Dialog */}
           <AlertDialog open={showModal}>
-            <AlertDialogContent>
+            <AlertDialogContent className="border border-red-200">
               <AlertDialogHeader>
-                <AlertDialogTitle className="flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
                   End Test?
                 </AlertDialogTitle>
-                <AlertDialogDescription>
+                <AlertDialogDescription className="text-gray-600">
                   Are you sure you want to end this test? Your final score will be {score} points. All unsolved problems will be verified one last time before submission.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setShowModal(false)}>Continue Test</AlertDialogCancel>
-                <AlertDialogAction onClick={handleEndTest} className="bg-destructive text-destructive-foreground">
+                <AlertDialogCancel onClick={() => setShowModal(false)} className="border-gray-200 text-gray-700">Continue Test</AlertDialogCancel>
+                <AlertDialogAction onClick={handleEndTest} className="bg-red-500 hover:bg-red-600 text-white">
                   End Test Now
                 </AlertDialogAction>
               </AlertDialogFooter>
@@ -572,7 +618,5 @@ const ContestQuest: React.FC = () => {
         </div>
       )}
     </div>
-  );
-};
-
+  )}
 export default ContestQuest;
