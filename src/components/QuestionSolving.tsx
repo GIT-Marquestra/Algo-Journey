@@ -87,16 +87,16 @@ const QuestionSolving = () => {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
 
-  const getDifficultyColor = (difficulty: Difficulty): string => {
-    const colors: Record<Difficulty, string> = {
-      BEGINNER: 'bg-green-500/10 text-green-500',
-      EASY: 'bg-green-500/10 text-green-500',
-      MEDIUM: 'bg-yellow-500/10 text-yellow-500',
-      HARD: 'bg-red-500/10 text-red-500',
-      VERYHARD: 'bg-red-700/10 text-red-700'
-    };
-    return colors[difficulty] || 'bg-gray-500/10 text-gray-500';
-  };
+  // const getDifficultyColor = (difficulty: Difficulty): string => {
+  //   const colors: Record<Difficulty, string> = {
+  //     BEGINNER: 'bg-green-500/10 text-green-500',
+  //     EASY: 'bg-green-500/10 text-green-500',
+  //     MEDIUM: 'bg-yellow-500/10 text-yellow-500',
+  //     HARD: 'bg-red-500/10 text-red-500',
+  //     VERYHARD: 'bg-red-700/10 text-red-700'
+  //   };
+  //   return colors[difficulty] || 'bg-gray-500/10 text-gray-500';
+  // };
 
   const verifySubmission = async (
     platform: 'Leetcode' | 'Codeforces',
@@ -287,123 +287,194 @@ const QuestionSolving = () => {
   }
 
   return (
-    <div className="container mx-auto p-4 mt-16">
-      <Card className="mb-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="container mx-auto p-4 mt-16 max-w-6xl">
+      <Card className="mb-6 bg-indigo-50/90 border border-indigo-100 shadow-sm">
         <CardContent className="py-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Practice Questions</h2>
-            <div className="text-right">
-              <p className="text-sm text-muted-foreground">Total Score</p>
-              <p className="text-2xl font-bold">{score}</p>
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-indigo-800">Practice Questions</h2>
+              <p className="text-sm text-indigo-600 mt-1">Master algorithms through consistent practice</p>
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-indigo-100">
+              <p className="text-sm text-gray-600 mb-1">Total Score</p>
+              <p className="text-3xl font-bold text-indigo-700">{score}</p>
             </div>
           </div>
           
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <p className="text-sm text-muted-foreground">Filter by difficulty:</p>
-              <Select
-                value={selectedDifficulty}
-                onValueChange={setSelectedDifficulty}
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select Difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DIFFICULTIES.map(difficulty => (
-                    <SelectItem key={difficulty.value} value={difficulty.value}>
-                      {difficulty.label}
-                    </SelectItem>
+          <div className="space-y-6">
+            <div className="bg-white p-4 rounded-lg border border-gray-100">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+                <p className="text-sm font-medium text-gray-700">Filter by difficulty:</p>
+                <Select
+                  value={selectedDifficulty}
+                  onValueChange={setSelectedDifficulty}
+                >
+                  <SelectTrigger className="w-full md:w-48 bg-white border-indigo-200 text-indigo-700">
+                    <SelectValue placeholder="Select Difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DIFFICULTIES.map(difficulty => (
+                      <SelectItem key={difficulty.value} value={difficulty.value}>
+                        {difficulty.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+  
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-gray-700">Filter by tags:</p>
+                <div className="flex flex-wrap gap-2">
+                  {AVAILABLE_TAGS.map(tag => (
+                    <Button
+                      key={tag}
+                      variant={selectedTags.includes(tag) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => toggleTag(tag)}
+                      className={`rounded-full text-xs px-3 py-1 h-auto ${
+                        selectedTags.includes(tag) 
+                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white' 
+                          : 'border-indigo-200 text-indigo-700 hover:bg-indigo-50'
+                      }`}
+                    >
+                      {tag}
+                    </Button>
                   ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Filter by tags:</p>
-              <div className="flex flex-wrap gap-2">
-                {AVAILABLE_TAGS.map(tag => (
-                  <Button
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => toggleTag(tag)}
-                    className="rounded-full"
-                  >
-                    {tag}
-                  </Button>
-                ))}
+                </div>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      <div className="grid gap-6">
-        {filteredQuestions.map((q) => {
-          const isSolved = solvedProblems.has(q.id);
-          return (
-            <Card 
-              key={q.id}
-              className={`transition-colors duration-200 ${
-                isSolved ? 'bg-green-500/5 border-green-500/20' : ''
-              }`}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-xl">
-                      {q.question.slug}
-                    </CardTitle>
-                    {isSolved && (
-                      <Check className="h-5 w-5 text-green-500" />
-                    )}
-                  </div>
-                  <Badge 
-                    variant="secondary" 
-                    className={`${getDifficultyColor(q.question.difficulty)} ${
-                      isSolved ? 'opacity-75' : ''
-                    }`}
-                  >
-                    {q.question.difficulty}
-                  </Badge>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {q.question.questionTags.map((tag: AnyTag) => (
-                    <Badge
-                      key={tag.id}
-                      variant="outline"
-                      className="text-xs bg-background/80"
+  
+      {filteredQuestions.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-lg border border-gray-100 shadow-sm">
+          <p className="text-gray-600">No questions match your current filters.</p>
+          <Button 
+            variant="outline"
+            className="mt-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50" 
+            onClick={() => {
+              setSelectedTags([]);
+              setSelectedDifficulty("ALL");
+            }}
+          >
+            Clear filters
+          </Button>
+        </div>
+      ) : (
+        <div className="grid gap-6">
+          {filteredQuestions.map((q) => {
+            const isSolved = solvedProblems.has(q.id);
+            
+            // Get difficulty color
+            let difficultyColor = "";
+            switch (q.question.difficulty) {
+              case "BEGINNER":
+              case "EASY":
+                difficultyColor = "bg-green-500/10 text-green-700 border-green-200";
+                break;
+              case "MEDIUM":
+                difficultyColor = "bg-amber-500/10 text-amber-700 border-amber-200";
+                break;
+              case "HARD":
+              case "VERYHARD":
+                difficultyColor = "bg-red-500/10 text-red-700 border-red-200";
+                break;
+              default:
+                difficultyColor = "bg-gray-500/10 text-gray-700 border-gray-200";
+            }
+            
+            return (
+              <Card 
+                key={q.id}
+                className={`transition-all duration-300 hover:shadow-md ${
+                  isSolved 
+                    ? 'bg-green-50/50 border-green-200' 
+                    : 'bg-white border-gray-100 hover:border-indigo-200'
+                }`}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className={`text-xl ${isSolved ? 'text-green-800' : 'text-indigo-800'}`}>
+                        {q.question.slug}
+                      </CardTitle>
+                      {isSolved && (
+                        <div className="flex items-center gap-1">
+                          <Check className="h-5 w-5 text-green-600" />
+                          <span className="text-xs font-medium text-green-600">Solved</span>
+                        </div>
+                      )}
+                    </div>
+                    <Badge 
+                      variant="secondary" 
+                      className={`${difficultyColor} ${
+                        isSolved ? 'opacity-75' : ''
+                      } px-3 py-1 rounded-full text-xs font-medium`}
                     >
-                      {tag.name}
+                      {q.question.difficulty}
                     </Badge>
-                  ))}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Practice Points: {Math.floor(q.question.points / 2)}
-                  </p>
-                  <Link 
-                    href={q.question.leetcodeUrl || q.question.codeforcesUrl || '#'}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      className={isSolved ? 'opacity-75' : ''}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {q.question.questionTags.map((tag: AnyTag) => (
+                      <Badge
+                        key={tag.id}
+                        variant="outline"
+                        className={`text-xs bg-white border-gray-200 text-gray-600 ${
+                          selectedTags.includes(tag.name) 
+                            ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                            : ''
+                        }`}
+                      >
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0 pb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+                        isSolved ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
+                      }`}>
+                        <span className="text-sm font-bold">{Math.floor(q.question.points / 2)}</span>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        Practice Points
+                      </p>
+                    </div>
+                    <Link 
+                      href={q.question.leetcodeUrl || q.question.codeforcesUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full sm:w-auto"
                     >
-                      {isSolved ? 'View Problem' : 'Solve'} <ExternalLink className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
-                </div></CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                      <Button 
+                        variant={isSolved ? "outline" : "default"}
+                        size="sm"
+                        className={`w-full ${
+                          isSolved 
+                            ? 'border-green-200 text-green-700 hover:bg-green-50' 
+                            : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                        }`}
+                      >
+                        {isSolved ? 'View Problem' : 'Solve Now'} 
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+      
+      {questions.length > 0 && (
+        <div className="mt-6 text-center text-sm text-gray-600">
+          Showing {filteredQuestions.length} of {questions.length} questions
+        </div>
+      )}
     </div>
-  );
-};
-
+  )}
 export default QuestionSolving;
