@@ -1,9 +1,9 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Calendar, Users, CheckCircle, X, ChevronDown, ChevronUp, Ban } from "lucide-react";
+import { Trophy, Calendar, Users, CheckCircle, X, ChevronDown, ChevronUp, Ban, Award, Code, Target, ExternalLink } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -31,7 +31,7 @@ interface Submission {
   id: string;
   score: number;
   status: string;
-  createdAt: string; // Added createdAt field for submission time
+  createdAt: string;
   question: {
     id: string;
     slug: string;
@@ -71,24 +71,19 @@ interface Contest {
   attemptedGroups: GroupOnContest[];
 }
 
-const getRankBadgeColor = (rank: number) => {
-  switch(rank) {
-    case 1: return "bg-yellow-500";
-    case 2: return "bg-gray-400";
-    case 3: return "bg-amber-700";
-    default: return "bg-slate-600";
-  }
-};
-
-const GroupSubmissionsLoader = () => (
-  <div className="space-y-3">
-    <Skeleton className="h-8 w-full" />
-    <Skeleton className="h-8 w-full" />
-    <Skeleton className="h-8 w-full" />
+const DashboardSkeleton = () => (
+  <div className="space-y-6">
+    <Skeleton className="h-12 w-3/4" />
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {[...Array(4)].map((_, i) => (
+        <Skeleton key={i} className="h-32 w-full" />
+      ))}
+    </div>
+    <Skeleton className="h-64 w-full" />
+    <Skeleton className="h-64 w-full" />
   </div>
 );
 
-// Helper function to get the earliest submission time for a member
 const getEarliestSubmissionTime = (member: Member) => {
   if (!member.submissions || member.submissions.length === 0) return Infinity;
   
@@ -97,15 +92,10 @@ const getEarliestSubmissionTime = (member: Member) => {
   ));
 };
 
-const GroupSubmissions = ({ group, questions, isLoading }: { 
+const GroupSubmissions = ({ group, questions }: { 
   group: Group; 
   questions: Question[];
-  isLoading?: boolean;
 }) => {
-  if (isLoading) {
-    return <GroupSubmissionsLoader />;
-  }
-
   // Sort members by points and submission time
   const sortedMembers = [...group.members].sort((a, b) => {
     // Calculate total points for each member
@@ -127,21 +117,21 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
   });
 
   return (
-    <div className="mt-4 overflow-x-auto">
+    <div className="mt-3 overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50">
-            <TableHead className="w-16 py-4">Rank</TableHead>
-            <TableHead className="w-32 py-4">Member</TableHead>
+            <TableHead className="w-16 py-3">Rank</TableHead>
+            <TableHead className="w-32 py-3">Member</TableHead>
             {questions?.map((q, index) => (
-              <TableHead key={q.question.id} className="text-center py-4">
+              <TableHead key={q.question.id} className="text-center py-3">
                 <div className="font-semibold">Q{String.fromCharCode(65 + index)}</div>
                 <div className="text-xs text-gray-500 font-normal">
                   {q.question.points} pts
                 </div>
               </TableHead>
             ))}
-            <TableHead className="text-right py-4 pr-6">Total Score</TableHead>
+            <TableHead className="text-right py-3 pr-6">Total Score</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -150,10 +140,10 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
             
             return (
               <TableRow key={member.id} className="hover:bg-gray-50 transition-colors">
-                <TableCell className="font-medium py-4">
+                <TableCell className="font-medium py-3">
                   {member.isAllowedToParticipate === false ? "-" : index + 1}
                 </TableCell>
-                <TableCell className="font-medium py-4">
+                <TableCell className="font-medium py-3">
                   <div className="flex items-center gap-2">
                     {member.username}
                     {member.isAllowedToParticipate === false && (
@@ -171,11 +161,11 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
                   
                   if (member.isAllowedToParticipate === false) {
                     return (
-                      <TableCell key={q.question.id} className="text-center py-4">
+                      <TableCell key={q.question.id} className="text-center py-3">
                         <div className="flex flex-col items-center">
-                          <Ban className="h-5 w-5 text-red-400" />
+                          <Ban className="h-4 w-4 text-red-400" />
                           <span className="text-xs text-red-400 mt-1">
-                            Not Allowed
+                            N/A
                           </span>
                         </div>
                       </TableCell>
@@ -183,21 +173,20 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
                   }
                   
                   return (
-                    <TableCell key={q.question.id} className="text-center py-4">
+                    <TableCell key={q.question.id} className="text-center py-3">
                       {submission ? (
                         <div className="flex flex-col items-center">
-                          <CheckCircle className="h-5 w-5 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-green-500" />
                           <span className="text-sm font-medium text-green-600 mt-1">
                             {submission.score}
                           </span>
-                          {/* Display submission time */}
                           <span className="text-xs text-gray-500">
                             {new Date(submission.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                           </span>
                         </div>
                       ) : (
                         <div className="flex flex-col items-center">
-                          <X className="h-5 w-5 text-gray-400" />
+                          <X className="h-4 w-4 text-gray-400" />
                           <span className="text-sm font-medium text-gray-400 mt-1">
                             0
                           </span>
@@ -206,7 +195,7 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
                     </TableCell>
                   );
                 })}
-                <TableCell className="text-right font-semibold py-4 pr-6">
+                <TableCell className="text-right font-semibold py-3 pr-6">
                   {member.isAllowedToParticipate === false ? (
                     <span className="text-red-500">N/A</span>
                   ) : (
@@ -216,11 +205,11 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
               </TableRow>
             );
           })}
-          <TableRow className="bg-gray-50">
-            <TableCell colSpan={questions.length + 2} className="font-bold py-4">
+          <TableRow className="bg-gray-50 border-t border-gray-200">
+            <TableCell colSpan={questions.length + 2} className="font-bold py-3">
               Group Total
             </TableCell>
-            <TableCell className="text-right font-bold py-4 pr-6">
+            <TableCell className="text-right font-bold py-3 pr-6">
               {group.score}
             </TableCell>
           </TableRow>
@@ -230,58 +219,65 @@ const GroupSubmissions = ({ group, questions, isLoading }: {
   );
 };
 
-const GroupDetails = ({ group, questions, rank, isLoading }: { 
+const GroupDetails = ({ group, questions, rank }: { 
   group: Group; 
   questions: Question[]; 
   rank: number;
-  isLoading?: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const participatingMembers = group.members.filter(m => m.isAllowedToParticipate !== false);
   const nonParticipatingMembers = group.members.filter(m => m.isAllowedToParticipate === false);
 
+  const getRankBadgeColor = (rank: number) => {
+    switch(rank) {
+      case 1: return "bg-yellow-100 text-yellow-800";
+      case 2: return "bg-gray-100 text-gray-800";
+      case 3: return "bg-amber-100 text-amber-800";
+      default: return "bg-gray-100 text-gray-600";
+    }
+  };
+
   return (
-    <div className="border rounded-lg mb-4 overflow-hidden shadow-sm">
+    <div className="border border-gray-100 rounded-lg mb-3 overflow-hidden shadow-sm">
       <div 
-        className="px-6 py-4 bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+        className="px-5 py-3 bg-white cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center">
           <Badge 
-            className={`${getRankBadgeColor(rank)} w-10 h-10 flex items-center justify-center rounded-full mr-4 text-white font-bold`}
+            className={`${getRankBadgeColor(rank)} w-8 h-8 flex items-center justify-center rounded-full mr-3 font-bold`}
           >
             {rank}
           </Badge>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-gray-500" />
-              <h3 className="text-lg font-semibold">{group.name}</h3>
+              <Users className="h-4 w-4 text-indigo-500" />
+              <h3 className="text-md font-semibold text-gray-800">{group.name}</h3>
             </div>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-xs text-gray-600 mt-1">
               Coordinator: {group.coordinator?.username} • 
               Participating: {participatingMembers.length} • 
               Not Allowed: {nonParticipatingMembers.length}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="text-right">
-              <div className="font-bold text-lg">{group.score}</div>
-              <div className="text-sm text-gray-500">points</div>
+              <div className="font-bold text-lg text-gray-800">{group.score}</div>
+              <div className="text-xs text-gray-500">points</div>
             </div>
             {isExpanded ? (
-              <ChevronUp className="h-6 w-6 text-gray-400" />
+              <ChevronUp className="h-5 w-5 text-gray-400" />
             ) : (
-              <ChevronDown className="h-6 w-6 text-gray-400" />
+              <ChevronDown className="h-5 w-5 text-gray-400" />
             )}
           </div>
         </div>
       </div>
       {isExpanded && (
-        <div className="border-t">
+        <div className="border-t border-gray-100">
           <GroupSubmissions 
             group={group}
             questions={questions}
-            isLoading={isLoading}
           />
         </div>
       )}
@@ -289,128 +285,164 @@ const GroupDetails = ({ group, questions, rank, isLoading }: {
   );
 };
 
-const ContestDetails = ({ contest, isLoading }: { contest: Contest; isLoading?: boolean }) => (
-  <Card className="mb-6">
-    <CardHeader>
-      <CardTitle className="flex items-center gap-4">
-        <Trophy className="h-6 w-6 text-yellow-500" />
-        <div>
-          <Link href={`/contest/${contest.id}`} target='_blank'>
-            <span className='text-blue-700'>Contest #{contest.id}</span>
-          </Link>
-          <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-            <Calendar className="h-4 w-4" />
-            <span>
-              {new Date(contest.startTime).toLocaleDateString()} - 
-              {new Date(contest.endTime).toLocaleDateString()}
-            </span>
+const ContestDetails = ({ contest }: { contest: Contest }) => {
+  const getDifficultyColor = (difficulty: string) => {
+    switch(difficulty.toUpperCase()) {
+      case 'EASY': return 'bg-green-100 text-green-800';
+      case 'MEDIUM': return 'bg-amber-100 text-amber-800';
+      case 'HARD': return 'bg-rose-100 text-rose-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <Card className="bg-white shadow-sm hover:shadow-md transition-all border-gray-100">
+      <CardHeader className="border-b border-gray-100 pb-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-amber-500" />
+            <Link href={`/contest/${contest.id}`} className="text-xl font-bold text-gray-800 hover:text-indigo-600 transition-colors">
+              Contest #{contest.id}
+            </Link>
+          </CardTitle>
+          <Badge>
+            {contest.status === 'ACTIVE' ? 'Active' : 'Completed'}
+          </Badge>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-gray-500 mt-2">
+          <Calendar className="h-4 w-4" />
+          <span>
+            {new Date(contest.startTime).toLocaleDateString()} - {new Date(contest.endTime).toLocaleDateString()}
+          </span>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pt-6 pb-2">
+        {/* Questions Section */}
+        <div className="mb-6">
+          <h3 className="text-md font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <Code className="h-4 w-4 text-indigo-500" /> 
+            Problems
+          </h3>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="w-16 py-3">#</TableHead>
+                  <TableHead className="py-3">Problem</TableHead>
+                  <TableHead className="text-right py-3">Difficulty</TableHead>
+                  <TableHead className="text-right py-3">Points</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {contest.questions?.map((q, index) => (
+                  <TableRow key={q.question.id} className="hover:bg-gray-50 transition-colors">
+                    <TableCell className="py-3 font-medium">{String.fromCharCode(65 + index)}</TableCell>
+                    <TableCell className="py-3">
+                      <Link 
+                        href={q.question.leetcodeUrl || q.question.codeforcesUrl || ''} 
+                        target='_blank'
+                        className="text-indigo-600 hover:text-indigo-800 hover:underline"
+                      >
+                        {q.question.slug}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right py-3">
+                      <Badge className={getDifficultyColor(q.question.difficulty)}>
+                        {q.question.difficulty.charAt(0) + q.question.difficulty.slice(1).toLowerCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium py-3">{q.question.points}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </div>
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">Questions</h3>
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="w-16">#</TableHead>
-              <TableHead>Problem</TableHead>
-              <TableHead className="text-right">Points</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {contest.questions?.map((q, index) => (
-              <TableRow key={q.question.id} className="hover:bg-gray-50">
-                <TableCell>{String.fromCharCode(65 + index)}</TableCell>
-                <TableCell>
-                  <Link 
-                    href={q.question.leetcodeUrl || q.question.codeforcesUrl || ''} 
-                    target='_blank'
-                    className="text-blue-600 hover:text-blue-800 hover:underline"
-                  >
-                    {q.question.slug}
-                  </Link>
-                </TableCell>
-                <TableCell className="text-right font-medium">{q.question.points}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-      <div>
-        <h3 className="text-lg font-semibold mb-3">Rankings</h3>
-        {contest.attemptedGroups?.length ? (
-          contest.attemptedGroups.map((groupEntry, index) => (
-            <GroupDetails
-              key={groupEntry.id}
-              group={groupEntry.group}
-              questions={contest.questions || []}
-              rank={index + 1}
-              isLoading={isLoading}
-            />
-          ))
-        ) : (
-          <div className="text-gray-500 text-center py-8 bg-gray-50 rounded-lg">
-            No groups have attempted this contest yet.
-          </div>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-);
+
+        {/* Rankings Section */}
+        <div>
+          <h3 className="text-md font-medium text-gray-700 mb-3 flex items-center gap-2">
+            <Award className="h-4 w-4 text-rose-500" /> 
+            Team Rankings
+          </h3>
+          
+          {contest.attemptedGroups?.length ? (
+            contest.attemptedGroups.map((groupEntry, index) => (
+              <GroupDetails
+                key={groupEntry.id}
+                group={groupEntry.group}
+                questions={contest.questions || []}
+                rank={index + 1}
+              />
+            ))
+          ) : (
+            <div className="text-gray-500 text-center py-8 bg-gray-50 rounded-lg border border-gray-100">
+              <Users className="h-6 w-6 mx-auto mb-2 text-gray-400" />
+              No groups have attempted this contest yet.
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const ContestsPage = () => {
   const { data: contests, isLoading, error } = useQuery({
     queryKey: ['contests'],
     queryFn: async () => {
       const response = await axios.get('/api/contests');
-      console.log(response)
       return response.data;
     },
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mr-3"></div>
-        <span>Loading contests...</span>
+      <div className="container mx-auto p-8 pt-20 space-y-8">
+        <DashboardSkeleton />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto py-8 mt-20">
-        <div className="max-w-4xl mx-auto text-center text-red-500">
-          Error loading contests. Please try again later.
-        </div>
+      <div className="container mx-auto p-8 pt-20 space-y-8">
+        <Card className="bg-white shadow-sm border-gray-100">
+          <CardContent className="text-center py-12">
+            <X className="h-12 w-12 mx-auto mb-3 text-rose-300" />
+            <h3 className="text-xl font-medium text-gray-700 mb-1">Error loading contests</h3>
+            <p className="text-gray-500">Please try again later</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 mt-20">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">
-          Contest History
-        </h1>
-        {contests?.length ? (
-          contests.map((contest: Contest) => (
-            <ContestDetails 
-              key={contest.id} 
-              contest={contest} 
-              isLoading={isLoading}
-            />
-          ))
-        ) : (
-          <Card>
-            <CardContent className="text-center py-8">
-              No contests available.
-            </CardContent>
-          </Card>
-        )}
+    <div className="container mx-auto p-8 pt-20 space-y-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Contest History</h1>
+          <p className="text-gray-600 mt-1">Track your team's performance across competitions</p>
+        </div>
       </div>
+
+      {contests?.length ? (
+        <div className="space-y-6">
+          {contests.map((contest: Contest) => (
+            <ContestDetails key={contest.id} contest={contest} />
+          ))}
+        </div>
+      ) : (
+        <Card className="bg-white shadow-sm border-gray-100">
+          <CardContent className="text-center py-12">
+            <Trophy className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+            <h3 className="text-xl font-medium text-gray-700 mb-1">No contests available</h3>
+            <p className="text-gray-500">Check back later for upcoming competitions</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

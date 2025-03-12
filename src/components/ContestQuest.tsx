@@ -29,7 +29,6 @@ import {
   Play
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Difficulty } from '@prisma/client';
 import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from '@/serverActions/fetch';
 import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
