@@ -93,7 +93,6 @@ type UserProfileResponse = {
 
 export async function GET(request: Request) {
   try {
-    console.log(request.url);
 
     // Extract username from URL
     const { url } = request;
@@ -264,8 +263,6 @@ export async function GET(request: Request) {
     
       },
     };
-
-    console.log(response.data)
 
     return NextResponse.json<UserProfileResponse>(response);
   } catch (error) {
