@@ -184,7 +184,6 @@ const TopicGrid: React.FC = () => {
             topics.map((topic) => {
               const colorScheme = getTopicColor(topic);
               const topicData = topicProgress[topic] || { total: 0, solved: 0, percentage: 0 };
-              const category = topicCategories[topic];
               
               return (
                 <Link 
