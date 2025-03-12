@@ -16,12 +16,17 @@ export async function GET() {
             where: { email: userEmail },
             include: {
                 group: {
-                    include: {
-                        members: {
-                            select: { username: true, individualPoints: true },
-                        },
+                    select:{
+                        id: true,
+                        name: true,
+                        groupPoints: true,
+                        _count:{
+                            select:{ members: true}
+                        }
                     },
-                }
+                    
+                },
+                coordinatedGroup: true
             }
         });
 
@@ -79,19 +84,6 @@ export async function GET() {
             where: { userId: user.id },
         });
 
-
-        console.log({
-            latestContests,
-            user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                individualPoints: user.individualPoints,
-                group: user.group
-            },
-            submissionCount
-        })
-
         return NextResponse.json(
             {
                 latestContests,
@@ -100,7 +92,8 @@ export async function GET() {
                     email: user.email,
                     username: user.username,
                     individualPoints: user.individualPoints,
-                    group: user.group
+                    group: user.group,
+                    coordinatedGroup: user.coordinatedGroup
                 },
                 submissionCount,
             },

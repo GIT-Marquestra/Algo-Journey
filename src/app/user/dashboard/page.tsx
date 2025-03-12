@@ -60,12 +60,15 @@ interface GroupMember {
 interface Group {
   name: string;
   groupPoints: number;
-  members: GroupMember[];
+  _count: {
+    members: number;  
+  }
 }
 
 interface User {
   individualPoints: number;
   group?: Group;
+  coordinatedGroup?: Group;
 }
 
 interface UserStats {
@@ -73,7 +76,8 @@ interface UserStats {
   totalPoints: number;
   groupName: string | null;
   groupPoints: number | null;
-  groupMembers: GroupMember[];
+  groupMembers: number | null;
+  isCoordinator: boolean;
 }
 
 interface Contest {
@@ -87,7 +91,6 @@ interface Contest {
 
 interface DashboardData {
   contests: Contest[];
-  isCoordinator: boolean;
   username: string;
   isAdmin: boolean;
   userStats: UserStats;
@@ -124,10 +127,6 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
     user: User;
   }>('/api/getData');
   
-  const coordResponse = await axios.post<{
-    isCoordinator: boolean;
-  }>('/api/checkIfCoordinator');
-  
   const usernameResponse = await axios.post<{
     username: string;
   }>('/api/getUsername');
@@ -139,7 +138,6 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
 
   return {
     contests: contestsResponse.data.latestContests,
-    isCoordinator: coordResponse.data.isCoordinator,
     username: usernameResponse.data.username,
     isAdmin: adminResponse.data.isAdmin,
     userStats: {
@@ -147,27 +145,25 @@ const fetchDashboardData = async (): Promise<DashboardData> => {
       totalPoints: contestsResponse.data.user.individualPoints,
       groupName: contestsResponse.data.user.group?.name || null,
       groupPoints: contestsResponse.data.user.group?.groupPoints || null,
-      groupMembers: contestsResponse.data.user.group?.members || []
+      groupMembers: contestsResponse.data.user?.group?._count?.members || null,
+      isCoordinator: contestsResponse.data.user?.coordinatedGroup ? true : false
     }
   };
 };
 
 const fetchPlatformData = async (): Promise<PlatformData> => {
-  const leetcodeResponse = await axios.post<{
+  const usernames = await axios.post<{
     leetcodeUsername: string | null;
-  }>('/api/user/leetcode/username');
-  
-  const codeforcesResponse = await axios.post<{
-    codeforcesUsername: string | null;
-  }>('/api/user/codeforces/username');
+    codeforcesUsername: string | null;  
+  }>('/api/user/username');
 
-  if (!leetcodeResponse.data.leetcodeUsername || !codeforcesResponse.data.codeforcesUsername) {
+  if (!usernames.data.leetcodeUsername || !usernames.data.codeforcesUsername) {
     throw new Error('Usernames not set');
   }
 
   const [leetcodeData, codeforcesData] = await Promise.all([
-    fetchUserStats(leetcodeResponse.data.leetcodeUsername) as Promise<LeetCodeStats>,
-    fetchCodeforcesUserData(codeforcesResponse.data.codeforcesUsername),
+    fetchUserStats(usernames.data.leetcodeUsername) as Promise<LeetCodeStats>,
+    fetchCodeforcesUserData(usernames.data.codeforcesUsername),
   ]);
 
   return {
@@ -204,6 +200,8 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 
 
 export default function Dashboard() {
+  const [members, setMembers] = useState<GroupMember[]>([]);  
+  const [loadingMembers, setLoadingMembers] = useState<boolean>(false); 
   const router = useRouter();
   const { data: session, status } = useSession();
   const [notification, setNotification] = useState<boolean>(true);
@@ -331,7 +329,7 @@ export default function Dashboard() {
             </p>
             {dashboardData?.userStats.groupName && (
               <p className="text-xs text-gray-500 mt-1">
-                {dashboardData.userStats.groupMembers.length} team members
+                {dashboardData.userStats.groupMembers} team members
               </p>
             )}
           </CardContent>
@@ -614,13 +612,69 @@ export default function Dashboard() {
               <Button 
                 variant="ghost" 
                 className="p-0 hover:bg-transparent"
-                onClick={() => setShowTeamMembers(!showTeamMembers)}
+                onClick={async () => {
+                  try{
+                    setLoadingMembers(true)
+                    const response = await axios.get('/api/getGroupMembersForMember');
+                    if(response.status !== 200){{
+                      toast.error('Error fethcing members')
+                    }}
+                    setMembers(response.data.members);  
+                    setShowTeamMembers(!showTeamMembers)
+
+                  } catch (error){
+                    console.error('Error fetching team members:', error);
+                    toast.error('Failed to fetch team members');
+                  } finally {
+                    setShowTeamMembers(!showTeamMembers);
+                    setLoadingMembers(false)
+                  }
+                }}
               >
                 <ChevronDown className={`h-5 w-5 text-gray-600 transition-transform ${showTeamMembers ? 'transform rotate-180' : ''}`} />
               </Button>
             </div>
           </CardHeader>
-          {showTeamMembers && (
+          {loadingMembers ? (<CardContent className="pt-4">
+      <div className="overflow-hidden rounded-lg border border-gray-100">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50 border-b border-gray-100">
+              <TableHead className="text-gray-700">Rank</TableHead>
+              <TableHead className="text-gray-700">Member</TableHead>
+              <TableHead className="text-right text-gray-700">Points</TableHead>
+              <TableHead className="text-right text-gray-700">Contribution</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index} className="border-b border-gray-50 animate-pulse">
+                <TableCell className="py-3 text-center">
+                  <div className="h-5 w-5 bg-gray-200 rounded-full mx-auto"></div>
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                    <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                  </div>
+                </TableCell>
+                <TableCell className="py-3 text-right">
+                  <div className="h-4 w-12 bg-gray-200 rounded mx-auto"></div>
+                </TableCell>
+                <TableCell className="py-3 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="h-4 w-8 bg-gray-200 rounded"></div>
+                    <div className="w-16 bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                      <div className="bg-gray-300 h-1.5 rounded-full w-1/2"></div>
+                    </div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </CardContent>) : showTeamMembers && (
             <CardContent className="pt-4">
               <div className="overflow-hidden rounded-lg border border-gray-100">
                 <Table>
@@ -633,7 +687,7 @@ export default function Dashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dashboardData.userStats.groupMembers
+                    {members
                       .sort((a, b) => b.individualPoints - a.individualPoints)
                       .map((member, index) => {
                         const totalPoints = dashboardData.userStats.groupPoints || 1;
