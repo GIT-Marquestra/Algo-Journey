@@ -258,16 +258,6 @@ const ContestQuest: React.FC = () => {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getDifficultyColor = (difficulty: Difficulty): string => {
-    //@ts-expect-error : it important here
-    const colors: Record<Difficulty, string> = {
-      EASY: 'bg-green-500/10 text-green-500',
-      MEDIUM: 'bg-yellow-500/10 text-yellow-500',
-      HARD: 'bg-red-500/10 text-red-500'
-    };
-    return colors[difficulty] || 'bg-gray-500/10 text-gray-500';
-  };
-
   const handleStartTestClick = () => {
     if (!lusername || !cusername) {
       toast.error('Please wait while we load your profile data');
