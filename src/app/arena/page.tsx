@@ -192,7 +192,7 @@ const TopicGrid: React.FC = () => {
               return (
                 <Link 
                   key={topic} 
-                  href={`/topicwiseQuestions/${topic}/all`} 
+                  href={`/topicwiseQuestions/s/${topic}/s/BEGINNER/EASY/MEDIUM/HARD/VERYHARD`} 
                   target='_blank' 
                   rel="noopener noreferrer"
                   className="block"
