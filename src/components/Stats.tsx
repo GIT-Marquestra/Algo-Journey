@@ -1,6 +1,5 @@
 'use client'
 import React, { useCallback, useEffect, useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -9,7 +8,6 @@ import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import SearchInput from './SearchInput';
-import Modal from './ui/Modal';
 import Link from 'next/link';
 import { Users, UserCheck, Award, Target, ChevronRight } from 'lucide-react';
 
@@ -63,38 +61,9 @@ const StatsCard = ({
   </Card>
 );
 
-const UserData = ({ user }: {user: User | null}) => {
-  return (
-    <div className="py-4 px-1">
-      {user ? (
-        <div className="space-y-3">
-          <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-            <h3 className="font-medium text-gray-800 mb-2">User Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <p className="text-sm"><span className="font-medium text-gray-700">Name:</span> {user.username}</p>
-                <p className="text-sm"><span className="font-medium text-gray-700">Email:</span> {user.email}</p>
-                <p className="text-sm"><span className="font-medium text-gray-700">Section:</span> {user.section}</p>
-                <p className="text-sm"><span className="font-medium text-gray-700">Group:</span> {user.group.name}</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm"><span className="font-medium text-gray-700">Points:</span> {user.individualPoints}</p>
-                <p className="text-sm"><span className="font-medium text-gray-700">Leetcode:</span> {user.leetcodeUsername || 'Not set'}</p>
-                <p className="text-sm"><span className="font-medium text-gray-700">CodeForces:</span> {user.codeforcesUsername || 'Not set'}</p>
-                <p className="text-sm"><span className="font-medium text-gray-700">Joined:</span> {new Date(user.createdAt).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="text-center py-4 text-gray-500">No user details available</div>
-      )}
-    </div>
-  );
-};
+
 
 const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
-  const [userDetails, setUserDetails] = useState<User | null>(null);
   
   if (loading) {
     return (
@@ -112,18 +81,6 @@ const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
         ))}
       </div>
     );
-  }
-
-  const handleViewDetails = async (id: string) => {
-    try {
-      const response = await axios.post('/api/getUserDetails', { id })
-      if(!response.data.userDetail) return toast.error('User not found')  
-      setUserDetails(response.data.userDetail)
-      toast.success('Viewing user details')
-    } catch (error) {
-      console.log(error)
-      toast.error('Some error occurred')
-    }
   }
 
   return (
@@ -148,16 +105,6 @@ const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
                 </div>
               </div>
             </div>
-            <Modal
-              trigger={
-                <Button variant="outline" size="sm" className="border-gray-200 hover:bg-indigo-50 text-indigo-600">
-                  View Details <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              }
-              title="User Information"
-            >
-              <UserData user={userDetails}/>
-            </Modal>
           </div>
         </Card>
       )) : (

@@ -235,18 +235,6 @@ const ArenaLeaderboardPage = () => {
     return Array.from(new Map(data.map(item => [item.question.id, item.question])).values());
   };
 
-  // Get submission for a specific user and question
-  const getSubmission = (userId: string, questionId: string) => {
-    return data?.find(s => s.userId === userId && s.questionId === questionId);
-  };
-
-//   if (hasAppliedFilters) {
-//     return (
-//       <div className="container mx-auto p-8 pt-20 space-y-8">
-//         <DashboardSkeleton />
-//       </div>
-//     );
-//   }
 
   if (error) {
     return (
@@ -442,7 +430,7 @@ const ArenaLeaderboardPage = () => {
             <Filter className="h-12 w-12 mx-auto mb-3 text-indigo-300" />
             <h3 className="text-xl font-medium text-gray-700 mb-2">Please Select Filters</h3>
             <p className="text-gray-500 max-w-md mx-auto">
-              Select your preferred topic, team, and difficulty level filters above and click "Apply Filters" to view the leaderboard.
+              Select your preferred topic, team, and difficulty level filters above and click &quot;Apply Filters&quot; to view the leaderboard.
             </p>
           </CardContent>
         </Card>
@@ -525,7 +513,9 @@ const ArenaLeaderboardPage = () => {
                   {uniqueUsers.map((user, index) => (
                     <TableRow key={user.id} className="hover:bg-gray-50 transition-colors">
                       <TableCell className="font-medium py-3">{index + 1}</TableCell>
-                      <TableCell className="font-medium py-3">{user.username}</TableCell>
+                      <Link href={`/user/updateProfile/${user.username}`} target='_blank'>
+                        <TableCell className="font-medium py-3 text-blue-700">{user.username}</TableCell>
+                      </Link>
                       <TableCell className="py-3">{user.group?.name || 'No Team'}</TableCell>
                       {uniqueQuestions.map((question) => {
                         const submission = data?.find(
