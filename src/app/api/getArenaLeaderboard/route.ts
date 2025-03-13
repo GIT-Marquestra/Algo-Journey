@@ -7,10 +7,6 @@ export async function POST(req: Request) {
   try {
     // Parse request body
     const { topics, teams, difficulties } = await req.json();
-    // Fetch submissions based on filters
-    if(!difficulties){
-
-    }
     const submissions = await prisma.submission.findMany({
       where: {
         question: {
