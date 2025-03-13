@@ -16,7 +16,6 @@ interface ContestRequest {
 export async function POST(req: Request) {
   try {
     const request: ContestRequest = await req.json();
-    console.log(request);
     const { duration, questions } = request;
 
     // Create the contest and connect questions in a single transaction
@@ -49,10 +48,21 @@ export async function POST(req: Request) {
             }
           }
         });
+
+        await tx.question.updateMany({
+          where: {
+            id: {
+              in: questions.map(q => q.id)
+            }
+          },
+          data: {
+            inContest: true
+          }
+        })
       }
 
       return newContest;
-    });
+    }, { timeout: 15000 });
 
     return NextResponse.json({
       contestId: contest.id,

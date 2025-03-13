@@ -122,12 +122,14 @@ model GroupOnContest {
 
 
 model Question {
-  id                String                @id @default(uuid())
+  id                String               @id @default(uuid())
   leetcodeUrl       String?         
   codeforcesUrl     String?          
   difficulty        Difficulty       
   points            Int
   questionTags      QuestionTag[]     
+  inContest         Boolean               @default(false)
+  inArena           Boolean               @default(false) 
   slug              String                @unique
   contests          QuestionOnContest[]   @relation("QuestionToContest")
   submissions       Submission[]          @relation("QuestionToSubmission")

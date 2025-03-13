@@ -41,9 +41,14 @@ export async function POST(req: NextRequest) {
             }
           });
 
-          
-          
-          
+          await prisma.question.update({    
+            where: {
+              id: question.id
+            },
+            data: {
+              inArena: true
+            }
+          });       
           // Disconnect the question and delete temp entry if no questions remain
           await prisma.tempContestQuestion.update({
             where: {
@@ -85,8 +90,15 @@ export async function POST(req: NextRequest) {
               contestId: null
             }
           });
+          await prisma.question.update({
+            where: {
+              id: question.id
+            },
+            data: {
+              inArena: true
         }
-
+      }); 
+        }
         return {
           ...question,
           contestId: tempQuestion?.contestId || null

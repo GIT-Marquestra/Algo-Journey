@@ -25,6 +25,7 @@ import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
 import ContestPermissionModal from './ContestPermissionModal';
 import Image from 'next/image';
+import useStore from '@/store/store';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -97,22 +98,23 @@ export default function AllQuestions() {
   const [loadingArena, setLoadingArena] = useState(false)
   const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
   const [show, setShow] = useState(true)
+  const { isAdmin } = useStore()
 
 
   const fetchQuestions = useCallback(async () => {
     try {
-      const res = await axios.post('/api/checkIfAdmin')
+
       const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
       const response2 = await axios.post('/api/getQuestionOnContest')
       if(!(response2.status === 200)) {
         toast.error(response2.data.message)
       }
       setQuestionOnContest(response2.data.data)
-      if(!res.data.isAdmin) {
+      if(!isAdmin) {
         setShow(false)
         return
       } 
-      if(res.data.isAdmin) setShow(true)
+      if(isAdmin) setShow(true)
       
       setQuestions(response.data.questions);
       setFilteredQuestions(response.data.questions);
@@ -247,7 +249,6 @@ const handleCreateTest = async () => {
 
   setLoading(true);
   try {
-    console.log('creating test')
     const testData = {
       questions: selectedQuestions,
       name: contestName,
@@ -258,7 +259,6 @@ const handleCreateTest = async () => {
 
 
     const response = await axios.post("/api/createTest", testData);
-    console.log(response.data)  
     const contestId = response.data.contestId; // Make sure your API returns the contest ID
     
     return contestId;
@@ -308,7 +308,6 @@ const handlePushToArena = async () => {
   setLoadingArena(true);
   try {
     const response = await axios.post("/api/pushToArena", { questions: selectedArenaQuestions });
-    console.log(response.data)  
     if(!(response.status === 200)) {
       toast.error(response.data.message)
       return 
@@ -332,7 +331,7 @@ const handleDeleteQuestion = async (id: string) => {
 
     toast.success("Deleted")
   } catch (error) {
-    console.log('Error while deleteing question: ', error)
+    console.error('Error while deleteing question: ', error)
     toast.error("Some unexpected error occured!")
   }
 }
