@@ -167,7 +167,8 @@ const AdminDashboard = () => {
             </h1>
             <p className="text-gray-600 mt-1">Monitor platform activity and manage users</p>
           </div>
-          <Button className='bg-indigo-600 text-white' onClick={() => router.push('/leaderboard/admin')} variant="outline" size="sm">Arena Leaderboard</Button>
+         
+          <Button className='bg-indigo-600 text-white' onClick={() => router.push('/leaderboard/admin')} variant="link" size="sm">Arena Leaderboard <ChevronRight className="h-6 w-6 text-white" /></Button>
         </div>
         
         {/* Stats cards */}

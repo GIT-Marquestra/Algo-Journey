@@ -14,7 +14,7 @@ export async function POST(req: Request) {
           questionTags: {
             some: { name: { in: topics.split(",") } }, // Filter by topic tags
           },
-          difficulty: { in: difficulties.split(",") as any }, // Filter by difficulty
+          difficulty: { in: difficulties.split(",") }, // Filter by difficulty
         },
         user: {
           group: {
