@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useParams } from 'next/navigation';
-import { ExternalLink, Check } from 'lucide-react';
+import { ExternalLink, Check, Loader2, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Difficulty } from '@prisma/client';
@@ -18,19 +18,18 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from './ui/skeleton';
+import useStore from '@/store/store';
 
 interface Question {
   id: string;
   contestId: number;
-  question: {
-    id: string;
-    leetcodeUrl: string | null;
-    codeforcesUrl: string | null;
-    difficulty: Difficulty;
-    points: number;
-    slug: string;
-    questionTags: QuestionTag[];
-  };
+  slug: string;
+  difficulty: Difficulty;
+  points: number;
+  isSolved: boolean;
+  leetcodeUrl: string | null;
+  codeforcesUrl: string | null;
+  questionTags: QuestionTag[];
   submissions?: {
     status: string;
     score: number;
@@ -77,21 +76,29 @@ const DIFFICULTIES = [
 ];
 
 const QuestionSolving = () => {
-  const { topic } = useParams();
+  const { array } = useParams();
   const [loading, setLoading] = useState<boolean>(true);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
+  const { pUsernames, setPUsernames } = useStore()
   const [score, setScore] = useState<number>(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
+  const newString = Array.isArray(array) ? array.join('/') : null;
+  const newArray = newString ? newString.split('/s/') : null;
+  const topics = newArray ? newArray[0].split('/') : null;
+  const difficulties = newArray ? newArray[1].split('/') : null;
+  const [isVerifying, setIsVerifying] = useState<{ [key: string]: boolean }>({}); 
 
 
   const verifySubmission = async (
     platform: 'Leetcode' | 'Codeforces',
     problemName: string,
-    username: string
+    username: string,
+    questionId: string
   ): Promise<boolean> => {
+    setIsVerifying(prev => ({ ...prev, [questionId]: true }));
     try {
       if (platform === "Leetcode") {
         const res = await fetchLatestSubmissionsLeetCode(username);
@@ -111,10 +118,14 @@ const QuestionSolving = () => {
     } catch (error) {
       console.error('Verification error:', error);
       return false;
+    } finally{
+      setIsVerifying(prev => ({ ...prev, [questionId]: false }));
     }
   };
 
-  const updateScoreInDatabase = async (questionId: string, contestId: number, points: number) => {
+ 
+
+  const updateScoreInDatabase = async (questionId: string, contestId: number | null, points: number) => {
     try {
       const response = await axios.post('/api/updatePracticeScore', {
         questionId,
@@ -123,6 +134,9 @@ const QuestionSolving = () => {
         headers: { 'Content-Type': 'application/json' },
       });
       if (response.status === 200) {
+        solvedProblems.add(questionId);
+        setSolvedProblems(new Set(solvedProblems));
+        setScore(prev => prev + points);
         toast.success('Score Updated');
       }
     } catch (error) {
@@ -131,58 +145,27 @@ const QuestionSolving = () => {
     }
   };
 
-  const verifyAllQuestions = async (questions: Question[], lUsername: string, cUsername: string) => {
-    const newSolvedProblems = new Set<string>();
-    let totalPoints = score;
-
-    for (const q of questions) {
-      const platform = q.question.leetcodeUrl ? 'Leetcode' : 'Codeforces';
-      const username = platform === 'Leetcode' ? lUsername : cUsername;
-      
-      const isAlreadySolved = await axios.post('/api/checkExistingSubmission', {
-        problemName: q.question.slug
-      });
-
-      if (isAlreadySolved.data.solved) {
-        newSolvedProblems.add(q.id);
-        continue;
-      }
-
-      const isSolved = await verifySubmission(
-        platform,
-        q.question.slug,
-        username
-      );
-
-      if (isSolved) {
-        newSolvedProblems.add(q.id);
-        const points = Math.floor(q.question.points / 2);
-        totalPoints += points;
-        await updateScoreInDatabase(q.question.id, q.contestId, points);
-      }
-    }
-
-    setSolvedProblems(newSolvedProblems);
-    setScore(totalPoints);
-  };
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [questionsRes, response] = await Promise.all([
-          axios.post('/api/questions', topic ? { topic } : {}),
-          axios.post('/api/user/username')
-        ]);
 
-        setQuestions(questionsRes.data.questions);
+        if(pUsernames.codeforcesUsername === "" || pUsernames.leetcodeUsername === ""){
+          const usernames = await axios.post<{
+            leetcodeUsername: string | null;
+            codeforcesUsername: string | null;  
+          }>('/api/user/username');
+        
+          setPUsernames({
+            leetcodeUsername: usernames.data.leetcodeUsername || '',
+            codeforcesUsername: usernames.data.codeforcesUsername || ''
+          });
+        }
+
+        const questionsRes = await axios.post('/api/questions', topics && difficulties ? { topics: [...topics], difficulties: [...difficulties] } : {})
+ 
+        setQuestions(questionsRes.data.questionsWithSolvedStatus);
         setScore(questionsRes.data.individualPoints);
-
-        await verifyAllQuestions(
-          questionsRes.data.questions,
-          response.data.leetcodeUsername,
-          response.data.codeforcesUsername
-        );
       } catch (error) {
         console.error(error);
         toast.error('Error fetching questions');
@@ -192,18 +175,18 @@ const QuestionSolving = () => {
     };
 
     fetchData();
-  }, [topic]);
+  }, []);
 
   useEffect(() => {
     let filtered = questions;
     
     if (selectedDifficulty !== 'ALL') {
-      filtered = filtered.filter(q => q.question.difficulty === selectedDifficulty);
+      filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
     }
    
     if (selectedTags.length > 0) {
       filtered = filtered.filter(q => {
-        const questionTagNames = q.question.questionTags.map(tag => tag.name);
+        const questionTagNames = q.questionTags.map(tag => tag.name);
         return selectedTags.some(selectedTag => questionTagNames.includes(selectedTag));
       });
     }
@@ -353,11 +336,10 @@ const QuestionSolving = () => {
       ) : (
         <div className="grid gap-6">
           {filteredQuestions.map((q) => {
-            const isSolved = solvedProblems.has(q.id);
             
             // Get difficulty color
             let difficultyColor = "";
-            switch (q.question.difficulty) {
+            switch (q.difficulty) {
               case "BEGINNER":
               case "EASY":
                 difficultyColor = "bg-green-500/10 text-green-700 border-green-200";
@@ -377,7 +359,7 @@ const QuestionSolving = () => {
               <Card 
                 key={q.id}
                 className={`transition-all duration-300 hover:shadow-md ${
-                  isSolved 
+                  q.isSolved || solvedProblems.has(q.id) 
                     ? 'bg-green-50/50 border-green-200' 
                     : 'bg-white border-gray-100 hover:border-indigo-200'
                 }`}
@@ -385,10 +367,10 @@ const QuestionSolving = () => {
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CardTitle className={`text-xl ${isSolved ? 'text-green-800' : 'text-indigo-800'}`}>
-                        {q.question.slug}
+                      <CardTitle className={`text-xl ${q.isSolved ? 'text-green-800' : 'text-indigo-800'}`}>
+                        {q.slug}
                       </CardTitle>
-                      {isSolved && (
+                      {q.isSolved || solvedProblems.has(q.id) || solvedProblems.has(q.id) && (
                         <div className="flex items-center gap-1">
                           <Check className="h-5 w-5 text-green-600" />
                           <span className="text-xs font-medium text-green-600">Solved</span>
@@ -398,14 +380,14 @@ const QuestionSolving = () => {
                     <Badge 
                       variant="secondary" 
                       className={`${difficultyColor} ${
-                        isSolved ? 'opacity-75' : ''
+                        q.isSolved || solvedProblems.has(q.id) ? 'opacity-75' : ''
                       } px-3 py-1 rounded-full text-xs font-medium`}
                     >
-                      {q.question.difficulty}
+                      {q.difficulty}
                     </Badge>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    {q.question.questionTags.map((tag: AnyTag) => (
+                    {q.questionTags.map((tag: AnyTag) => (
                       <Badge
                         key={tag.id}
                         variant="outline"
@@ -424,30 +406,59 @@ const QuestionSolving = () => {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                        isSolved ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
+                        q.isSolved || solvedProblems.has(q.id) ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
                       }`}>
-                        <span className="text-sm font-bold">{Math.floor(q.question.points / 2)}</span>
+                        <span className="text-sm font-bold">{Math.floor(q.points / 2)}</span>
                       </div>
                       <p className="text-sm text-gray-600">
                         Practice Points
                       </p>
                     </div>
+                    
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              if(q.isSolved || solvedProblems.has(q.id)){
+                                toast.error('Already verified');
+                                return;
+                              }
+                              const response = await verifySubmission(q.leetcodeUrl ? 'Leetcode' : 'Codeforces', q.slug, q.leetcodeUrl ? pUsernames.leetcodeUsername : pUsernames.codeforcesUsername, q.id); 
+                              if(response){
+                                updateScoreInDatabase(q.id, null, q.points);  
+                              } else {
+                                toast.error('Submission not verified');
+                              }
+                            }}
+                            disabled={isVerifying[q.id]}
+                            className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full sm:w-auto"
+                          >
+                            {isVerifying[q.id] ? 
+                              <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Verifying...
+                              </>
+                            : q.isSolved || solvedProblems.has(q.id) ? 
+                              <>Verified <CheckCircle className="ml-2 h-4 w-4 text-green-400" /></>
+                             : <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>}
+                          </Button>
+                        
                     <Link 
-                      href={q.question.leetcodeUrl || q.question.codeforcesUrl || '#'}
+                      href={q.leetcodeUrl || q.codeforcesUrl || '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full sm:w-auto"
                     >
                       <Button 
-                        variant={isSolved ? "outline" : "default"}
+                        variant={q.isSolved ? "outline" : "default"}
                         size="sm"
                         className={`w-full ${
-                          isSolved 
+                          q.isSolved || solvedProblems.has(q.id) 
                             ? 'border-green-200 text-green-700 hover:bg-green-50' 
                             : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                         }`}
                       >
-                        {isSolved ? 'View Problem' : 'Solve Now'} 
+                        {q.isSolved || solvedProblems.has(q.id) ? 'View Problem' : 'Solve Now'} 
                         <ExternalLink className="ml-2 h-4 w-4" />
                       </Button>
                     </Link>

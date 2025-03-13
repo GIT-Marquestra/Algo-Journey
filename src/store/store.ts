@@ -8,6 +8,11 @@ interface StoreState {
   setFlag: (value: boolean) => void;
   contest: Contest | null;
   isAdmin: boolean;
+  pUsernames: {
+    leetcodeUsername: string;
+    codeforcesUsername: string; 
+  }
+  setPUsernames: (v: {leetcodeUsername: string, codeforcesUsername: string}) => void;
   setIsAdmin: (value: boolean) => void; 
   addedQuestions: QuestionPar[];
   setAddedQuestions: (v: QuestionPar) => void;
@@ -16,6 +21,11 @@ interface StoreState {
 
 const useStore = create<StoreState>((set) => ({
   flag: false, // Initial state
+  pUsernames: {
+    leetcodeUsername: '',
+    codeforcesUsername: ''
+  },
+  setPUsernames: (v) => set({ pUsernames: v }), 
   isAdmin: false,
   setIsAdmin: (value) => set({ isAdmin: value }),
   addedQuestions: [],

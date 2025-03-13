@@ -154,6 +154,8 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
     codeforcesUsername: string | null;  
   }>('/api/user/username');
 
+  
+
   if (!usernames.data.leetcodeUsername || !usernames.data.codeforcesUsername) {
     throw new Error('Usernames not set');
   }

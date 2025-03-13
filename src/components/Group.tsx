@@ -740,59 +740,59 @@ const UnifiedGroupManagement = () => {
                       </Button>
                     )}
                     {isAdmin && (
-  <>
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="sm"
-          className="border-gray-200 hover:bg-red-50 text-red-600 flex items-center gap-2"
-          disabled={isDeleting}
-        >
-          <Trash2 className="h-4 w-4" />
-          Delete
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="bg-white p-0 overflow-hidden">
-        <AlertDialogHeader className="bg-red-50 px-4 py-3 border-b border-gray-100">
-          <AlertDialogTitle className="text-lg font-medium text-red-700 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Delete Group
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-gray-600">
-            This action cannot be undone. All members will be removed from this group.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <div className="p-4">
-          <p className="text-sm text-gray-600 mb-6">
-            Are you sure you want to delete <span className="font-semibold">{group.name}</span>?
-          </p>
-          <AlertDialogFooter className="flex space-x-2 justify-end">
-            <AlertDialogCancel className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => handleDeleteGroup(group.id)}
-              className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded flex items-center"
-            >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                  Delete Group
-                </>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </div>
-      </AlertDialogContent>
-    </AlertDialog>
-  </>
-)}
+                    <>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            className="border-gray-200 hover:bg-red-50 text-red-600 flex items-center gap-2"
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-white p-0 overflow-hidden">
+                          <AlertDialogHeader className="bg-red-50 px-4 py-3 border-b border-gray-100">
+                            <AlertDialogTitle className="text-lg font-medium text-red-700 flex items-center gap-2">
+                              <AlertCircle className="h-5 w-5" />
+                              Delete Group
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-600">
+                              This action cannot be undone. All members will be removed from this group.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <div className="p-4">
+                            <p className="text-sm text-gray-600 mb-6">
+                              Are you sure you want to delete <span className="font-semibold">{group.name}</span>?
+                            </p>
+                            <AlertDialogFooter className="flex space-x-2 justify-end">
+                              <AlertDialogCancel className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded">
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteGroup(group.id)}
+                                className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded flex items-center"
+                              >
+                                {isDeleting ? (
+                                  <>
+                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                    Delete Group
+                                  </>
+                                )}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </div>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </>
+                  )}
                   </div>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 import { Code, BookOpen, Brain, ChevronRight, Target, Trophy } from 'lucide-react';
+import CustomizeDropdown from '@/components/ArenaDropdown';
 
 const topics = [
   "PrefixSum",
@@ -151,7 +152,10 @@ const TopicGrid: React.FC = () => {
             </h1>
             <p className="text-gray-600 mt-1">Master these topics to ace your technical interviews!</p>
           </div>
-          <Trophy className="h-10 w-10 text-indigo-500" />
+          <div className='flex p-2 justify-center items-center'>
+          <CustomizeDropdown/>
+          <Trophy className="h-10 w-10 mx-3 text-indigo-500" />
+          </div>
         </div>
         
         {/* Topics grid */}
@@ -188,7 +192,7 @@ const TopicGrid: React.FC = () => {
               return (
                 <Link 
                   key={topic} 
-                  href={`/topicwiseQuestions/${topic}`} 
+                  href={`/topicwiseQuestions/${topic}/all`} 
                   target='_blank' 
                   rel="noopener noreferrer"
                   className="block"
