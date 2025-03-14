@@ -9,10 +9,12 @@ export async function POST(req: Request) {
     const { topics, teams, difficulties } = await req.json();
     const submissions = await prisma.submission.findMany({
       where: {
+        status: 'ACCEPTED',
         question: {
           questionTags: {
             some: { name: { in: topics.split(",") } }, // Filter by topic tags
           },
+          
           difficulty: difficulties ? { in: difficulties.split(",")} : undefined, // Filter by difficulty
         },
         user: {
