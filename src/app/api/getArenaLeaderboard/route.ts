@@ -3,29 +3,28 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    // Parse request body
     const { topics, teams, difficulties } = await req.json();
     const submissions = await prisma.submission.findMany({
       where: {
         status: 'ACCEPTED',
         question: {
           questionTags: {
-            some: { name: { in: topics.split(",") } }, // Filter by topic tags
+            some: { name: { in: topics.split(",") } }, 
           },
           
-          difficulty: difficulties ? { in: difficulties.split(",")} : undefined, // Filter by difficulty
+          difficulty: difficulties ? { in: difficulties.split(",")} : undefined, 
         },
         user: {
           group: {
-            name: { in: teams.split(",") }, // Filter by team name
+            name: { in: teams.split(",") }, 
           },
         },
       },
       include: {
-        user: { include: { group: true } }, // Include user and their group
+        user: { include: { group: true } },
         question: {
-            include: { questionTags: true }, // Include question
-        }, // Include question details
+            include: { questionTags: true }, 
+        }, 
       },
     });
 
