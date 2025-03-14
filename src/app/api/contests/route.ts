@@ -4,6 +4,13 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const contests = await prisma.contest.findMany({
+      where:{
+        questions:{
+          some:{
+            contestId: null
+          }
+        }
+      },
       orderBy: {
         startTime: 'desc'
       },

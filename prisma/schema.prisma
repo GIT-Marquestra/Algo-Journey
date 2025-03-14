@@ -172,7 +172,6 @@ model QuestionOnContest {
 }
 
 
-
 model ContestPermission{
   id                String              @id @default(uuid())
   users             User[]
