@@ -80,6 +80,7 @@ const QuestionSolving = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
   const { pUsernames, setPUsernames } = useStore()
+  const [selectSolved, setSelectSolved] = useState<boolean>(false); 
   const [score, setScore] = useState<number>(0);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -179,7 +180,11 @@ const QuestionSolving = () => {
 
   useEffect(() => {
     let filtered = questions;
-    
+
+    if(selectSolved){
+      filtered = filtered.filter(q => !q.isSolved && !solvedProblems.has(q.id));
+    }
+
     if (selectedDifficulty !== 'ALL') {
       filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
     }
@@ -192,7 +197,7 @@ const QuestionSolving = () => {
     }
 
     setFilteredQuestions(filtered);
-  }, [selectedTags, selectedDifficulty, questions]);
+  }, [selectedTags, selectedDifficulty, questions, setSelectSolved, selectSolved]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
@@ -292,6 +297,7 @@ const QuestionSolving = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button className='bg-indigo-600 hover:bg-indigo-500' onClick={() => setSelectSolved((p) => !p)}>Toggle not Solved</Button>
               </div>
   
               <div className="space-y-3">

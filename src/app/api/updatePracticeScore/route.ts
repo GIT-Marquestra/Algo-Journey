@@ -10,9 +10,8 @@ export async function POST(req: Request) {
     }
 
     const userEmail = session.user.email;
-    const { contestId, questionId, score } = await req.json();
+    const { questionId, score } = await req.json();
 
-    console.log(contestId, questionId, score)
 
 
 
@@ -36,23 +35,15 @@ export async function POST(req: Request) {
     });
 
 
-
-    console.log(user.id, questionId, contestId, score)
-
-
-
     const res = await prisma.submission.create({
       data: {
         userId: user.id,
         questionId,
-        contestId: contestId,
+        contestId: null,
         score: parseInt(score),
         status: 'ACCEPTED', 
       },
     });
-
-    console.log(res)
-
 
     if(!res) return NextResponse.json({ message: "Submission not created" });
 
