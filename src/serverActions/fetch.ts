@@ -45,9 +45,12 @@ export async function fetchLatestSubmissionsCodeForces(username: string){
 
 export async function fetchUserStats(username: string) {
     try {
-      const response = await axios.get(`https://leetcode-stats-api.herokuapp.com/${username}`);
+      const response = await axios.get(`https://leetcode-rest-api.onrender.com/profile`, { data: { username } });
+      const total = await fetchLatestSubmissionsLeetCode(username)
       const returnData = {
-        ...response.data,   
+        ...response.data.data.submitStatsGlobal,
+        questionCount: total?.allQuestionsCount,  
+        ranking: total?.matchedUser?.profile.ranking, 
         leetcodeUsername: username  
       }
       return returnData;

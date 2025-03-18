@@ -160,10 +160,25 @@ const fetchPlatformData = async (): Promise<PlatformData> => {
     throw new Error('Usernames not set');
   }
 
-  const [leetcodeData, codeforcesData] = await Promise.all([
-    fetchUserStats(usernames.data.leetcodeUsername) as Promise<LeetCodeStats>,
+  const [leetData, codeforcesData] = await Promise.all([
+    fetchUserStats(usernames.data.leetcodeUsername),
     fetchCodeforcesUserData(usernames.data.codeforcesUsername),
   ]);
+
+
+  const leetcodeData = {
+    totalSolved: leetData.acSubmissionNum[0].count,
+    totalQuestions: leetData.questionCount[0].count,
+    easySolved: leetData.acSubmissionNum[1].count,
+    totalEasy: leetData.questionCount[1].count,
+    mediumSolved: leetData.acSubmissionNum[2].count,
+    leetcodeUsername: leetData.leetcodeUsername,
+    totalMedium: leetData.questionCount[2].count,
+    hardSolved: leetData.acSubmissionNum[3].count,
+    totalHard: leetData.questionCount[3].count,
+    ranking: leetData.ranking
+
+  }
 
   return {
     leetcodeData: leetcodeData,
