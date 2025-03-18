@@ -271,7 +271,6 @@ export default function Dashboard() {
 
   const {
     data: platformData,
-    isLoading: isPlatformLoading,
   } = useQuery({
     queryKey: ['platformData'],
     queryFn: () => fetchPlatformData().catch((error) => {
