@@ -190,6 +190,7 @@ export default function Dashboard() {
         }
       };
     } catch (error) {
+      console.log(error)
       return {
         contests: [],
         username: '',
@@ -260,7 +261,6 @@ export default function Dashboard() {
 
   const { 
     data: dashboardData,
-    isLoading: isDashboardLoading,
   } = useQuery({
     queryKey: ['dashboardData'],
     queryFn: fetchDashboardData,
@@ -292,7 +292,6 @@ export default function Dashboard() {
     }
   }, [status]);
 
-  const isLoading = isDashboardLoading || isPlatformLoading;
 
   // Calculate difficulty percentages for LeetCode
   const getLeetCodeDifficultyPercentage = (solved: number, total: number) => {
