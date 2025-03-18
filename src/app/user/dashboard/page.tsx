@@ -48,6 +48,7 @@ import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
 import DashboardSkeleton from '@/components/DashboardLoader';
 import ProjectRatingNotification from '@/components/Notification';
+import { CodeforcesSkeleton, ContestsSkeleton, LeetCodeSkeleton, StatsCardSkeleton } from '@/components/Skeletons';
 
 interface GroupMember {
   username: string;
@@ -117,74 +118,9 @@ interface PlatformData {
 }
 
 // Fetch functions (same as before)
-const fetchDashboardData = async (): Promise<DashboardData> => {
-  const contestsResponse = await axios.get<{
-    latestContests: Contest[];
-    submissionCount: number;
-    user: User;
-  }>('/api/getData');
-  
-  const usernameResponse = await axios.post<{
-    username: string;
-  }>('/api/getUsername');
-  
-  const adminResponse = await axios.post<{
-    isAdmin: boolean;
-  }>('/api/checkIfAdmin');
 
 
-  return {
-    contests: contestsResponse.data.latestContests,
-    username: usernameResponse.data.username,
-    isAdmin: adminResponse.data.isAdmin,
-    userStats: {
-      totalSubmissions: contestsResponse.data.submissionCount,
-      totalPoints: contestsResponse.data.user.individualPoints,
-      groupName: contestsResponse.data.user.group?.name || null,
-      groupPoints: contestsResponse.data.user.group?.groupPoints || null,
-      groupMembers: contestsResponse.data.user?.group?._count?.members || null,
-      isCoordinator: contestsResponse.data.user?.coordinatedGroup ? true : false
-    }
-  };
-};
 
-const fetchPlatformData = async (): Promise<PlatformData> => {
-  const usernames = await axios.post<{
-    leetcodeUsername: string | null;
-    codeforcesUsername: string | null;  
-  }>('/api/user/username');
-
-  
-
-  if (!usernames.data.leetcodeUsername || !usernames.data.codeforcesUsername) {
-    throw new Error('Usernames not set');
-  }
-
-  const [leetData, codeforcesData] = await Promise.all([
-    fetchUserStats(usernames.data.leetcodeUsername),
-    fetchCodeforcesUserData(usernames.data.codeforcesUsername),
-  ]);
-
-
-  const leetcodeData = {
-    totalSolved: leetData.acSubmissionNum[0].count,
-    totalQuestions: leetData.questionCount[0].count,
-    easySolved: leetData.acSubmissionNum[1].count,
-    totalEasy: leetData.questionCount[1].count,
-    mediumSolved: leetData.acSubmissionNum[2].count,
-    leetcodeUsername: leetData.leetcodeUsername,
-    totalMedium: leetData.questionCount[2].count,
-    hardSolved: leetData.acSubmissionNum[3].count,
-    totalHard: leetData.questionCount[3].count,
-    ranking: leetData.ranking
-
-  }
-
-  return {
-    leetcodeData: leetcodeData,
-    codeforcesData: codeforcesData || null
-  };
-};
 type StatusType = "ACTIVE" | "INACTIVE" | "COMPLETED";
 const StatusBadge = ({ status }: { status: StatusType }) => {
   const statusConfig: Record<StatusType, { color: string; icon: JSX.Element }> = {
@@ -215,12 +151,113 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 
 export default function Dashboard() {
   const [members, setMembers] = useState<GroupMember[]>([]);  
+  const [loadingPlatformData, setLoadingPlatformData] = useState(false);
+  const [loadingContest, setLoadingContest] = useState(false)
   const [loadingMembers, setLoadingMembers] = useState<boolean>(false); 
   const router = useRouter();
   const { data: session, status } = useSession();
   const [notification, setNotification] = useState<boolean>(true);
   const [showTeamMembers, setShowTeamMembers] = useState(false);
   const [token, setToken] = useState<string | null>(null)
+  const fetchDashboardData = async (): Promise<DashboardData> => {
+    try {
+      setLoadingContest(true)
+      const contestsResponse = await axios.get<{
+        latestContests: Contest[];
+        submissionCount: number;
+        user: User;
+      }>('/api/getData');
+      
+      const usernameResponse = await axios.post<{
+        username: string;
+      }>('/api/getUsername');
+      
+      const adminResponse = await axios.post<{
+        isAdmin: boolean;
+      }>('/api/checkIfAdmin');
+    
+    
+      return {
+        contests: contestsResponse.data.latestContests,
+        username: usernameResponse.data.username,
+        isAdmin: adminResponse.data.isAdmin,
+        userStats: {
+          totalSubmissions: contestsResponse.data.submissionCount,
+          totalPoints: contestsResponse.data.user.individualPoints,
+          groupName: contestsResponse.data.user.group?.name || null,
+          groupPoints: contestsResponse.data.user.group?.groupPoints || null,
+          groupMembers: contestsResponse.data.user?.group?._count?.members || null,
+          isCoordinator: contestsResponse.data.user?.coordinatedGroup ? true : false
+        }
+      };
+    } catch (error) {
+      return {
+        contests: [],
+        username: '',
+        isAdmin: false,
+        userStats: {
+          totalSubmissions: 0,
+          totalPoints: 0,
+          groupName: null,
+          groupPoints: null,
+          groupMembers: null,
+          isCoordinator: false
+        }
+      }
+    } finally{
+      setLoadingContest(false)
+    }
+  };
+
+  const fetchPlatformData = async (): Promise<PlatformData> => {
+    try{
+      setLoadingPlatformData(true)
+    const usernames = await axios.post<{
+      leetcodeUsername: string | null;
+      codeforcesUsername: string | null;  
+    }>('/api/user/username');
+  
+    
+  
+    if (!usernames.data.leetcodeUsername || !usernames.data.codeforcesUsername) {
+      throw new Error('Usernames not set');
+    }
+  
+    const [leetData, codeforcesData] = await Promise.all([
+      fetchUserStats(usernames.data.leetcodeUsername),
+      fetchCodeforcesUserData(usernames.data.codeforcesUsername),
+    ]);
+  
+  
+    const leetcodeData = {
+      totalSolved: leetData.acSubmissionNum[0].count,
+      totalQuestions: leetData.questionCount[0].count,
+      easySolved: leetData.acSubmissionNum[1].count,
+      totalEasy: leetData.questionCount[1].count,
+      mediumSolved: leetData.acSubmissionNum[2].count,
+      leetcodeUsername: leetData.leetcodeUsername,
+      totalMedium: leetData.questionCount[2].count,
+      hardSolved: leetData.acSubmissionNum[3].count,
+      totalHard: leetData.questionCount[3].count,
+      ranking: leetData.ranking
+  
+    }
+
+  
+    return {
+      leetcodeData: leetcodeData,
+      codeforcesData: codeforcesData || null
+    };
+    } catch(error) {
+      console.log(error)
+      return {
+        leetcodeData: null,
+        codeforcesData: null
+      };
+    } finally{
+      setLoadingPlatformData(false)
+    }
+  };
 
   const { 
     data: dashboardData,
@@ -287,7 +324,6 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
   <div className="container mx-auto p-8 pt-20 space-y-8">
-    {isLoading ? <DashboardSkeleton/> : (
     <>
       {/* Welcome header with avatar */}
       <div className="flex items-center justify-between mb-8">
@@ -301,7 +337,7 @@ export default function Dashboard() {
       
       {/* Stats cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-white border-l-4 border-l-blue-400 shadow-sm hover:shadow-md transition-all">
+        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-blue-400 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Target className="h-4 w-4 text-blue-500" />
@@ -312,9 +348,9 @@ export default function Dashboard() {
             <p className="text-3xl font-bold text-gray-800">{dashboardData?.userStats.totalSubmissions}</p>
             <p className="text-xs text-gray-500 mt-1">Total problems attempted</p>
           </CardContent>
-        </Card>
+        </Card>}
 
-        <Card className="bg-white border-l-4 border-l-teal-400 shadow-sm hover:shadow-md transition-all">
+        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-teal-400 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Trophy className="h-4 w-4 text-teal-500" />
@@ -325,9 +361,9 @@ export default function Dashboard() {
             <p className="text-3xl font-bold text-gray-800">{dashboardData?.userStats.totalPoints}</p>
             <p className="text-xs text-gray-500 mt-1">Your personal points</p>
           </CardContent>
-        </Card>
+        </Card>}
 
-        <Card className="bg-white border-l-4 border-l-amber-400 shadow-sm hover:shadow-md transition-all">
+        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-amber-400 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Users className="h-4 w-4 text-amber-500" />
@@ -344,9 +380,9 @@ export default function Dashboard() {
               </p>
             )}
           </CardContent>
-        </Card>
+        </Card>}
 
-        <Card className="bg-white border-l-4 border-l-rose-400 shadow-sm hover:shadow-md transition-all">
+        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-rose-400 shadow-sm hover:shadow-md transition-all">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <Award className="h-4 w-4 text-rose-500" />
@@ -359,13 +395,13 @@ export default function Dashboard() {
             </p>
             <p className="text-xs text-gray-500 mt-1">Combined team points</p>
           </CardContent>
-        </Card>
+        </Card>}
       </div>
 
       {/* Platform Statistics */}
       <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
         {/* LeetCode card */}
-        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+        {loadingPlatformData ? <LeetCodeSkeleton/> : <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
           <CardHeader className="border-b border-gray-100 pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -450,10 +486,10 @@ export default function Dashboard() {
               </Link>
             </div>
           </CardFooter>
-        </Card>
+        </Card>}
 
         {/* Codeforces card */}
-        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+       {loadingPlatformData ? <CodeforcesSkeleton/> :  <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
           <CardHeader className="border-b border-gray-100 pb-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -516,11 +552,11 @@ export default function Dashboard() {
             </Button>
           </Link>
           </CardFooter>
-        </Card>
+        </Card>}
       </div>
 
       {/* Latest Contests */}
-      <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+      {loadingContest ? <ContestsSkeleton/> : <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
         <CardHeader className="border-b border-gray-100 pb-4">
           <div className="flex items-center justify-between">
             <div>
@@ -604,7 +640,7 @@ export default function Dashboard() {
             ))}
           </div>
         </CardContent>
-      </Card>
+      </Card>}
 
       {/* Team Members */}
       {dashboardData?.userStats.groupName ? (
@@ -788,7 +824,7 @@ export default function Dashboard() {
         </Card>
       )}
     </>
-    )}
+
   </div>
   {notification && <ProjectRatingNotification onGetRated={() => {
     router.push(token ? '/chat/true' : '/chat/false')
