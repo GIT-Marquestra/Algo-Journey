@@ -151,7 +151,11 @@ const Navbar = () => {
                         <span className="text-gray-700">Stats</span>
                       </DropdownMenuItem>
                     </Link>
-                    <Link href={token ? '/chat/true' : '/chat/false'}>
+                   
+                    <DropdownMenuSeparator className="bg-gray-100" />
+                  </>
+                )}
+                 <Link href={token ? '/chat/true' : '/chat/false'}>
                       <DropdownMenuItem className="px-3 py-2 hover:bg-gray-50 cursor-pointer">
                         <Brain className="mr-2 h-4 w-4 text-amber-500" />
                         <span className="text-gray-700">Chat/Rate with Gemini</span>
@@ -163,9 +167,6 @@ const Navbar = () => {
                         <span className="text-gray-700">About AlgoJourney</span>
                       </DropdownMenuItem>
                     </Link>
-                    <DropdownMenuSeparator className="bg-gray-100" />
-                  </>
-                )}
                 
                 <Link href={`/user/updateProfile/${username}`}>
                   <DropdownMenuItem className="px-3 py-2 hover:bg-gray-50 cursor-pointer">
