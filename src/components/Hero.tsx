@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import img1 from '@/images/landing.jpg'
-import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin, Star, Award, BarChart3, BookOpen } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin, Star, Award, BarChart3, BookOpen, LogIn } from "lucide-react";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -18,9 +18,6 @@ const HeroSection = () => {
   const sentence = "We are dedicated to providing an exceptional learning experience."
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false);
-
-
-
 
   return (
     <div className="bg-gradient-to-b from-white via-white to-gray-50 relative w-screen h-auto flex flex-col items-center overflow-hidden">
@@ -53,21 +50,37 @@ const HeroSection = () => {
 
         {/* CTA Button */}
         <motion.div 
-          className="flex w-full justify-center pt-10"
+          className="flex flex-col md:flex-row w-full justify-center items-center gap-4 pt-10"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
           {!session && (
-            <Button
-              size="lg"
-              className="animate-[buttonPulse_360s_infinite_linear] w-40 md:w-48 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg hover:shadow-xl transition-all duration-300"
-              asChild
-            >
-              <Link href="/auth/signin" className="text-white flex items-center">
-                Get Started Now <ArrowRight className="ml-2 h-5 w-5 text-white" />
-              </Link>
-            </Button>
+            <>
+              <Button
+                size="lg"
+                className="animate-[buttonPulse_360s_infinite_linear] w-40 md:w-48 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg hover:shadow-xl transition-all duration-300"
+                asChild
+              >
+                <Link href="/auth/signin" className="text-white flex items-center">
+                  Get Started Now <ArrowRight className="ml-2 h-5 w-5 text-white" />
+                </Link>
+              </Button>
+              
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-40 md:w-48 border-blue-300 hover:bg-blue-50 shadow-md transition-all duration-300"
+                  asChild
+                >
+                  <Link href="/auth/signin?demo=true" className="text-blue-600 flex items-center">
+                    Try Demo <LogIn className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <p className="text-xs text-gray-500 mt-2">Demo credentials: Username: Visitor, Password: Visitor1234</p>
+              </div>
+            </>
           )}
         </motion.div>
 
@@ -81,6 +94,29 @@ const HeroSection = () => {
             className="w-[90%] md:w-[80%] lg:w-[70%] h-auto rounded-xl"
           />
         </div>
+
+        {/* Demo Account Info Box */}
+        <motion.div 
+          className="max-w-lg mx-auto my-10 px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md border border-blue-100"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <h3 className="text-xl font-semibold text-blue-700 mb-2">Try Without Registration</h3>
+          <p className="text-gray-700 mb-4">Want to explore AlgoJourney without creating an account? Use our demo account:</p>
+          <div className="bg-white p-3 rounded-md shadow-sm">
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-medium text-gray-700">Username:</span>
+              <code className="bg-gray-100 px-2 py-1 rounded-md text-blue-700">Visitor</code>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gray-700">Password:</span>
+              <code className="bg-gray-100 px-2 py-1 rounded-md text-blue-700">Visitor1234</code>
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mt-3">Note: This is a read-only account with limited functionality.</p>
+        </motion.div>
 
         {/* Features Section */}
         <div className="max-w-6xl w-full px-4 md:px-8 py-16 mx-auto">
