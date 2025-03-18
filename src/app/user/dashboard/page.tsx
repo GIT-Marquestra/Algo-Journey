@@ -46,7 +46,6 @@ import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
-import DashboardSkeleton from '@/components/DashboardLoader';
 import ProjectRatingNotification from '@/components/Notification';
 import { CodeforcesSkeleton, ContestsSkeleton, LeetCodeSkeleton, StatsCardSkeleton } from '@/components/Skeletons';
 
