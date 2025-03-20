@@ -92,7 +92,6 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
-  const [questionOnContest, setQuestionOnContest] = useState<QuestionOnContest[]>([]);
   const [loadingArena, setLoadingArena] = useState(false);
   const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -402,7 +401,7 @@ export default function AllQuestions() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-gray-800">
-                {questionOnContest.filter(q => q.contests.length !== 0 && !q.contests[0].contestId).length}
+                0
               </p>
               <p className="text-xs text-gray-500 mt-1">Questions in practice arena</p>
             </CardContent>
