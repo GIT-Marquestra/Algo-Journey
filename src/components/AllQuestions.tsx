@@ -658,7 +658,7 @@ export default function AllQuestions() {
                 ) : (
                   <div className="space-y-4">
                     {filteredQuestions.map((q) => (
-                      <HintsComponent questionId={q.id} questionSlug={q.slug} isAdmin={isAdmin}>
+                      <HintsComponent questionId={q.id} key={q.id} questionSlug={q.slug} isAdmin={isAdmin}>
                       <Card key={q.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
                         <CardContent className="p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
