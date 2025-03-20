@@ -61,9 +61,22 @@ interface QuestionTag {
 }
 
 const AVAILABLE_TAGS = [
-  "PrefixSum", "TwoPointers", "1DArrays", "Graph", "2DArrays", 
-  "TimeComplexity", "BasicMaths", "SpaceComplexity", "BinarySearch", 
-  "DP", "Sorting", "LinearSearch", "Exponentiation", "Recursion", "String"
+  "PrefixSum",
+  "TwoPointers",
+  "1DArrays",
+  "Graph",
+  "2DArrays",
+  "TimeComplexity",
+  "BasicMaths",
+  "SpaceComplexity",
+  "BinarySearch",
+  "DP",
+  "Sorting",
+  "LinearSearch",
+  "Exponentiation",
+  "Recursion",
+  "String",
+  "HashMaps/Dictionary"
 ];
 
 const DIFFICULTIES = [
