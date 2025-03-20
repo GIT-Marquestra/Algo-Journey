@@ -2,10 +2,13 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(
-  { params }: { params: { questionId: string } }
+  request: Request
 ) {
   try {
-    const questionId = params.questionId;
+
+    const url = request.url.split('/')
+
+    const questionId = url[url.length - 1]
 
     if (!questionId) {
       return NextResponse.json(
