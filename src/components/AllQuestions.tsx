@@ -67,16 +67,6 @@ interface QuestionTag {
   id: string;
   name: string;
 }
-interface QuestionOnContest {
-  id: string;
-  leetcodeUrl: string;
-  contestAppearances: number[]
-  contests: { contestId: number | null }[]
-  codeforcesUrl: string;
-  questionTags: { id: string; name: string; }[];
-  slug: string;
-  difficulty: string;
-}
 
 export default function AllQuestions() {
   // State declarations preserved from original component
