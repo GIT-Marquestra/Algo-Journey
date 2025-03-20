@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import Leetcode from '@/images/leetcode-svgrepo-com.svg'
 import Codeforces from '@/images/codeforces-svgrepo-com.svg'
-import { Clock, Filter, Plus, Trash2, X, Code, Target, Tag, Calendar, Settings, Layers } from 'lucide-react';
+import { Plus, Trash2, X, Code, Target, Settings, Layers } from 'lucide-react';
 import { Swords } from 'lucide-react';
 import {
   Select,
@@ -108,24 +108,6 @@ export default function AllQuestions() {
     }
   }, [isAdmin]);
 
-  const fetchQuestionOnContest = async () => {
-    try {
-      const response = await axios.post('/api/getQuestionOnContest');
-      if (response.status === 200) {
-        setQuestionOnContest(response.data.data);
-      } else {
-        toast.error(response.data.message || "Failed to fetch contest questions");
-      }
-    } catch (error) {
-      console.error("Error fetching contest questions:", error);
-      toast.error("Failed to fetch contest questions");
-    } finally {
-      if (!isAdmin) {
-        setIsLoading(false);
-      }
-    }
-  };
-
   const fetchQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -164,17 +146,6 @@ export default function AllQuestions() {
       VERYHARD: 'bg-red-50'
     };
     return colors[difficulty.toUpperCase()] || 'bg-gray-50';
-  };
-
-  const getDifficultyTextColor = (difficulty: string): string => {
-    const colors: Record<string, string> = {
-      BEGINNER: 'text-green-700',
-      EASY: 'text-green-700',
-      MEDIUM: 'text-amber-700',
-      HARD: 'text-red-700',
-      VERYHARD: 'text-red-700'
-    };
-    return colors[difficulty.toUpperCase()] || 'text-gray-700';
   };
 
   useEffect(() => {
