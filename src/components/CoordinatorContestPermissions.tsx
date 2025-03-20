@@ -15,6 +15,7 @@ import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import useStore from '@/store/store';
 
 interface TeamMember {
   id: string;
@@ -29,6 +30,7 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const Router = useRouter();
+  const { isAdmin } = useStore()
 
   // Calculate if all non-coordinator members are selected
   const nonCoordinatorMembers = members.filter(member => !member.isCoordinator);
@@ -99,6 +101,7 @@ export default function CoordinatorContestPermissions({ contestId }: { contestId
       const response = await axios.post('/api/startContestForMembers', {
         contestId,
         memberIds: selectedMembers,
+        isAdmin
       });
 
       if(response.status === 440){

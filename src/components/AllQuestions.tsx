@@ -45,8 +45,6 @@ const AVAILABLE_TAGS = [
   "String"
 ];
 
-
-
 const DIFFICULTY_LEVELS = [
   { id: "all", value: "all", label: "All Difficulties" },
   { id: "beginner", value: "BEGINNER", label: "Beginner" },
@@ -55,6 +53,7 @@ const DIFFICULTY_LEVELS = [
   { id: "hard", value: "HARD", label: "Hard" },
   { id: "veryhard", value: "VERYHARD", label: "Very Hard" }
 ];
+
 type Difficulty = 'BEGINNER' | 'EASY' | 'MEDIUM' | 'HARD' | 'VERYHARD';
 interface Question {
   id: string;
@@ -94,39 +93,66 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
-  const [questionOnContest, setQuestionOnContest] = useState<QuestionOnContest[]>([])
-  const [loadingArena, setLoadingArena] = useState(false)
-  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([])
-  const [show, setShow] = useState(true)
-  const { isAdmin } = useStore()
+  const [questionOnContest, setQuestionOnContest] = useState<QuestionOnContest[]>([]);
+  const [loadingArena, setLoadingArena] = useState(false);
+  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const storeIsAdmin = useStore(state => state.isAdmin);
 
+  // Separate admin check from data fetching
+  useEffect(() => {
+    // Set admin status from store
+    setIsAdmin(storeIsAdmin);
+    // Even if not admin, we still want to load the questionOnContest data
+    fetchQuestionOnContest();
+  }, [storeIsAdmin]);
+
+  // Fetch questions only if user is admin
+  useEffect(() => {
+    if (isAdmin) {
+      fetchQuestions();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAdmin]);
+
+  const fetchQuestionOnContest = async () => {
+    try {
+      const response = await axios.post('/api/getQuestionOnContest');
+      if (response.status === 200) {
+        setQuestionOnContest(response.data.data);
+      } else {
+        toast.error(response.data.message || "Failed to fetch contest questions");
+      }
+    } catch (error) {
+      console.error("Error fetching contest questions:", error);
+      toast.error("Failed to fetch contest questions");
+    } finally {
+      // If we're not admin, we can finish loading after fetching contest questions
+      if (!isAdmin) {
+        setIsLoading(false);
+      }
+    }
+  };
 
   const fetchQuestions = useCallback(async () => {
     try {
-
+      setIsLoading(true);
       const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
-      const response2 = await axios.post('/api/getQuestionOnContest')
-      if(!(response2.status === 200)) {
-        toast.error(response2.data.message)
+      if (response.status === 200) {
+        setQuestions(response.data.questions);
+        setFilteredQuestions(response.data.questions);
+      } else {
+        toast.error("Failed to fetch questions");
       }
-      setQuestionOnContest(response2.data.data)
-      if(!isAdmin) {
-        setShow(false)
-        return
-      } 
-      if(isAdmin) setShow(true)
-      
-      setQuestions(response.data.questions);
-      setFilteredQuestions(response.data.questions);
     } catch (error) {
       console.error("Error fetching questions:", error);
       toast.error("Failed to fetch questions");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
 
   const getDifficultyColor = (difficulty: string): string => {
     const colors: Record<string, string> = {
@@ -140,29 +166,27 @@ export default function AllQuestions() {
   };
 
   useEffect(() => {
-    let filtered = questions;
+    if (questions.length > 0) {
+      let filtered = questions;
 
+      if (selectedDifficulty !== "all") {
+        filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
+      }
 
-    if (selectedDifficulty !== "all") {
-      filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
+      if (selectedTags?.length > 0) {
+        filtered = filtered.filter(q => {
+          const questionTagNames = q.questionTags.map(tag => tag.name);
+          return selectedTags.some(selectedTag => questionTagNames.includes(selectedTag));
+        });
+      }
+
+      setFilteredQuestions(filtered);
     }
-
-
-    if (selectedTags?.length > 0) {
-      filtered = filtered.filter(q => {
-        const questionTagNames = q.questionTags.map(tag => tag.name);
-        return selectedTags.some(selectedTag => questionTagNames.includes(selectedTag));
-      });
-    }
-
-    setFilteredQuestions(filtered);
   }, [selectedTags, selectedDifficulty, questions]);
 
   const handleDifficultyChange = (value: string) => {
     setSelectedDifficulty(value);
   };
-
-  
 
   const addToTest = (question: Question) => {
     if (selectedQuestions?.some(q => q.id === question.id)) {
@@ -172,7 +196,6 @@ export default function AllQuestions() {
     setSelectedQuestions(prev => [...prev, { ...question }]);
     toast.success("Question added to test");
   };
- 
 
   const removeFromTest = (questionId: string) => {
     setSelectedQuestions(prev => prev.filter(q => q.id !== questionId));
@@ -235,116 +258,128 @@ export default function AllQuestions() {
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
     setDuration(isNaN(value) ? 1 : Math.max(1, value)); // Ensure duration is at least 1 hour
-};
+  };
 
-const handleCreateTest = async () => {
-  if (selectedQuestions.length === 0) {
-    toast.error("Please select at least one question to create a test.");
-    return 0;
-  }
+  const handleCreateTest = async () => {
+    if (selectedQuestions.length === 0) {
+      toast.error("Please select at least one question to create a test.");
+      return 0;
+    }
 
-  if (!validateDates()) {
-    return 0;
-  }
+    if (!validateDates()) {
+      return 0;
+    }
 
-  setLoading(true);
-  try {
-    const testData = {
-      questions: selectedQuestions,
-      name: contestName,
-      startTime: formatDateForPrisma(startTime),
-      duration,
-      endTime: formatDateForPrisma(endTime)
-    };
+    setLoading(true);
+    try {
+      const testData = {
+        questions: selectedQuestions,
+        name: contestName,
+        startTime: formatDateForPrisma(startTime),
+        duration,
+        endTime: formatDateForPrisma(endTime)
+      };
 
+      const response = await axios.post("/api/createTest", testData);
+      const contestId = response.data.contestId; // Make sure your API returns the contest ID
+      
+      return contestId;
+    } catch (error) {
+      console.error("Error creating test:", error);
+      toast.error("Failed to create test.");
+      return 0;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const response = await axios.post("/api/createTest", testData);
-    const contestId = response.data.contestId; // Make sure your API returns the contest ID
-    
-    return contestId;
-  } catch (error) {
-    console.error("Error creating test:", error);
-    toast.error("Failed to create test.");
-    return 0;
-  } finally {
-    setLoading(false);
-  }
-};
-
-const confirm = (id: string) => {
-  toast((t) => (
-    <div className="flex flex-col">
-      <p className="font-semibold">Are you sure?</p>
-      <div className="flex gap-2 mt-2">
-        <button 
-          onClick={() => {
-            toast.dismiss(t.id);
-            handleDeleteQuestion(id);
-          }} 
-          className="bg-red-500 text-white px-3 py-1 rounded"
-        >
-          Yes
-        </button>
-        <button 
-          onClick={() => toast.dismiss(t.id)} 
-          className="bg-gray-300 px-3 py-1 rounded"
-        >
-          No
-        </button>
+  const confirm = (id: string) => {
+    toast((t) => (
+      <div className="flex flex-col">
+        <p className="font-semibold">Are you sure?</p>
+        <div className="flex gap-2 mt-2">
+          <button 
+            onClick={() => {
+              toast.dismiss(t.id);
+              handleDeleteQuestion(id);
+            }} 
+            className="bg-red-500 text-white px-3 py-1 rounded"
+          >
+            Yes
+          </button>
+          <button 
+            onClick={() => toast.dismiss(t.id)} 
+            className="bg-gray-300 px-3 py-1 rounded"
+          >
+            No
+          </button>
+        </div>
       </div>
-    </div>
-  ), { duration: 5000 }); // Auto-dismiss after 5 sec
-};
+    ), { duration: 5000 }); // Auto-dismiss after 5 sec
+  };
 
-// const handleEdit = (id: string) => {
-
-// }
-
-const handlePushToArena = async () => {
-  if (selectedArenaQuestions.length === 0) {
-    toast.error("Please select at least one question to add to arena.");
-  }
-
-  setLoadingArena(true);
-  try {
-    const response = await axios.post("/api/pushToArena", { questions: selectedArenaQuestions });
-    if(!(response.status === 200)) {
-      toast.error(response.data.message)
-      return 
-    }
-    toast.success("Pushed Successfully")
-  } catch (error) {
-    console.error("Error adding to arena:", error);
-    toast.error("Failed to add to arena.");
-  } finally {
-    setLoadingArena(false);
-  }
-};
-
-const handleDeleteQuestion = async (id: string) => {
-  try {
-    const response = await axios.post('/api/deleteQuestion', { questionId: id })
-    if(!(response.status === 200)) {
-      toast.error(response.data.message)
-      return 
+  const handlePushToArena = async () => {
+    if (selectedArenaQuestions.length === 0) {
+      toast.error("Please select at least one question to add to arena.");
+      return;
     }
 
-    toast.success("Deleted")
-  } catch (error) {
-    console.error('Error while deleteing question: ', error)
-    toast.error("Some unexpected error occured!")
+    setLoadingArena(true);
+    try {
+      const response = await axios.post("/api/pushToArena", { questions: selectedArenaQuestions });
+      if (response.status === 200) {
+        toast.success("Pushed Successfully");
+      } else {
+        toast.error(response.data.message || "Failed to push to arena");
+      }
+    } catch (error) {
+      console.error("Error adding to arena:", error);
+      toast.error("Failed to add to arena.");
+    } finally {
+      setLoadingArena(false);
+    }
+  };
+
+  const handleDeleteQuestion = async (id: string) => {
+    try {
+      const response = await axios.post('/api/deleteQuestion', { questionId: id });
+      if (response.status === 200) {
+        // Update the questions list to remove the deleted question
+        setQuestions(prev => prev.filter(q => q.id !== id));
+        toast.success("Deleted");
+      } else {
+        toast.error(response.data.message || "Failed to delete question");
+      }
+    } catch (error) {
+      console.error('Error while deleting question: ', error);
+      toast.error("Some unexpected error occurred!");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
-}
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <div className="text-xl font-bold mb-4">Access Denied</div>
+        <p className="text-gray-500">You need admin privileges to access this page.</p>
+      </div>
+    );
+  }
 
   return (
-    <>
-    
-    {show ? <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto p-4 space-y-6">
       <div className="flex flex-col md:flex-row gap-6">
         {/* Left Column - Test Creation */}
         <div className="w-full md:w-1/3 space-y-6">
-        <UpdateContestCard dbQuestions={questions}/>
-        <Card>
+          <UpdateContestCard dbQuestions={questions}/>
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
@@ -362,13 +397,13 @@ const handleDeleteQuestion = async (id: string) => {
                 />
               </div>
               <div>
-                  <label className="block mb-1">Contest Duration (minutes)</label>
-                  <input
-                      type="number"
-                      value={duration}
-                      onChange={handleDurationChange}
-                      className="w-full p-2 border border-gray-600 rounded-md text-black"
-                  />
+                <label className="block mb-1">Contest Duration (minutes)</label>
+                <input
+                  type="number"
+                  value={duration}
+                  onChange={handleDurationChange}
+                  className="w-full p-2 border border-gray-600 rounded-md text-black"
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm text-muted-foreground">Start Time</label>
@@ -392,17 +427,15 @@ const handleDeleteQuestion = async (id: string) => {
               {dateError && (
                 <p className="text-sm text-destructive">{dateError}</p>
               )}
-              
             </CardContent>
           </Card>
-          
         
           <Card>
             <CardHeader>
               <CardTitle>Selected Questions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {show && selectedQuestions.length === 0 ? (
+              {selectedQuestions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No questions selected.</p>
               ) : (
                 selectedQuestions.map((q) => (
@@ -434,7 +467,7 @@ const handleDeleteQuestion = async (id: string) => {
               <CardTitle>Questions to push to Arena</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {show && selectedArenaQuestions.length === 0 ? (
+              {selectedArenaQuestions.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No questions selected.</p>
               ) : (
                 selectedArenaQuestions.map((q) => (
@@ -461,13 +494,11 @@ const handleDeleteQuestion = async (id: string) => {
               </Button>
             </CardContent>
           </Card>
-        <QuestionForm/>
+          <QuestionForm/>
         </div>
         
-
         {/* Right Column - Questions List */}
         <div className="w-full md:w-2/3">
-        
           <Card>
             <CardHeader>
               <CardTitle>Available Questions</CardTitle>
@@ -523,14 +554,14 @@ const handleDeleteQuestion = async (id: string) => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {show && filteredQuestions?.length === 0 ? (
+              {filteredQuestions.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8">
                   No questions found matching the selected filters.
                 </p>
               ) : (
-                filteredQuestions?.map((q) => (
+                filteredQuestions.map((q) => (
                   <Card key={q.id} className='relative'>
-                    <Trash2 className='absolute right-1 mx-1 top-2 text-red-500' onClick={()=>confirm(q.id)}/>
+                    <Trash2 className='absolute right-1 mx-1 top-2 text-red-500 cursor-pointer' onClick={() => confirm(q.id)}/>
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start gap-4">
                         <div className="space-y-2 flex">
@@ -553,36 +584,36 @@ const handleDeleteQuestion = async (id: string) => {
                               ))}
                             </div>
                           </div>
-                            <div className='flex flex-col'>
-                            <span className='p-3 absolute top-1'>{(questionOnContest.filter((p) => p.id === q.id)[0].contests.length !== 0 && !questionOnContest.filter((p) => p.id === q.id)[0].contests[0].contestId) && <Swords/>}</span>
+                          <div className='flex flex-col'>
+                            <span className='p-3 absolute top-1'>
+                              {questionOnContest.some(p => p.id === q.id && p.contests.length !== 0 && !p.contests[0].contestId) && 
+                                <Swords/>
+                              }
+                            </span>
                             <Image src={q.leetcodeUrl ? Leetcode : Codeforces} alt='logo' className='size-6 mx-10 absolute top-4'/>
-                            {/* <span className='p-3 absolute top-8'>{!(questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances.length === 1 && questionOnContest.filter((p) => p.id === q.id)[0].contestAppearances[0] === null) && <LucideSword/> }</span> */}
-                            {/* <span className='p-3 absolute bottom-1 font-bold text-[15px]'>Contest {questionOnContest.filter((p) => p.contestAppearances && p.id === q.id) ? questionOnContest.filter((p) => p.contestAppearances && p.id === q.id)[0].contestAppearances.map((m) => <span className='font-bold text-[15px]'>{m}</span>): '-'}</span> */}
-                            </div>
+                          </div>
                         </div>
                         <div className='flex flex-col p-3 mr-2'>
-                        <Button
-                          size="sm"
-                          onClick={() => addToTest(q)}
-                          className="shrink-0"
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add to Test
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant='outline'
-                          className="shrink-0 mt-4"
-                          onClick={() => addToArena(q)}
-                        >
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add to arena
-                        </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => addToTest(q)}
+                            className="shrink-0"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add to Test
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant='outline'
+                            className="shrink-0 mt-4"
+                            onClick={() => addToArena(q)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add to arena
+                          </Button>
                         </div>
                       </div>
-                      
                     </CardContent>
-                    
                   </Card>
                 ))
               )}
@@ -596,10 +627,6 @@ const handleDeleteQuestion = async (id: string) => {
         onClose={() => setIsPermissionModalOpen(false)}
         onCreateTest={handleCreateTest}
       />
-      </div> : <div className='flex justify-center'>Not an Admin</div>}</>
-   
+    </div>
   );
 }
-
-
-

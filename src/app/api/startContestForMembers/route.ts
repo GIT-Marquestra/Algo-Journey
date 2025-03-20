@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { contestId, memberIds } = body;
+    const { contestId, memberIds, isAdmin } = body;
 
     if (!contestId || !memberIds || !Array.isArray(memberIds) || memberIds.length === 0) {
       return NextResponse.json(
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'This group is not permitted to enter this contest' }, { status: 440 });
     }
 
-    if (!currentUser || !currentUser.coordinatedGroup) {
+    if ((!currentUser || !currentUser.coordinatedGroup) && !isAdmin) {
       return NextResponse.json(
         { error: 'Only group coordinators can start contests for members' },
         { status: 403 }

@@ -34,6 +34,7 @@ import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
 import Image from 'next/image';
 import { useSocket } from '@/hooks/SocketContext';
+import useStore from '@/store/store';
 
 interface LeetCodeSubmission {
   titleSlug: string;
@@ -68,6 +69,7 @@ const ContestQuest: React.FC = () => {
   const [lusername, setLUsername] = useState('')
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
+  const { isAdmin } = useStore()
   
   // Use Zustand store instead of context
   const { questions, setQuestions } = useSocket()
@@ -351,7 +353,7 @@ const ContestQuest: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       {!show ? (
         <>
-          {id && isCoord && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
+          {id && (isCoord || isAdmin) && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
           <div className="container mx-auto p-4 pt-20">
             <Card className="max-w-2xl mx-auto border border-gray-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-md">
               <CardHeader>
