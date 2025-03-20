@@ -1,12 +1,12 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Target, Plus, X, Save, CheckCircle2, ExternalLink } from "lucide-react";
+import { Loader2, Target, X, Save, CheckCircle2, ExternalLink } from "lucide-react";
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
@@ -28,13 +28,6 @@ const difficultyPoints = {
   VERYHARD: 10,
 };
 
-const difficultyIcons = {
-  BEGINNER: "bg-blue-500/10 text-blue-500",
-  EASY: "bg-green-500/10 text-green-500",
-  MEDIUM: "bg-yellow-500/10 text-yellow-500",
-  HARD: "bg-orange-500/10 text-orange-500",
-  VERYHARD: "bg-red-500/10 text-red-500"
-};
 
 const availableTags = [
   "PrefixSum",
@@ -66,6 +59,32 @@ const getDifficultyColor = (difficulty: string) => {
   return colors[difficulty as keyof typeof colors];
 };
 
+// Function to extract slug from URL
+const extractSlugFromUrl = (url: string, platform: string): string => {
+  if (!url) return "";
+  
+  try {
+    if (platform === "Leetcode") {
+      // Handle Leetcode URLs like: https://leetcode.com/problems/smallest-even-multiple/
+      const match = url.match(/problems\/([^/]+)/);
+      if (match && match[1]) {
+        // Return the exact slug as it appears in the URL
+        return match[1];
+      }
+    } else if (platform === "Codeforces") {
+      // Handle Codeforces URLs like: https://codeforces.com/problemset/problem/1352/A
+      const match = url.match(/problem\/(\d+)\/([A-Z\d]+)/);
+      if (match && match[1] && match[2]) {
+        return `${match[1]}${match[2]}`;
+      }
+    }
+  } catch (error) {
+    console.error("Error extracting slug:", error);
+  }
+  
+  return "";
+};
+
 export default function QuestionForm() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,6 +111,22 @@ export default function QuestionForm() {
     });
     setEditingIndex(null);
   };
+
+  // Auto-extract slug when URL changes
+  useEffect(() => {
+    const platform = currentQuestion.platform;
+    const url = platform === "Leetcode" ? currentQuestion.leetcodeUrl : currentQuestion.codeforcesUrl;
+    
+    if (url) {
+      const extractedSlug = extractSlugFromUrl(url, platform);
+      if (extractedSlug && (!currentQuestion.slug || currentQuestion.slug === "")) {
+        setCurrentQuestion(prev => ({
+          ...prev,
+          slug: extractedSlug
+        }));
+      }
+    }
+  }, [currentQuestion.leetcodeUrl, currentQuestion.codeforcesUrl, currentQuestion.platform]);
 
   const updateCurrentQuestion = (field: keyof Question, value: string) => {
     setCurrentQuestion((prev) => {
@@ -194,6 +229,28 @@ export default function QuestionForm() {
               </CardHeader>
               
               <CardContent className="pt-6 space-y-4">
+                {currentQuestion.platform === "Leetcode" ? (
+                  <div className="space-y-2">
+                    <Label htmlFor="leetcodeUrl">Leetcode URL</Label>
+                    <Input
+                      id="leetcodeUrl"
+                      placeholder="Enter Leetcode URL"
+                      value={currentQuestion.leetcodeUrl}
+                      onChange={(e) => updateCurrentQuestion("leetcodeUrl", e.target.value)}
+                    />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="codeforcesUrl">Codeforces URL</Label>
+                    <Input
+                      id="codeforcesUrl"
+                      placeholder="Enter Codeforces URL"
+                      value={currentQuestion.codeforcesUrl}
+                      onChange={(e) => updateCurrentQuestion("codeforcesUrl", e.target.value)}
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <Label htmlFor="questionName">Question Name</Label>
                   <Input
@@ -202,6 +259,12 @@ export default function QuestionForm() {
                     value={currentQuestion.slug}
                     onChange={(e) => updateCurrentQuestion("slug", e.target.value)}
                   />
+                  {(currentQuestion.leetcodeUrl || currentQuestion.codeforcesUrl) && 
+                   currentQuestion.slug && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Name auto-extracted from URL. You can edit if needed.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -219,30 +282,6 @@ export default function QuestionForm() {
                     </SelectContent>
                   </Select>
                 </div>
-
-                {currentQuestion.platform === "Leetcode" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="leetcodeUrl">Leetcode URL</Label>
-                    <Input
-                      id="leetcodeUrl"
-                      placeholder="Enter Leetcode URL"
-                      value={currentQuestion.leetcodeUrl}
-                      onChange={(e) => updateCurrentQuestion("leetcodeUrl", e.target.value)}
-                    />
-                  </div>
-                )}
-
-                {currentQuestion.platform === "Codeforces" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="codeforcesUrl">Codeforces URL</Label>
-                    <Input
-                      id="codeforcesUrl"
-                      placeholder="Enter Codeforces URL"
-                      value={currentQuestion.codeforcesUrl}
-                      onChange={(e) => updateCurrentQuestion("codeforcesUrl", e.target.value)}
-                    />
-                  </div>
-                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="difficulty">Difficulty</Label>
