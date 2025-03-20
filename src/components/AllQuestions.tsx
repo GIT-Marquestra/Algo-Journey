@@ -40,7 +40,8 @@ const AVAILABLE_TAGS = [
   "LinearSearch",
   "Exponentiation",
   "Recursion",
-  "String"
+  "String",
+  "HashMaps/Dictionary"
 ];
 
 const DIFFICULTY_LEVELS = [

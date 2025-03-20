@@ -45,7 +45,8 @@ const availableTags = [
   "LinearSearch",
   "Exponentiation",
   "Recursion",
-  "String"
+  "String",
+  "HashMaps/Dictionary"
 ];
 
 const getDifficultyColor = (difficulty: string) => {
