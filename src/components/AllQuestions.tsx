@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
 import ContestPermissionModal from './Modals/ContestPermissionModal';
 import Image from 'next/image';
@@ -53,8 +52,8 @@ const DIFFICULTY_LEVELS = [
   { id: "hard", value: "HARD", label: "Hard" },
   { id: "veryhard", value: "VERYHARD", label: "Very Hard" }
 ];
-
 type Difficulty = 'BEGINNER' | 'EASY' | 'MEDIUM' | 'HARD' | 'VERYHARD';
+
 interface Question {
   id: string;
   leetcodeUrl: string;
@@ -365,7 +364,6 @@ export default function AllQuestions() {
             <div>
             <Button variant="link" className='bg-indigo-600 mx-1 text-white' onClick={() => Router.push('/admin/dashboard/updateContest')}>Update Contest</Button>
             <Button variant="link" className='bg-indigo-600 mx-1 text-white' onClick={() => Router.push('/admin/dashboard/addQuestions')}>Add Questions</Button>
-            <Button variant="link" className='bg-indigo-600 mx-1 text-white' onClick={() => Router.push('/admin/dashboard/addHints')}>Add Hints</Button>
             </div>
         </div>
 
@@ -582,11 +580,6 @@ export default function AllQuestions() {
                 </Button>
               </CardFooter>
             </Card>
-
-            {/* Utility Cards */}
-            <div className="grid grid-cols-1 gap-4">
-              <UpdateContestCard dbQuestions={questions} />
-            </div>
           </div>
 
           {/* Main Content */}

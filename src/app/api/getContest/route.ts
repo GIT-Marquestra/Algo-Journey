@@ -16,7 +16,11 @@ export async function POST(req: Request) {
       include:{
         questions: {
           include:{
-            question: true
+            question: {
+              include:{
+                questionTags: true
+              }
+            }
           }
         }
       }
