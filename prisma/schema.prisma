@@ -136,6 +136,7 @@ model Question {
   createdAt         DateTime              @default(now())
   temporary         TempContestQuestion[] @relation("QuestionToTemp")
   updatedAt         DateTime              @updatedAt
+  hint              Hint?               
 
   @@map("questions")
 }
@@ -158,6 +159,15 @@ enum Difficulty {
   MEDIUM
   HARD
   VERYHARD
+}
+
+model Hint{
+  id                String              @id @default(uuid())
+  questionId        String              @unique
+  question          Question            @relation(fields: [questionId], references: [id])
+  hint1             String
+  hint2             String
+  hint3             String
 }
 
 model QuestionOnContest {

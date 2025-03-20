@@ -18,12 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import QuestionForm from './QuestionsInput';
 import UpdateContestCard from './UpdateContest';
 import Link from 'next/link';
-import ContestPermissionModal from './ContestPermissionModal';
+import ContestPermissionModal from './Modals/ContestPermissionModal';
 import Image from 'next/image';
 import useStore from '@/store/store';
+import { useRouter } from 'next/navigation';
+import { HintsComponent } from './Modals/Hints';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -87,8 +88,8 @@ export default function AllQuestions() {
   const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useStore()
+  const Router = useRouter()
 
-  
 
   useEffect(() => {
     if (isAdmin) {
@@ -362,9 +363,9 @@ export default function AllQuestions() {
             <p className="text-gray-600 mt-1">Manage contest questions and create tests</p>
           </div>
             <div>
-            <Button variant="link" className='bg-indigo-600 mx-1 text-white'>Update Contest</Button>
-            <Button variant="link" className='bg-indigo-600 mx-1 text-white'>Add Questions</Button>
-            <Button variant="link" className='bg-indigo-600 mx-1 text-white'>Add Hints</Button>
+            <Button variant="link" className='bg-indigo-600 mx-1 text-white' onClick={() => Router.push('/admin/dashboard/updateContest')}>Update Contest</Button>
+            <Button variant="link" className='bg-indigo-600 mx-1 text-white' onClick={() => Router.push('/admin/dashboard/addQuestions')}>Add Questions</Button>
+            <Button variant="link" className='bg-indigo-600 mx-1 text-white' onClick={() => Router.push('/admin/dashboard/addHints')}>Add Hints</Button>
             </div>
         </div>
 
@@ -585,7 +586,6 @@ export default function AllQuestions() {
             {/* Utility Cards */}
             <div className="grid grid-cols-1 gap-4">
               <UpdateContestCard dbQuestions={questions} />
-              <QuestionForm />
             </div>
           </div>
 
@@ -665,6 +665,7 @@ export default function AllQuestions() {
                 ) : (
                   <div className="space-y-4">
                     {filteredQuestions.map((q) => (
+                      <HintsComponent questionId={q.id} questionSlug={q.slug} isAdmin={isAdmin}>
                       <Card key={q.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
                         <CardContent className="p-4">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -725,7 +726,10 @@ export default function AllQuestions() {
                             </div>
                           </div>
                         </CardContent>
+                        <CardContent>
+                        </CardContent>
                       </Card>
+                      </HintsComponent>
                     ))}
                   </div>
                 )}
