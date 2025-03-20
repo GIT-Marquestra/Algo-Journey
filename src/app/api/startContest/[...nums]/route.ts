@@ -77,6 +77,16 @@ export async function POST(
             return NextResponse.json({ message: "User not part of any group" }, { status: 404 });
         }
 
+        const groupsArray = await prisma.groupPermission.findMany({
+            where:{
+                contestId: Number(contestNumber)
+            }
+        })
+
+        if(!(groupsArray).some((p) => p.groupId === userGroup.id)){
+            return NextResponse.json({ message: "Your group not allwed for this contest" }, { status: 403 });
+        }
+
         // Check if this is the latest contest
         const isLatestContest = latestContest?.id === contestId;
 

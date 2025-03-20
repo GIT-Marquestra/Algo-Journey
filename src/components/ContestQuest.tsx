@@ -303,7 +303,7 @@ const ContestQuest: React.FC = () => {
       else {
         const errorMessages: Record<number, string> = {
           420: 'Test Entry Closed!',
-          403: 'Contest joining window has closed',
+          403: 'User group is not allowed for this contest',
           407: 'Already attempted the test',
           440: 'Contest has not started yet!',
           430: 'User has already participated in the contest',
