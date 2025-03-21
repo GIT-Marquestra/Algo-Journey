@@ -24,6 +24,7 @@ import Image from 'next/image';
 import useStore from '@/store/store';
 import { useRouter } from 'next/navigation';
 import { HintsComponent } from './Modals/Hints';
+import UpdateQuestionComponent from './Modals/UpdateQuestion';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -658,6 +659,13 @@ export default function AllQuestions() {
                 ) : (
                   <div className="space-y-4">
                     {filteredQuestions.map((q) => (
+                      <UpdateQuestionComponent 
+                        key={q.id}
+                        questionId={q.id} 
+                        questionSlug={q.slug} 
+                        isAdmin={isAdmin}
+                        question={q}
+                        >
                       <HintsComponent questionId={q.id} key={q.id} questionSlug={q.slug} isAdmin={isAdmin}>
                       <Card key={q.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
                         <CardContent className="p-4">
@@ -723,6 +731,7 @@ export default function AllQuestions() {
                         </CardContent>
                       </Card>
                       </HintsComponent>
+                      </UpdateQuestionComponent>
                     ))}
                   </div>
                 )}

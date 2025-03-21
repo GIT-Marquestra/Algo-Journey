@@ -29,7 +29,6 @@ export async function POST() {
             totalContests,
             usersArray,
         }   
-        console.log(response)
         return NextResponse.json(response, {status: 200})
     } catch (error) {
         console.error(error)

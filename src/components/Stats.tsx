@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import SearchInput from './SearchInput';
 import Link from 'next/link';
 import { Users, UserCheck, Award, Target, ChevronRight } from 'lucide-react';
+import useStore from '@/store/store';
 
 interface User {
   id: string;
@@ -90,11 +91,11 @@ const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
           <div className="p-4 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                {u.username.charAt(0).toUpperCase()}
+              {u.username.charAt(0).toUpperCase()}
               </div>
               <div className="space-y-1">
                 <Link href={`/user/updateProfile/${u.username}`} target='_blank'>
-                  <h4 className="font-medium text-indigo-700 hover:text-indigo-800 transition-colors">{u.username}</h4>
+                  <h4 className="font-medium text-indigo-700 hover:text-indigo-800 transition-colors">{u.email.split('@nst')[0].split('.')[0].toUpperCase()} {u.email.split('@nst')[0].split('.')[1].split('2024')[0].toUpperCase()}</h4>
                 </Link>
                 <p className="text-sm text-gray-600">Section {u.section}</p>
                 <div className="flex items-center gap-2">
@@ -126,16 +127,12 @@ const AdminDashboard = () => {
     activeContests: 0
   });
   const router = useRouter();
+  const { isAdmin } = useStore()
 
   const getNumbers = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await axios.post('/api/checkIfAdmin');
-      if(!res.data.isAdmin) {
-        toast.error('You are not authorized to access this page');
-        router.push('/');
-        return;
-      }
+      if(!isAdmin) return 
       const response = await axios.post('/api/getNumbers');
       setNumbers({
         totalUsers: response.data.totalUsers,
