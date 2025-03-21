@@ -44,6 +44,7 @@ export interface Question {
   questionTags: { id: string; name: string; }[];
   slug: string;
   points: number;
+  isSolved: boolean;
   difficulty: Difficulty;
 }
 
