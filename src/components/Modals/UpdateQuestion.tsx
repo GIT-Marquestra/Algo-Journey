@@ -38,6 +38,7 @@ import { Difficulty } from '@prisma/client';
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
@@ -95,6 +96,7 @@ const questionUpdateSchema = z.object({
   }),
   points: z.coerce.number().min(1, "Points must be at least 1"),
   tags: z.array(z.string()).min(1, "At least one tag is required"),
+  inArena: z.boolean().default(false),
 });
 
 type QuestionFormValues = z.infer<typeof questionUpdateSchema>;
@@ -108,6 +110,7 @@ interface Question {
   difficulty: Difficulty;
   points: number;
   questionTags: { id: string; name: string }[];
+  inArena: boolean;
 }
 
 interface UpdateQuestionComponentProps {
@@ -139,6 +142,7 @@ const UpdateQuestionComponent: React.FC<UpdateQuestionComponentProps> = ({
       difficulty: "MEDIUM" as Difficulty,
       points: DIFFICULTY_POINTS.MEDIUM,
       tags: [],
+      inArena: false,
     },
   });
 
@@ -163,6 +167,7 @@ const UpdateQuestionComponent: React.FC<UpdateQuestionComponentProps> = ({
       difficulty: question.difficulty,
       points: question.points,
       tags: currentTags,
+      inArena: question.inArena,
     });
   };
 
@@ -334,6 +339,27 @@ const UpdateQuestionComponent: React.FC<UpdateQuestionComponentProps> = ({
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="inArena"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Arena Status</FormLabel>
+                      <FormDescription>
+                        Toggle to include this question in the Arena
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}

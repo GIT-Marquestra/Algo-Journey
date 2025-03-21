@@ -12,7 +12,7 @@ export async function PUT(
     const questionId = arr[arr.length - 1]
     
     const req = await request.json()
-    const { slug, leetcodeUrl, codeforcesUrl, difficulty, points, tags } = req.updateData
+    const { slug, leetcodeUrl, codeforcesUrl, difficulty, points, tags, inArena } = req.updateData
 
     const currentQuestion = await prisma.question.findUnique({
       where: { id: questionId },
@@ -51,6 +51,7 @@ export async function PUT(
           codeforcesUrl: codeforcesUrl || null,
           difficulty: difficulty as Difficulty,
           points,
+          inArena: inArena || false, // Add the inArena field
         },
         include: {
           questionTags: true

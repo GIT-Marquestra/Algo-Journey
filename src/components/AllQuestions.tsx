@@ -62,6 +62,8 @@ interface Question {
   questionTags: QuestionTag[];
   slug: string;
   points: number;
+  inContest: boolean;
+  inArena: boolean;
   difficulty: Difficulty
 }
 
