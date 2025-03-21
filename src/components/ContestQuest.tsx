@@ -33,7 +33,7 @@ import { fetchLatestSubmissionsCodeForces, fetchLatestSubmissionsLeetCode } from
 import axios from 'axios';
 import CoordinatorContestPermissions from './CoordinatorContestPermissions';
 import Image from 'next/image';
-import { useSocket } from '@/hooks/SocketContext';
+import { QuestionPar, useSocket } from '@/hooks/SocketContext';
 import useStore from '@/store/store';
 
 interface LeetCodeSubmission {
@@ -287,11 +287,20 @@ const ContestQuest: React.FC = () => {
       toast.dismiss(loader);
       
       if (response.status === 200) {
-        setTimeLeft(response.data.contest.remainingTime*60 + 10)
+        if(response.data.contest.remainingTime > 0){
+          setTimeLeft(response.data.contest.remainingTime*60 + 10)
+        } 
         
         if (response.data.questions) {
           setShow(true);
           setQuestions(response.data.questions)
+
+          response.data.questions.forEach((p: QuestionPar) => {
+            if(p.question.isSolved){
+              setScore((prev) => prev + p.question.points)
+              setVerifiedProblems((prev) => new Set([...prev, p.questionId]))
+            }
+          })
           
           // Enhanced success message with time information
           toast.success(`Test Started! You have ${response.data.contest.duration} min to complete it. Good luck!`, {
@@ -353,7 +362,7 @@ const ContestQuest: React.FC = () => {
     <div className="min-h-screen bg-slate-50">
       {!show ? (
         <>
-          {id && (isCoord || isAdmin) && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
+          
           <div className="container mx-auto p-4 pt-20">
             <Card className="max-w-2xl mx-auto border border-gray-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-md">
               <CardHeader>
@@ -404,6 +413,7 @@ const ContestQuest: React.FC = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+          {id && (isCoord || isAdmin) && <CoordinatorContestPermissions contestId={parseInt(id)}/>}
         </>
       ) : (
         <div className="container mx-auto p-4 pt-20 space-y-6">
@@ -474,7 +484,7 @@ const ContestQuest: React.FC = () => {
                 <Card 
                   key={q.id}
                   className={`transition-all duration-300 hover:shadow-md ${
-                    isVerified 
+                    isVerified || q.question.isSolved
                       ? 'bg-green-50/50 border-green-200' 
                       : 'bg-white border-gray-100 hover:border-indigo-200'
                   }`}
@@ -485,7 +495,7 @@ const ContestQuest: React.FC = () => {
                         <CardTitle className={`text-xl ${isVerified ? 'text-green-800' : 'text-indigo-800'}`}>
                           {q.question.slug}
                         </CardTitle>
-                        {isVerified && (
+                        {isVerified || q.question.isSolved && (
                           <div className="flex items-center gap-1">
                             <Check className="h-5 w-5 text-green-600" />
                             <span className="text-xs font-medium text-green-600">Solved</span>
@@ -520,7 +530,7 @@ const ContestQuest: React.FC = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-100">
                       <div className="flex items-center gap-2">
                         <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                          isVerified ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
+                          isVerified || q.question.isSolved ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
                         }`}>
                           <span className="text-sm font-bold">{q.question.points}</span>
                         </div>
@@ -536,19 +546,19 @@ const ContestQuest: React.FC = () => {
                           className="w-full sm:w-auto"
                         >
                           <Button 
-                            variant={isVerified ? "outline" : "default"}
+                            variant={isVerified  || q.question.isSolved ? "outline" : "default"}
                             size="sm"
                             className={`w-full ${
-                              isVerified 
+                              isVerified  || q.question.isSolved 
                                 ? 'border-green-200 text-green-700 hover:bg-green-50' 
                                 : 'bg-indigo-600 hover:bg-indigo-700 text-white'
                             }`}
                           >
-                            {isVerified ? 'View Problem' : 'Solve Now'} 
+                            {isVerified  || q.question.isSolved ? 'View Problem' : 'Solve Now'} 
                             <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
                         </Link>
-                        {!isVerified && (
+                        {!isVerified  || q.question.isSolved && (
                           <Button
                             variant="outline"
                             size="sm"

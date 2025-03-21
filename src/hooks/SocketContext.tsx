@@ -26,6 +26,7 @@ interface Question {
   codeforcesUrl: string | null;
   questionTags: { id: string; name: string; }[];
   slug: string;
+  isSolved: boolean;
   points: number
   difficulty: Difficulty;
 }

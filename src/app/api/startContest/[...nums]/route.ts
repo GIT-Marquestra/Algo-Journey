@@ -205,6 +205,28 @@ export async function POST(
             remainingTime = contestDurationMs;
         }
 
+        // Get user's accepted submissions to mark questions as solved
+        const acceptedSubmissions = await prisma.submission.findMany({
+            where: {
+                userId: user.id,
+                status: 'ACCEPTED',
+            },
+            select: {
+                questionId: true,
+            },
+        });
+
+        const solvedQuestionIds = new Set(acceptedSubmissions.map(sub => sub.questionId));
+
+        // Add isSolved property to each question in the contest
+        const questionsWithSolvedStatus = contest.questions.map((questionObj: any) => ({
+            ...questionObj,
+            question: {
+                ...questionObj.question,
+                isSolved: solvedQuestionIds.has(questionObj.question.id),
+            },
+        }));
+
         return NextResponse.json({
             message: isLatestContest ? "Starting active contest" : "Starting practice contest",
             contest: {
@@ -217,8 +239,9 @@ export async function POST(
                 contestEndTime,
                 isPractice: !isLatestContest
             },
-            questions: contest.questions,
+            questions: questionsWithSolvedStatus,
             groupId: userGroup.id,
+            individualPoints: user.individualPoints,
             status: 200
         });
 
