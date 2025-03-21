@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Target, X, Save, CheckCircle2, ExternalLink } from "lucide-react";
+import { Loader2, Target, X, Save, CheckCircle2, ExternalLink, AlertCircle } from "lucide-react";
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
@@ -98,6 +98,10 @@ export default function QuestionForm() {
     platform: "Leetcode",
   });
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [formErrors, setFormErrors] = useState<{
+    slug?: string;
+    tags?: string;
+  }>({});
 
   const resetCurrentQuestion = () => {
     setCurrentQuestion({
@@ -110,6 +114,7 @@ export default function QuestionForm() {
       platform: "Leetcode",
     });
     setEditingIndex(null);
+    setFormErrors({});
   };
 
   // Auto-extract slug when URL changes
@@ -141,6 +146,11 @@ export default function QuestionForm() {
       
       return updated;
     });
+    
+    // Clear related error when field is updated
+    if (field === "slug") {
+      setFormErrors(prev => ({ ...prev, slug: undefined }));
+    }
   };
 
   const handleTagToggle = (tag: string) => {
@@ -150,11 +160,32 @@ export default function QuestionForm() {
         : [...prev.tags, tag];
       return { ...prev, tags: newTags };
     });
+    
+    // Clear tags error when tags are updated
+    setFormErrors(prev => ({ ...prev, tags: undefined }));
+  };
+
+  const validateForm = (): boolean => {
+    const errors: {slug?: string; tags?: string} = {};
+    
+    if (!currentQuestion.slug) {
+      errors.slug = "Question name is required";
+    }
+    
+    if (currentQuestion.tags.length === 0) {
+      errors.tags = "At least one tag must be selected";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const saveQuestion = () => {
-    if (!currentQuestion.slug) {
-      toast.error("Question name is required");
+    if (!validateForm()) {
+      // Show toast for each error
+      Object.values(formErrors).forEach(error => {
+        if (error) toast.error(error);
+      });
       return;
     }
     
@@ -176,6 +207,7 @@ export default function QuestionForm() {
   const editQuestion = (index: number) => {
     setCurrentQuestion(questions[index]);
     setEditingIndex(index);
+    setFormErrors({});
   };
 
   const removeQuestion = (index: number) => {
@@ -252,12 +284,20 @@ export default function QuestionForm() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="questionName">Question Name</Label>
+                  <Label htmlFor="questionName" className="flex justify-between">
+                    <span>Question Name</span>
+                    {formErrors.slug && (
+                      <span className="text-red-500 text-xs flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" /> {formErrors.slug}
+                      </span>
+                    )}
+                  </Label>
                   <Input
                     id="questionName"
                     placeholder="Enter question name"
                     value={currentQuestion.slug}
                     onChange={(e) => updateCurrentQuestion("slug", e.target.value)}
+                    className={formErrors.slug ? "border-red-500 focus:ring-red-500" : ""}
                   />
                   {(currentQuestion.leetcodeUrl || currentQuestion.codeforcesUrl) && 
                    currentQuestion.slug && (
@@ -305,8 +345,17 @@ export default function QuestionForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Tags</Label>
-                  <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 border rounded-md">
+                  <Label className="flex justify-between">
+                    <span>Tags</span>
+                    {formErrors.tags && (
+                      <span className="text-red-500 text-xs flex items-center">
+                        <AlertCircle className="h-3 w-3 mr-1" /> {formErrors.tags}
+                      </span>
+                    )}
+                  </Label>
+                  <div className={`flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 border rounded-md ${
+                    formErrors.tags ? "border-red-500" : ""
+                  }`}>
                     {availableTags.map((tag) => (
                       <Badge
                         key={tag}
@@ -318,6 +367,9 @@ export default function QuestionForm() {
                       </Badge>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-500">
+                    Select at least one tag for the question
+                  </p>
                 </div>
               </CardContent>
               
@@ -332,7 +384,6 @@ export default function QuestionForm() {
                 <Button
                   onClick={saveQuestion}
                   className="w-1/2"
-                  disabled={!currentQuestion.slug}
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {editingIndex !== null ? "Update" : "Add"}
