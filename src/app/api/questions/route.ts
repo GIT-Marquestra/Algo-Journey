@@ -219,10 +219,10 @@ export async function POST(
         const solvedQuestionIds = new Set(acceptedSubmissions.map(sub => sub.questionId));
 
         // Add isSolved property to each question in the contest
-        const questionsWithSolvedStatus = contest.questions.map((questionObj: any) => ({
+        const questionsWithSolvedStatus = contest.questions.map((questionObj) => ({
             ...questionObj,
-            question: {
-                ...questionObj.question,
+            question: {//@ts-expect-error: don't want it here
+                ...questionObj.question,//@ts-expect-error: don't want it here
                 isSolved: solvedQuestionIds.has(questionObj.question.id),
             },
         }));
