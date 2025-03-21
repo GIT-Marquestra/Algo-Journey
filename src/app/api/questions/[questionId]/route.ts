@@ -6,7 +6,6 @@ export async function PUT(
   request: NextRequest,
 ) {
   try {
-
     const { url } = request
 
     const arr = url.split('/')
@@ -33,6 +32,17 @@ export async function PUT(
     const pointsDifference = points - oldPoints;
 
     const updatedQuestion = await prisma.$transaction(async (tx) => {
+      // First, disconnect existing tags from the question without deleting the tags
+      await tx.question.update({
+        where: { id: questionId },
+        data: {
+          questionTags: {
+            disconnect: currentQuestion.questionTags.map(tag => ({ id: tag.id }))
+          }
+        }
+      });
+
+      // Update the question with new details
       const updatedQuestion = await tx.question.update({
         where: { id: questionId },
         data: {
@@ -47,16 +57,7 @@ export async function PUT(
         }
       });
 
-      await tx.questionTag.deleteMany({
-        where: {
-          questions: {
-            some: {
-              id: questionId
-            }
-          }
-        }
-      });
-
+      // Connect new tags to the question
       if (tags && tags.length > 0) {
         for (const tagName of tags) {
           const tag = await tx.questionTag.upsert({
@@ -75,6 +76,7 @@ export async function PUT(
         }
       }
 
+      // Handle point adjustments if necessary
       if (pointsDifference !== 0) {
         const submissions = await tx.submission.findMany({
           where: {

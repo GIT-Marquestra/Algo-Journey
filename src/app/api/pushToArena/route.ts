@@ -5,7 +5,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { questions } = body;
-
     
     if (!Array.isArray(questions)) {
       return NextResponse.json({
@@ -31,25 +30,51 @@ export async function POST(req: NextRequest) {
           }
         });
         
-        // Create QuestionOnContest entry
-        if (tempQuestion?.contestId) {
-          // Create entry with contestId
+        const contestId = tempQuestion?.contestId || null;
+        
+        // Check if QuestionOnContest entry already exists
+        const existingEntry = await prisma.questionOnContest.findFirst({
+          where: {
+            questionId: question.id
+          }
+        });
+        
+        if (existingEntry) {
+          // Update the existing entry if contestId is different
+          if (existingEntry.contestId !== contestId) {
+            await prisma.questionOnContest.update({
+              where: {
+                id: existingEntry.id
+              },
+              data: {
+                contestId: contestId
+              }
+            });
+          }
+          // No need to update if contestId is the same
+        } else {
+          // Create new entry if it doesn't exist
           await prisma.questionOnContest.create({
             data: {
-              contestId: tempQuestion.contestId,
+              contestId: contestId,
               questionId: question.id
             }
           });
-
-          await prisma.question.update({    
-            where: {
-              id: question.id
-            },
-            data: {
-              inArena: true
-            }
-          });       
-          // Disconnect the question and delete temp entry if no questions remain
+        }
+        
+        // Update question status to inArena
+        await prisma.question.update({    
+          where: {
+            id: question.id
+          },
+          data: {
+            inArena: true
+          }
+        });
+        
+        // Process temp question if it exists
+        if (tempQuestion) {
+          // Disconnect the question from temp entry
           await prisma.tempContestQuestion.update({
             where: {
               id: tempQuestion.id
@@ -62,7 +87,7 @@ export async function POST(req: NextRequest) {
               }
             }
           });
-
+          
           // Check if temp contest has any questions left
           const remainingQuestions = await prisma.tempContestQuestion.findUnique({
             where: {
@@ -81,27 +106,11 @@ export async function POST(req: NextRequest) {
               }
             });
           }
-        } else {
-          
-          // If no contestId, create entry with null contestId
-          await prisma.questionOnContest.create({
-            data: {
-              questionId: question.id,
-              contestId: null
-            }
-          });
-          await prisma.question.update({
-            where: {
-              id: question.id
-            },
-            data: {
-              inArena: true
         }
-      }); 
-        }
+        
         return {
           ...question,
-          contestId: tempQuestion?.contestId || null
+          contestId: contestId
         };
       })
     );
@@ -114,10 +123,10 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Error processing questions:', error);
     
-
     return NextResponse.json({
       success: false,
-      error: 'Internal server error'
+      error: 'Internal server error',
+      details: error.message
     }, { status: 500 });
   }
 }

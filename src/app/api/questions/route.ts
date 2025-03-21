@@ -43,6 +43,9 @@ export async function POST(request: Request) {
       include: {
         questionTags: true,
       },
+      orderBy:{
+        difficulty: 'asc'
+      }
     });
 
     const user = await prisma.user.findUnique({
