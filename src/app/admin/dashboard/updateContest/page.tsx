@@ -18,6 +18,7 @@ function Page() {
       console.error("Error fetching questions:", error);
       toast.error("Failed to fetch questions");
   }
+  }
   useEffect(() => {
     fetch()
   }, [])
@@ -26,6 +27,5 @@ function Page() {
       <UpdateContestCard dbQuestions={questions}/>
     </div>
   )
-}
 }
 export default Page
