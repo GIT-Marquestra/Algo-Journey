@@ -22,6 +22,7 @@ export async function POST(request: Request) {
 
     const questions = await prisma.question.findMany({
       where: {
+        inArena: true,
         AND: [
           {
             questionTags: {

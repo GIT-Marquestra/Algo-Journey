@@ -23,6 +23,9 @@ export async function GET() {
     const questionsWithProgress = await prisma.questionTag.findMany({
       include: {
         questions: {
+          where:{
+            inArena: true
+          },
           include: {
             submissions: {
               where: {
