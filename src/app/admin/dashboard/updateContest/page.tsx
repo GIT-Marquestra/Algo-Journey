@@ -1,21 +1,26 @@
-import UpdateContestCard from '@/components/UpdateContest'
-import prisma from '@/lib/prisma'
-import React from 'react'
+'use client'
+import UpdateContestCard, { Question } from '@/components/UpdateContest'
+import axios from 'axios';
+import React, { useState } from 'react'
+import toast from 'react-hot-toast';
 
 async function Page() {
-    const dbQuestions = await prisma.question.findMany({
-        include:{
-            questionTags: true
-        },
-        orderBy:{
-            createdAt: 'desc'
-        }
-    })
+  const [questions, setQuestions] = useState<Question[]>([])
+  try {
+    const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
+    if (response.status === 200) {
+      setQuestions(response.data.questions);
+    } else {
+      toast.error("Failed to fetch questions");
+    }
+  } catch (error) {
+    console.error("Error fetching questions:", error);
+    toast.error("Failed to fetch questions");
   return (
     <div>
-      <UpdateContestCard dbQuestions={dbQuestions}/>
+      <UpdateContestCard dbQuestions={questions}/>
     </div>
   )
 }
-
+}
 export default Page
