@@ -139,7 +139,7 @@ export function HintsComponent({
       <TabsList className="grid grid-cols-3 mb-4">
         <TabsTrigger value="hint1">Hint 1</TabsTrigger>
         <TabsTrigger value="hint2">Hint 2</TabsTrigger>
-        <TabsTrigger value="hint3">Hint 3</TabsTrigger>
+        <TabsTrigger value="hint3">Solution Approach</TabsTrigger>
       </TabsList>
       
       <TabsContent value="hint1">
