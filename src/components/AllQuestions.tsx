@@ -178,14 +178,7 @@ export default function AllQuestions() {
     toast.success("Question removed from test");
   };
 
-  const addToArena = (question: Question) => {
-    if (selectedArenaQuestions?.some(q => q.id === question.id)) {
-      toast.error("Question already added to Arena");
-      return;
-    }
-    setSelectedArenaQuestions(prev => [...prev, { ...question }]);
-    toast.success("Question added to Arena");
-  };
+
 
   const removeFromArena = (questionId: string) => {
     setSelectedArenaQuestions(prev => prev.filter(q => q.id !== questionId));
