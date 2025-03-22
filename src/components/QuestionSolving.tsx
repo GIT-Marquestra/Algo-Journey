@@ -31,6 +31,7 @@ interface Question {
   leetcodeUrl: string | null;
   codeforcesUrl: string | null;
   questionTags: QuestionTag[];
+  index: number; // Add this new field
   submissions?: {
     status: string;
     score: number;
@@ -191,12 +192,15 @@ const QuestionSolving = () => {
   }, []);
 
   useEffect(() => {
-    let filtered = questions;
-
+    let filtered = [...questions]; // Create a copy first
+    
+    // Sort by index before applying any filters
+    filtered.sort((a, b) => a.index - b.index);
+    
     if(selectSolved){
       filtered = filtered.filter(q => !q.isSolved && !solvedProblems.has(q.id));
     }
-
+  
     if (selectedDifficulty !== 'ALL') {
       filtered = filtered.filter(q => q.difficulty === selectedDifficulty);
     }
@@ -207,9 +211,9 @@ const QuestionSolving = () => {
         return selectedTags.some(selectedTag => questionTagNames.includes(selectedTag));
       });
     }
-
+  
     setFilteredQuestions(filtered);
-  }, [selectedTags, selectedDifficulty, questions, setSelectSolved, selectSolved]);
+  }, [selectedTags, selectedDifficulty, questions, setSelectSolved, selectSolved, solvedProblems]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>

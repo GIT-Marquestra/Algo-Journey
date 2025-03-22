@@ -52,31 +52,31 @@ export async function POST(request: Request) {
       }
     });
 
-  // Update the sorting in your existing getArenaQuestions API
-const sortedQuestions = questions.sort((a, b) => {
-  // First check if arenaOrder exists and use it
-  //@ts-expect-error: do not knwo what to do here 
-  if (a.arenaOrder !== null && b.arenaOrder !== null) {
-    //@ts-expect-error: do not knwo what to do here 
-    return a.arenaOrder - b.arenaOrder;
-  }
-  
-  // Fall back to difficulty sorting if arenaOrder is not available
-  const diffA = difficultyOrder[a.difficulty];
-  const diffB = difficultyOrder[b.difficulty];
-  
-  if (diffA !== diffB) {
-    return diffA - diffB;
-  }
-  
-  // Finally sort by arenaAddedAt
-  if (!a.arenaAddedAt && !b.arenaAddedAt) return 0;
-  if (!a.arenaAddedAt) return 1;
-  if (!b.arenaAddedAt) return -1;
-  
-  // return b.arenaAddedAt.getTime() - a.arenaAddedAt.getTime();
-  return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
-});
+    // Sort the questions
+    const sortedQuestions = questions.sort((a, b) => {
+      // First check if arenaOrder exists and use it
+      //@ts-expect-error: do not know what to do here 
+      if (a.arenaOrder !== null && b.arenaOrder !== null) {
+        //@ts-expect-error: do not know what to do here 
+        return a.arenaOrder - b.arenaOrder;
+      }
+      
+      // Fall back to difficulty sorting if arenaOrder is not available
+      const diffA = difficultyOrder[a.difficulty];
+      const diffB = difficultyOrder[b.difficulty];
+      
+      if (diffA !== diffB) {
+        return diffA - diffB;
+      }
+      
+      // Finally sort by arenaAddedAt
+      if (!a.arenaAddedAt && !b.arenaAddedAt) return 0;
+      if (!a.arenaAddedAt) return 1;
+      if (!b.arenaAddedAt) return -1;
+      
+      return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
+    });
+
     const user = await prisma.user.findUnique({
       where: {
         email: userEmail,
@@ -95,12 +95,17 @@ const sortedQuestions = questions.sort((a, b) => {
 
     const solvedQuestionIds = new Set(acceptedSubmissions.map(sub => sub.questionId));
 
-    const questionsWithSolvedStatus = sortedQuestions.map(question => ({
+    // Add index to each question
+    const questionsWithSolvedStatus = sortedQuestions.map((question, index) => ({
       ...question,
+      index: index, // Explicit index field for ordering
       isSolved: solvedQuestionIds.has(question.id),
     }));
 
-    return NextResponse.json({ questionsWithSolvedStatus, individualPoints: user?.individualPoints }, { status: 200 });
+    return NextResponse.json({ 
+      questionsWithSolvedStatus, 
+      individualPoints: user?.individualPoints 
+    }, { status: 200 });
   } catch (error) {
     console.error('Error fetching questions:', error);
     return NextResponse.json(
