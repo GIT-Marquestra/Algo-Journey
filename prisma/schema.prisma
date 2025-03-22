@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -7,8 +6,6 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
-
 
 model User {
   id                  String              @id @default(uuid())
@@ -130,6 +127,7 @@ model Question {
   questionTags      QuestionTag[]     
   inContest         Boolean               @default(false)
   inArena           Boolean               @default(false) 
+  arenaAddedAt      DateTime?             // New field to track when question was added to arena
   slug              String                @unique
   contests          QuestionOnContest[]   @relation("QuestionToContest")
   submissions       Submission[]          @relation("QuestionToSubmission")
@@ -138,6 +136,7 @@ model Question {
   updatedAt         DateTime              @updatedAt
   hint              Hint?               
 
+  @@index([inArena, arenaAddedAt]) // Add index for efficient querying
   @@map("questions")
 }
 

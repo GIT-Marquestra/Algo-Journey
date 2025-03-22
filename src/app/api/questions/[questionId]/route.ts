@@ -30,6 +30,7 @@ export async function PUT(
 
     const oldPoints = currentQuestion.points;
     const pointsDifference = points - oldPoints;
+    const oldInArena = currentQuestion.inArena;
 
     const updatedQuestion = await prisma.$transaction(async (tx) => {
       // First, disconnect existing tags from the question without deleting the tags
@@ -42,6 +43,19 @@ export async function PUT(
         }
       });
 
+      // Determine how to handle arenaAddedAt based on inArena change
+      let arenaAddedAtUpdate = {};
+      
+      // If inArena is changing from false to true, set arenaAddedAt to current time
+      if (inArena && !oldInArena) {
+        arenaAddedAtUpdate = { arenaAddedAt: new Date() };
+      } 
+      // If inArena is changing from true to false, set arenaAddedAt to null
+      else if (!inArena && oldInArena) {
+        arenaAddedAtUpdate = { arenaAddedAt: null };
+      }
+      // If inArena is not changing, leave arenaAddedAt as is
+
       // Update the question with new details
       const updatedQuestion = await tx.question.update({
         where: { id: questionId },
@@ -51,7 +65,8 @@ export async function PUT(
           codeforcesUrl: codeforcesUrl || null,
           difficulty: difficulty as Difficulty,
           points,
-          inArena: inArena || false, // Add the inArena field
+          inArena: inArena || false,
+          ...arenaAddedAtUpdate // Apply the arenaAddedAt update
         },
         include: {
           questionTags: true

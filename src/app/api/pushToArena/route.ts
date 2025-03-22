@@ -62,13 +62,21 @@ export async function POST(req: NextRequest) {
           });
         }
         
-        // Update question status to inArena
+        // Check if the question is already in arena
+        const currentQuestion = await prisma.question.findUnique({
+          where: { id: question.id },
+          select: { inArena: true }
+        });
+        
+        // Update question status to inArena and set arenaAddedAt timestamp if not already in arena
         await prisma.question.update({    
           where: {
             id: question.id
           },
           data: {
-            inArena: true
+            inArena: true,
+            // Only set arenaAddedAt if the question wasn't already in arena
+            ...((!currentQuestion?.inArena) && { arenaAddedAt: new Date() })
           }
         });
         
