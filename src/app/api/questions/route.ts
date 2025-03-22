@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       if (!a.arenaAddedAt) return 1;
       if (!b.arenaAddedAt) return -1;
       
-      return b.arenaAddedAt.getTime() - a.arenaAddedAt.getTime();
+      return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
     });
 
     const user = await prisma.user.findUnique({

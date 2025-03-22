@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Save, Edit, Sparkles } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast"; // Changed to react-hot-toast
 
 interface HintsComponentProps {
   questionId: string;
@@ -43,7 +43,14 @@ export function HintsComponent({
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState("hint1");
   const [isEditMode, setIsEditMode] = useState(false);
-  const { toast } = useToast();
+  // Removed useToast hook
+  
+  // Create a copy of the original hints for comparison
+  const [originalHint, setOriginalHint] = useState<Hint>({
+    hint1: "",
+    hint2: "",
+    hint3: "",
+  });
 
   // Fetch existing hints when modal opens
   useEffect(() => {
@@ -56,26 +63,24 @@ export function HintsComponent({
         
         if (response.ok) {
           const data = await response.json();
-          setHint({
+          const hints = {
             hint1: data.hint1 || "",
             hint2: data.hint2 || "",
             hint3: data.hint3 || "",
-          });
+          };
+          setHint(hints);
+          setOriginalHint(JSON.parse(JSON.stringify(hints))); // Deep copy to preserve originals
         }
       } catch (error) {
         console.error("Error fetching hints:", error);
-        toast({
-          title: "Error",
-          description: "Could not load hints. Please try again.",
-          variant: "destructive",
-        });
+        toast.error("Could not load hints. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchHints();
-  }, [questionId, open, toast]);
+  }, [questionId, open]);
 
   const handleInputChange = (field: keyof Hint, value: string) => {
     setHint((prev) => ({
@@ -86,11 +91,7 @@ export function HintsComponent({
 
   const handleSubmit = async () => {
     if (!hint.hint1.trim() || !hint.hint2.trim() || !hint.hint3.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "All three hints are required.",
-        variant: "destructive",
-      });
+      toast.error("All three hints are required.");
       return;
     }
     
@@ -111,11 +112,10 @@ export function HintsComponent({
         throw new Error("Failed to save hints");
       }
 
-      toast({
-        title: "Success",
-        description: "Hints saved successfully!",
-        variant: "default",
-      });
+      // Update the original hints after successful save
+      setOriginalHint(JSON.parse(JSON.stringify(hint)));
+      
+      toast.success("Hints saved successfully!");
       
       if (onSave) {
         onSave();
@@ -124,11 +124,7 @@ export function HintsComponent({
       setIsEditMode(false);
     } catch (error) {
       console.error("Error saving hints:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save hints. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to save hints. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -198,6 +194,15 @@ export function HintsComponent({
     setIsEditMode(true);
     setOpen(true);
   };
+  
+  // Reset to original values if cancel is clicked
+  const handleCancel = () => {
+    setHint(JSON.parse(JSON.stringify(originalHint))); // Restore from original values
+    setIsEditMode(false);
+    if (!originalHint.hint1 && !originalHint.hint2 && !originalHint.hint3) {
+      setOpen(false);
+    }
+  };
 
   // Default button if no children provided
   const defaultTrigger = (
@@ -225,7 +230,13 @@ export function HintsComponent({
       )}
       
       {/* Regular dialog with trigger */}
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(newOpen) => {
+        // If closing and in edit mode, reset to original values
+        if (!newOpen && isEditMode) {
+          handleCancel();
+        }
+        setOpen(newOpen);
+      }}>
         {/* Only render DialogTrigger when we have no direct open method (non-admin or no children) */}
         {(!isAdmin || !children) && (
           <DialogTrigger asChild>
@@ -265,12 +276,7 @@ export function HintsComponent({
                 <div className="flex justify-end gap-2 mt-4">
                   <Button 
                     variant="outline" 
-                    onClick={() => {
-                      setIsEditMode(false);
-                      if (!hint.hint1 && !hint.hint2 && !hint.hint3) {
-                        setOpen(false);
-                      }
-                    }}
+                    onClick={handleCancel}
                   >
                     Cancel
                   </Button>
