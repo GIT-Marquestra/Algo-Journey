@@ -360,6 +360,38 @@ export default function AllQuestions() {
     );
   }
 
+
+  const handleAddToArena = async (questionId: string) => {
+    let loadingToast;
+    try {
+      // Show loading toast
+      loadingToast = toast.loading('Adding question to arena...');
+      
+      // Make API call to add question to arena
+      const response = await axios.post('/api/questions/add-to-arena', {
+        questionId
+      });
+      
+      // Show success toast
+      if (response.data.success) {
+        toast.success('Question successfully added to arena!');
+        // Optional: Refresh data or update UI state if needed
+      } else {
+        toast.error(response.data.message || 'Failed to add question to arena');
+      }
+    } catch (error) {
+      // Handle error cases
+      toast.error(
+        'An error occurred while adding question to arena'
+      );
+      console.error('Error adding question to arena:', error);
+    } finally {
+      // Ensure loading toast is dismissed in all cases
+      if (loadingToast) {
+        toast.dismiss(loadingToast);
+      }
+    }
+  };
  
 
   return (
@@ -727,7 +759,8 @@ export default function AllQuestions() {
                                 size="sm"
                                 variant="outline"
                                 className="border-amber-500 text-amber-500 hover:bg-amber-50"
-                                onClick={() => addToArena(q)}
+                                // onClick={() => addToArena(q)}
+                                onClick={() => handleAddToArena(q.id)}
                               >
                                 <Swords className="h-4 w-4 mr-1" /> Add to Arena
                               </Button>
