@@ -74,7 +74,8 @@ const sortedQuestions = questions.sort((a, b) => {
   if (!a.arenaAddedAt) return 1;
   if (!b.arenaAddedAt) return -1;
   
-  return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
+  return b.arenaAddedAt.getTime() - a.arenaAddedAt.getTime();
+  // return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
 });
     const user = await prisma.user.findUnique({
       where: {
