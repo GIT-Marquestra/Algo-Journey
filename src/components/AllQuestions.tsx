@@ -299,12 +299,22 @@ export default function AllQuestions() {
       toast.error("Please select at least one question to add to arena.");
       return;
     }
-
+  
+    // Create ordered map with position information
+    const questionsWithOrder = selectedArenaQuestions.map((question, index) => ({
+      id: question.id,
+      order: index + 1  // Using 1-based indexing
+    }));
+  
     setLoadingArena(true);
     try {
-      const response = await axios.post("/api/pushToArena", { questions: selectedArenaQuestions });
+      const response = await axios.post("/api/pushToArena", { 
+        questions: questionsWithOrder
+      });
+      
       if (response.status === 200) {
         toast.success("Pushed Successfully");
+        setSelectedArenaQuestions([]); // Clear selection after successful push
       } else {
         toast.error(response.data.message || "Failed to push to arena");
       }
@@ -331,7 +341,6 @@ export default function AllQuestions() {
     }
   };
 
-  // Renders
 
   if (isLoading) {
     return (

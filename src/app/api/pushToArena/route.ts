@@ -13,14 +13,19 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
     
+    // Create base timestamp (current time)
+    const baseTimestamp = new Date();
+    
     const processedQuestions = await Promise.all(
-      questions.map(async (question) => {
+      questions.map(async (question, index) => {
+        const { id, order } = question;
+        
         // Find if question exists in TempContestQuestion
         const tempQuestion = await prisma.tempContestQuestion.findFirst({
           where: {
             questions: {
               some: {
-                id: question.id
+                id: id
               }
             }
           },
@@ -35,7 +40,7 @@ export async function POST(req: NextRequest) {
         // Check if QuestionOnContest entry already exists
         const existingEntry = await prisma.questionOnContest.findFirst({
           where: {
-            questionId: question.id
+            questionId: id
           }
         });
         
@@ -57,26 +62,25 @@ export async function POST(req: NextRequest) {
           await prisma.questionOnContest.create({
             data: {
               contestId: contestId,
-              questionId: question.id
+              questionId: id
             }
           });
         }
         
-        // Check if the question is already in arena
-        const currentQuestion = await prisma.question.findUnique({
-          where: { id: question.id },
-          select: { inArena: true }
-        });
+        // Calculate ordered timestamp - add seconds based on the order
+        // This creates timestamps 1 second apart, preserving the order
+        const orderedTimestamp = new Date(baseTimestamp.getTime() + (order - 1) * 1000);
         
-        // Update question status to inArena and set arenaAddedAt timestamp if not already in arena
+        // Update question status to inArena and set arenaAddedAt timestamp 
+        // using the calculated orderedTimestamp
         await prisma.question.update({    
           where: {
-            id: question.id
+            id: id
           },
           data: {
             inArena: true,
-            // Only set arenaAddedAt if the question wasn't already in arena
-            ...((!currentQuestion?.inArena) && { arenaAddedAt: new Date() })
+            // Always update arenaAddedAt to maintain the order
+            arenaAddedAt: orderedTimestamp
           }
         });
         
@@ -90,7 +94,7 @@ export async function POST(req: NextRequest) {
             data: {
               questions: {
                 disconnect: {
-                  id: question.id
+                  id: id
                 }
               }
             }
@@ -117,8 +121,10 @@ export async function POST(req: NextRequest) {
         }
         
         return {
-          ...question,
-          contestId: contestId
+          id,
+          order,
+          contestId,
+          timestamp: orderedTimestamp
         };
       })
     );

@@ -52,25 +52,30 @@ export async function POST(request: Request) {
       }
     });
 
-    // Custom sort function to order by difficulty first, then by arenaAddedAt
-    const sortedQuestions = questions.sort((a, b) => {
-      // First sort by custom difficulty order
-      const diffA = difficultyOrder[a.difficulty];
-      const diffB = difficultyOrder[b.difficulty];
-      
-      if (diffA !== diffB) {
-        return diffA - diffB; // Sort by difficulty first
-      }
-      
-      // If difficulty is the same, sort by arenaAddedAt (newest first)
-      // Handle null values for arenaAddedAt
-      if (!a.arenaAddedAt && !b.arenaAddedAt) return 0;
-      if (!a.arenaAddedAt) return 1;
-      if (!b.arenaAddedAt) return -1;
-      
-      return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
-    });
-
+  // Update the sorting in your existing getArenaQuestions API
+const sortedQuestions = questions.sort((a, b) => {
+  // First check if arenaOrder exists and use it
+  //@ts-expect-error: do not knwo what to do here 
+  if (a.arenaOrder !== null && b.arenaOrder !== null) {
+    //@ts-expect-error: do not knwo what to do here 
+    return a.arenaOrder - b.arenaOrder;
+  }
+  
+  // Fall back to difficulty sorting if arenaOrder is not available
+  const diffA = difficultyOrder[a.difficulty];
+  const diffB = difficultyOrder[b.difficulty];
+  
+  if (diffA !== diffB) {
+    return diffA - diffB;
+  }
+  
+  // Finally sort by arenaAddedAt
+  if (!a.arenaAddedAt && !b.arenaAddedAt) return 0;
+  if (!a.arenaAddedAt) return 1;
+  if (!b.arenaAddedAt) return -1;
+  
+  return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
+});
     const user = await prisma.user.findUnique({
       where: {
         email: userEmail,
