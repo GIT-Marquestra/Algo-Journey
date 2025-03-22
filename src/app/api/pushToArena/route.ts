@@ -16,12 +16,15 @@ export async function POST(req: NextRequest) {
     // Create base timestamp (current time)
     const baseTimestamp = new Date();
     
-    const processedQuestions = await Promise.all(
-      questions.map(async (question) => {
+    // Use transaction to ensure all operations succeed or fail together
+    const processedQuestions = await prisma.$transaction(async (tx) => {
+      const results = [];
+      
+      for (const question of questions) {
         const { id, order } = question;
         
         // Find if question exists in TempContestQuestion
-        const tempQuestion = await prisma.tempContestQuestion.findFirst({
+        const tempQuestion = await tx.tempContestQuestion.findFirst({
           where: {
             questions: {
               some: {
@@ -38,7 +41,7 @@ export async function POST(req: NextRequest) {
         const contestId = tempQuestion?.contestId || null;
         
         // Check if QuestionOnContest entry already exists
-        const existingEntry = await prisma.questionOnContest.findFirst({
+        const existingEntry = await tx.questionOnContest.findFirst({
           where: {
             questionId: id
           }
@@ -47,7 +50,7 @@ export async function POST(req: NextRequest) {
         if (existingEntry) {
           // Update the existing entry if contestId is different
           if (existingEntry.contestId !== contestId) {
-            await prisma.questionOnContest.update({
+            await tx.questionOnContest.update({
               where: {
                 id: existingEntry.id
               },
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
           // No need to update if contestId is the same
         } else {
           // Create new entry if it doesn't exist
-          await prisma.questionOnContest.create({
+          await tx.questionOnContest.create({
             data: {
               contestId: contestId,
               questionId: id
@@ -73,7 +76,7 @@ export async function POST(req: NextRequest) {
         
         // Update question status to inArena and set arenaAddedAt timestamp 
         // using the calculated orderedTimestamp
-        await prisma.question.update({    
+        await tx.question.update({    
           where: {
             id: id
           },
@@ -87,7 +90,7 @@ export async function POST(req: NextRequest) {
         // Process temp question if it exists
         if (tempQuestion) {
           // Disconnect the question from temp entry
-          await prisma.tempContestQuestion.update({
+          await tx.tempContestQuestion.update({
             where: {
               id: tempQuestion.id
             },
@@ -101,7 +104,7 @@ export async function POST(req: NextRequest) {
           });
           
           // Check if temp contest has any questions left
-          const remainingQuestions = await prisma.tempContestQuestion.findUnique({
+          const remainingQuestions = await tx.tempContestQuestion.findUnique({
             where: {
               id: tempQuestion.id
             },
@@ -112,7 +115,7 @@ export async function POST(req: NextRequest) {
 
           // If no questions remain, delete the temp contest entry
           if (remainingQuestions && remainingQuestions.questions.length === 0) {
-            await prisma.tempContestQuestion.delete({
+            await tx.tempContestQuestion.delete({
               where: {
                 id: tempQuestion.id
               }
@@ -120,14 +123,21 @@ export async function POST(req: NextRequest) {
           }
         }
         
-        return {
+        results.push({
           id,
           order,
           contestId,
           timestamp: orderedTimestamp
-        };
-      })
-    );
+        });
+      }
+      
+      return results;
+    }, {
+      // Transaction options - you may need to adjust based on your Prisma version
+      maxWait: 5000, // 5s max wait time for transaction
+      timeout: 10000, // 10s timeout for the transaction
+      isolationLevel: 'Serializable' // Highest isolation level
+    });
 
     return NextResponse.json({
       success: true,
@@ -140,7 +150,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: false,
       error: 'Internal server error',
-      details: error
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }
