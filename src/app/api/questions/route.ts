@@ -54,12 +54,6 @@ export async function POST(request: Request) {
 
     // Sort the questions
     const sortedQuestions = questions.sort((a, b) => {
-      // First check if arenaOrder exists and use it
-      //@ts-expect-error: do not know what to do here 
-      if (a.arenaOrder !== null && b.arenaOrder !== null) {
-        //@ts-expect-error: do not know what to do here 
-        return a.arenaOrder - b.arenaOrder;
-      }
       
       // Fall back to difficulty sorting if arenaOrder is not available
       const diffA = difficultyOrder[a.difficulty];
