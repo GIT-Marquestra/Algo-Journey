@@ -134,9 +134,9 @@ export async function POST(req: NextRequest) {
       return results;
     }, {
       // Transaction options - you may need to adjust based on your Prisma version
-      maxWait: 5000, // 5s max wait time for transaction
-      timeout: 10000, // 10s timeout for the transaction
-      isolationLevel: 'Serializable' // Highest isolation level
+      maxWait: 10000, // 5s max wait time for transaction
+      timeout: 40000, // 10s timeout for the transaction
+      isolationLevel: 'ReadCommitted' // Highest isolation level
     });
 
     return NextResponse.json({
