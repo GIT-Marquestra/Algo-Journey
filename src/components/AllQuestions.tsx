@@ -671,6 +671,9 @@ export default function AllQuestions() {
                       <HintsComponent questionId={q.id} key={q.id} questionSlug={q.slug} isAdmin={isAdmin}>
                       <Card key={q.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
                         <CardContent className="p-4">
+                                {q.inArena && (
+                                  <div className="w-2 h-2 rounded-full bg-purple-500" title="In Arena"></div>
+                                )}
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                               <div className={`${getDifficultyBgColor(q.difficulty)} p-3 rounded-lg`}>
@@ -691,6 +694,7 @@ export default function AllQuestions() {
                                   <Badge className={getDifficultyColor(q.difficulty)}>
                                     {q.difficulty.charAt(0) + q.difficulty.slice(1).toLowerCase()}
                                   </Badge>
+                                  
                                 </div>
                                 <div className="flex flex-wrap gap-1 mt-2">
                                   {q.questionTags.map((tag) => (
