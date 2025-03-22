@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const baseTimestamp = new Date();
     
     const processedQuestions = await Promise.all(
-      questions.map(async (question, index) => {
+      questions.map(async (question) => {
         const { id, order } = question;
         
         // Find if question exists in TempContestQuestion
