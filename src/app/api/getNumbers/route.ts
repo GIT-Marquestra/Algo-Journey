@@ -15,7 +15,8 @@ export async function POST() {
             },
             orderBy: {
                 individualPoints: 'desc'
-            }
+            },
+            take: 10
         })
         const totalGroups = await prisma.group.count()
 

@@ -11,6 +11,7 @@ import SearchInput from './SearchInput';
 import Link from 'next/link';
 import { Users, UserCheck, Award, Target, ChevronRight } from 'lucide-react';
 import useStore from '@/store/store';
+import SearchBar, { ServerSideSearchConfig } from './SearchBarGenX';
 
 interface User {
   id: string;
@@ -153,6 +154,31 @@ const AdminDashboard = () => {
     getNumbers();
   }, [getNumbers]);
 
+  const serverConfig: ServerSideSearchConfig<string> = {
+    mode: "serverSide",
+    endpoint: '/api/getNumbers/users/search',
+    debounceMs: 300,
+    minQueryLength: 2,
+    responsePath: "formattedUsers",
+    placeholder: 'Search users...',
+    onResultSelect: async (name: string) => {
+      try {
+        const res = await axios.post('/api/getNumbers/users/search/result', { name })
+        if(res.status !== 200) {
+          toast.error('Some error occured while searching')
+        }
+        setFilteredUsers(res.data.formattedUsers)
+      } catch (error) {
+        console.error('Error in onResultSelect function in allquestions: ', error)
+      }
+    },
+  renderItem: (userName: string) => (
+    <div className="flex flex-col">
+      <span className="font-medium">{userName}</span>
+    </div>
+  )
+}
+
   return (
     <div className="min-h-screen bg-gray-50"> 
       <div className="container mx-auto p-8 pt-20 space-y-8">
@@ -213,7 +239,9 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent className="pt-6">
             <div className="mb-6">
-              <SearchInput<User> items={users} onResultsChange={setFilteredUsers} />   
+              <SearchBar 
+              config={serverConfig}
+              />
             </div>
             <ScrollArea className="h-[550px] pr-4">
               <UserList loading={loading} users={filteredUsers} />

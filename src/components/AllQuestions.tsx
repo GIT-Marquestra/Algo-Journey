@@ -87,7 +87,6 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
-  const [loadingArena, setLoadingArena] = useState(false);
   const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useStore()
@@ -179,12 +178,6 @@ export default function AllQuestions() {
     toast.success("Question removed from test");
   };
 
-
-
-  const removeFromArena = (questionId: string) => {
-    setSelectedArenaQuestions(prev => prev.filter(q => q.id !== questionId));
-    toast.success("Question removed from Arena");
-  };
 
   const validateDates = () => {
     if (!startTime || !endTime) {
@@ -286,38 +279,6 @@ export default function AllQuestions() {
         </div>
       </div>
     ), { duration: 5000 });
-  };
-
-  const handlePushToArena = async () => {
-    if (selectedArenaQuestions.length === 0) {
-      toast.error("Please select at least one question to add to arena.");
-      return;
-    }
-  
-    // Create ordered map with position information
-    const questionsWithOrder = selectedArenaQuestions.map((question, index) => ({
-      id: question.id,
-      order: index + 1  // Using 1-based indexing
-    }));
-  
-    setLoadingArena(true);
-    try {
-      const response = await axios.post("/api/pushToArena", { 
-        questions: questionsWithOrder
-      });
-      
-      if (response.status === 200) {
-        toast.success("Pushed Successfully");
-        setSelectedArenaQuestions([]); // Clear selection after successful push
-      } else {
-        toast.error(response.data.message || "Failed to push to arena");
-      }
-    } catch (error) {
-      console.error("Error adding to arena:", error);
-      toast.error("Failed to add to arena.");
-    } finally {
-      setLoadingArena(false);
-    }
   };
 
   const handleDeleteQuestion = async (id: string) => {
