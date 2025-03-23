@@ -16,9 +16,14 @@ export async function POST() {
         take: 10
       });
 
-      const questionsCount = await prisma.question.count()
+      const questionsArena = await prisma.question.findMany({
+        select:{
+          inArena: true
+        }
+      })
 
-      return NextResponse.json({ questions, questionsCount }, { status: 200 })
+
+      return NextResponse.json({ questions, questionsCount: questionsArena.length, questionsInArena: questionsArena.filter((p) => p.inArena).length }, { status: 200 })
     } catch (error) {
       console.log(error)
       return NextResponse.json({ error }, { status: 400 })

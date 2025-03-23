@@ -76,6 +76,7 @@ interface QuestionTag {
 export default function AllQuestions() {
   // State declarations preserved from original component
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [numberofArenaQuestions, setNumberofArenaQuestions] = useState(0)
   const [dbQuestionsCount, setDbQuestionsCount] = useState(0)
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
@@ -104,10 +105,11 @@ export default function AllQuestions() {
   const fetchQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.post<{ questions: Question[], questionsCount: number }>("/api/getQuestions");
+      const response = await axios.post<{ questions: Question[], questionsCount: number, questionsInArena: number }>("/api/getQuestions");
       if (response.status === 200) {
         setQuestions(response.data.questions);
         setDbQuestionsCount(response.data.questionsCount)
+        setNumberofArenaQuestions(response.data.questionsInArena)
         setFilteredQuestions(response.data.questions);
       } else {
         toast.error("Failed to fetch questions");
@@ -416,7 +418,7 @@ export default function AllQuestions() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-gray-800">
-                {questions.filter((p) => p.inArena).length}
+                {numberofArenaQuestions}
               </p>
               <p className="text-xs text-gray-500 mt-1">Questions in practice arena</p>
             </CardContent>
