@@ -87,7 +87,6 @@ export default function AllQuestions() {
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
-  const [selectedArenaQuestions, setSelectedArenaQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { isAdmin } = useStore()
   const Router = useRouter()
@@ -392,7 +391,7 @@ export default function AllQuestions() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Card className="bg-white border-l-4 border-l-blue-400 shadow-sm hover:shadow-md transition-all">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
@@ -415,7 +414,7 @@ export default function AllQuestions() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold text-gray-800">
-                0
+                {questions.filter((p) => p.inArena).length}
               </p>
               <p className="text-xs text-gray-500 mt-1">Questions in practice arena</p>
             </CardContent>
@@ -434,18 +433,6 @@ export default function AllQuestions() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-l-4 border-l-rose-400 shadow-sm hover:shadow-md transition-all">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Swords className="h-4 w-4 text-rose-500" />
-                Arena Selection
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-gray-800">{selectedArenaQuestions.length}</p>
-              <p className="text-xs text-gray-500 mt-1">Questions ready for arena</p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Main Content */}
