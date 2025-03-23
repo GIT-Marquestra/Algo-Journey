@@ -7,7 +7,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import SearchInput from './SearchInput';
 import Link from 'next/link';
 import { Users, UserCheck, Award, Target, ChevronRight } from 'lucide-react';
 import useStore from '@/store/store';
