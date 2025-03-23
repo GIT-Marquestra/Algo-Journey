@@ -16,7 +16,9 @@ export async function POST() {
         take: 10
       });
 
-      return NextResponse.json({ questions }, { status: 200 })
+      const questionsCount = await prisma.question.count()
+
+      return NextResponse.json({ questions, questionsCount }, { status: 200 })
     } catch (error) {
       console.log(error)
       return NextResponse.json({ error }, { status: 400 })

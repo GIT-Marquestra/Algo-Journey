@@ -76,6 +76,7 @@ interface QuestionTag {
 export default function AllQuestions() {
   // State declarations preserved from original component
   const [questions, setQuestions] = useState<Question[]>([]);
+  const [dbQuestionsCount, setDbQuestionsCount] = useState(0)
   const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
@@ -103,9 +104,10 @@ export default function AllQuestions() {
   const fetchQuestions = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await axios.post<{ questions: Question[] }>("/api/getQuestions");
+      const response = await axios.post<{ questions: Question[], questionsCount: number }>("/api/getQuestions");
       if (response.status === 200) {
         setQuestions(response.data.questions);
+        setDbQuestionsCount(response.data.questionsCount)
         setFilteredQuestions(response.data.questions);
       } else {
         toast.error("Failed to fetch questions");
@@ -400,7 +402,7 @@ export default function AllQuestions() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-gray-800">{questions.length}</p>
+              <p className="text-3xl font-bold text-gray-800">{dbQuestionsCount}</p>
               <p className="text-xs text-gray-500 mt-1">Total questions in database</p>
             </CardContent>
           </Card>

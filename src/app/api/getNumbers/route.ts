@@ -18,14 +18,14 @@ export async function POST() {
             },
             take: 10
         })
+        const userCount = await prisma.user.count()
         const totalGroups = await prisma.group.count()
 
         const totalContests = await prisma.contest.count()
         
-        const totalUsers = usersArray.length
         
         const response = {
-            totalUsers,
+            totalUsers: userCount,
             totalGroups,
             totalContests,
             usersArray,
