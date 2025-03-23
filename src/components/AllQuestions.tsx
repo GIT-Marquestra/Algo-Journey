@@ -25,6 +25,7 @@ import useStore from '@/store/store';
 import { useRouter } from 'next/navigation';
 import { HintsComponent } from './Modals/Hints';
 import UpdateQuestionComponent from './Modals/UpdateQuestion';
+import SearchBar, { ServerSideSearchConfig } from './SearchBarGenX';
 
 const AVAILABLE_TAGS = [
   "PrefixSum",
@@ -385,6 +386,31 @@ export default function AllQuestions() {
       }
     }
   };
+
+  const serverConfig: ServerSideSearchConfig<string> = {
+    mode: "serverSide",
+    endpoint: '/api/questions/search',
+    debounceMs: 300,
+    minQueryLength: 2,
+    responsePath: "slugs",
+    placeholder: 'Search questions...',
+    onResultSelect: async (questionSlug: string) => {
+      try {
+        const res = await axios.post('/api/questions/search/result', { query: questionSlug })
+        if(res.status !== 200) {
+          toast.error('Some error occured while searching')
+        }
+        setFilteredQuestions(res.data.question)
+      } catch (error) {
+        console.error('Error in onResultSelect function in allquestions: ', error)
+      }
+    },
+  renderItem: (questionSlug: string) => (
+    <div className="flex flex-col">
+      <span className="font-medium">{questionSlug}</span>
+    </div>
+  )
+}
  
 
   return (
@@ -568,55 +594,6 @@ export default function AllQuestions() {
                 )}
               </CardContent>
             </Card>
-
-            {/* Arena Questions */}
-            <Card className="bg-white shadow-sm hover:shadow-md transition-all">
-              <CardHeader className="border-b border-gray-100 pb-4">
-                <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <Swords className="h-5 w-5 text-indigo-500" />
-                  Arena Questions
-                </CardTitle>
-                <CardDescription className="text-gray-500">Questions to push to practice arena</CardDescription>
-              </CardHeader>
-              <CardContent className="pt-4">
-                {selectedArenaQuestions.length === 0 ? (
-                  <div className="text-center py-6">
-                    <p className="text-gray-500">No questions selected for arena</p>
-                    <p className="text-sm text-gray-400 mt-2">Add questions from the list on the right</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {selectedArenaQuestions.map((q) => (
-                      <div key={q.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${q.difficulty === 'EASY' || q.difficulty === 'BEGINNER' ? 'bg-green-500' : q.difficulty === 'MEDIUM' ? 'bg-amber-500' : 'bg-red-500'}`}></div>
-                          <Link href={q.leetcodeUrl ? q.leetcodeUrl : q.codeforcesUrl || ''} target='_blank'>
-                            <span className="font-medium text-indigo-700 hover:text-indigo-900 transition-colors">{q.slug}</span>
-                          </Link>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFromArena(q.id)}
-                          className="text-gray-500 hover:text-red-500"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter className="border-t border-gray-100 pt-4">
-                <Button
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                  disabled={loadingArena}
-                  onClick={handlePushToArena}
-                >
-                  {loadingArena ? "Pushing to Arena..." : "Push to Arena"}
-                </Button>
-              </CardFooter>
-            </Card>
           </div>
 
           {/* Main Content */}
@@ -627,6 +604,11 @@ export default function AllQuestions() {
                   <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
                     <Code className="h-5 w-5 text-indigo-500" />
                     Available Questions
+                  </CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                   <SearchBar
+                   config={serverConfig}
+                   />
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -752,7 +734,6 @@ export default function AllQuestions() {
                                 size="sm"
                                 variant="outline"
                                 className="border-amber-500 text-amber-500 hover:bg-amber-50"
-                                // onClick={() => addToArena(q)}
                                 onClick={() => handleAddToArena(q.id)}
                               >
                                 <Swords className="h-4 w-4 mr-1" /> Add to Arena
