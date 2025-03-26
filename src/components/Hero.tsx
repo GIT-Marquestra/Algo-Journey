@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ButtonX } from './ui/moving-border';
 import img1 from '@/images/landing.jpg'
-import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin, LogIn } from "lucide-react";
+import { ChevronDown, ChevronUp, Code, Database, Layout, Linkedin } from "lucide-react";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -95,24 +95,10 @@ const HeroSection = () => {
                 className="w-40 p-5 md:w-48 bg-gradient-to-r flex items-center justify-center from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg hover:shadow-xl transition-all duration-300"
                 asChild
               >
-                <Link href="/auth/signin" className="text-white flex items-center justify-center">
-                    Get Started Now <ArrowRight className="h-5 w-5 text-white" />
+                <Link href="/auth/signin" className="text-white mr-2 flex items-center justify-center">
+                    Get Started Now 
                 </Link>
               </ButtonX>
-              
-              <div className="flex flex-col items-center">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-40 md:w-48 border-blue-300 hover:bg-blue-50 shadow-md transition-all duration-300"
-                  asChild
-                >
-                  <Link href="/auth/signin?demo=true" className="text-blue-600 flex items-center">
-                    Try Demo <LogIn className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <p className="text-xs text-gray-500 mt-2">Demo credentials: Username: Visitor, Password: Visitor1234</p>
-              </div>
             </>
           )}
         </motion.div>
