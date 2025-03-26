@@ -43,6 +43,7 @@ const HeroSection = () => {
       description: "Structured curriculum designed to take you from beginner to advanced algorithm master.",
       alignment: "left"
     },
+    // 
     {
       image: projectEval,
       title: "Real-time Performance Tracking and project evaluation by Gemini",
