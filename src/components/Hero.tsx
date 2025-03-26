@@ -1,11 +1,16 @@
 'use client'
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { ButtonX } from './ui/moving-border';
 import img1 from '@/images/landing.jpg'
-import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin, Star, Award, BarChart3, BookOpen, LogIn } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Code, Database, Layout, Linkedin, LogIn } from "lucide-react";
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import dashboard from '@/images/dashboard.png';
+import arena0 from '@/images/arena0.png'
+import arena from '@/images/arena.png'
+import projectEval from '@/images/projectEval.png'
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,11 +18,38 @@ import {
 } from "@/components/ui/collapsible"
 import { TextGenerateEffect } from './ui/text-generate-effect';
 import { motion } from 'framer-motion';
+import { CardBody, CardContainer, CardItem } from './ui/3d-card';
 
 const HeroSection = () => {
   const sentence = "We are dedicated to providing an exceptional learning experience."
   const { data: session } = useSession()
   const [isOpen, setIsOpen] = useState(false);
+  const imageDescriptions = [
+    {
+      image: dashboard,
+      title: "Watch your profile grow",
+      description: "Be consitent and track your progress",
+      alignment: "left"
+    },
+    {
+      image: arena0,
+      title: "Interactive Coding Challenges",
+      description: "Engage with real-world coding problems that test and enhance your algorithmic thinking.",
+      alignment: "right"
+    },
+    {
+      image: arena,
+      title: "Comprehensive Learning Paths",
+      description: "Structured curriculum designed to take you from beginner to advanced algorithm master.",
+      alignment: "left"
+    },
+    {
+      image: projectEval,
+      title: "Real-time Performance Tracking and project evaluation by Gemini",
+      description: "Monitor your progress, identify strengths, and focus on areas that need improvement.",
+      alignment: "right"
+    }
+  ];
 
   return (
     <div className="bg-gradient-to-b from-white via-white to-gray-50 relative w-screen h-auto flex flex-col items-center overflow-hidden">
@@ -57,15 +89,15 @@ const HeroSection = () => {
         >
           {!session && (
             <>
-              <Button
-                size="lg"
-                className="animate-[buttonPulse_360s_infinite_linear] w-40 md:w-48 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg hover:shadow-xl transition-all duration-300"
+              <ButtonX
+                size="md"
+                className="w-40 p-5 md:w-48 bg-gradient-to-r flex items-center justify-center from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-lg hover:shadow-xl transition-all duration-300"
                 asChild
               >
-                <Link href="/auth/signin" className="text-white flex items-center">
-                  Get Started Now <ArrowRight className="ml-2 h-5 w-5 text-white" />
+                <Link href="/auth/signin" className="text-white flex items-center justify-center">
+                    Get Started Now <ArrowRight className="h-5 w-5 text-white" />
                 </Link>
-              </Button>
+              </ButtonX>
               
               <div className="flex flex-col items-center">
                 <Button
@@ -95,6 +127,47 @@ const HeroSection = () => {
           />
         </div>
 
+
+        <div className="max-w-6xl mt-8 w-full px-4 md:px-8 py-16 mx-auto">
+          
+          
+        {imageDescriptions.map((item, index) => (
+  <motion.div 
+    key={index}
+    className={`flex flex-col ${item.alignment === 'left' ? 'md:flex-row' : 'md:flex-row-reverse'} items-center gap-8 mb-16`}
+    initial={{ opacity: 0, x: item.alignment === 'left' ? -50 : 50 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6 }}
+  >
+    <CardContainer className="inter-var w-full">
+      <CardBody className="bg-gray-50 relative group/card dark:hover:shadow-2xl dark:hover:shadow-emerald-500/[0.1] dark:bg-black dark:border-white/[0.2] border-black/[0.1] w-full h-auto rounded-xl p-6 border">
+        <CardItem
+          translateZ="50"
+          className="w-full"
+        >
+          <Image
+            src={item.image}
+            height="1000"
+            width="1600"
+            className="w-full h-[400px] object-cover rounded-xl group-hover/card:shadow-xl"
+            alt={item.title}
+          />
+        </CardItem>
+      </CardBody>
+    </CardContainer>
+    <div className={`w-full md:w-1/2 ${item.alignment === 'left' ? 'md:pl-8' : 'md:pr-8'}`}>
+      <h3 className="text-2xl md:text-3xl font-bold text-blue-700 mb-4">
+        {item.title}
+      </h3>
+      <p className="text-gray-600 text-base md:text-lg leading-relaxed">
+        {item.description}
+      </p>
+    </div>
+  </motion.div>
+))}
+        </div>
+
         {/* Demo Account Info Box */}
         <motion.div 
           className="max-w-lg mx-auto my-10 px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md border border-blue-100"
@@ -120,63 +193,9 @@ const HeroSection = () => {
 
         {/* Features Section */}
         <div className="max-w-6xl w-full px-4 md:px-8 py-16 mx-auto">
-          <motion.h1 
-            className="text-black font-bold text-3xl md:text-4xl text-center mb-10"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="relative inline-block">
-              Key Features
-              <span className="absolute left-0 bottom-0 w-full h-1 bg-gradient-to-r from-blue-400 to-indigo-600 transform scale-x-0 transition-transform group-hover:scale-x-100"></span>
-            </span>
-          </motion.h1>
+          
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
-            {[
-              {
-                icon: <Star className="h-6 w-6 text-blue-500" />,
-                title: "Weekly Coding Contests",
-                description: "Compete, rank up, and sharpen your problem-solving skills.",
-              },
-              {
-                icon: <BarChart3 className="h-6 w-6 text-indigo-500" />,
-                title: "Interactive Progress Tracker",
-                description: "See how many problems you've solved and track your growth.",
-              },
-              {
-                icon: <Award className="h-6 w-6 text-blue-500" />,
-                title: "Competitive Leaderboard",
-                description: "Rank yourself among peers in weekly & monthly contests.",
-              },
-              {
-                icon: <BookOpen className="h-6 w-6 text-indigo-500" />,
-                title: "Topic-Wise Practice",
-                description: "Solve handpicked problems to master Data Structures & Algorithms.",
-              },
-            ].map((feature, index) => (
-              <motion.div 
-                key={index} 
-                className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex items-start">
-                  <div className="p-3 bg-gray-50 rounded-lg group-hover:bg-blue-50 transition-colors duration-300">
-                    {feature.icon}
-                  </div>
-                  <div className="ml-4">
-                    <h2 className="text-black font-extrabold text-xl group-hover:text-blue-600 transition-colors duration-300">{feature.title}</h2>
-                    <p className="text-gray-600 mt-1">{feature.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          
 
           <motion.div 
             className="text-center mt-32 md:mt-48"

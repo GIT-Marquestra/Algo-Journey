@@ -45,7 +45,7 @@
     "cors": "^2.8.5",
     "encoding": "^0.1.13",
     "express": "^4.21.2",
-    "framer-motion": "^12.4.3",
+    "framer-motion": "^12.6.0",
     "http": "^0.0.1-security",
     "leetcode-api": "^1.1.0",
     "leetcode-public-api": "^1.1.1",

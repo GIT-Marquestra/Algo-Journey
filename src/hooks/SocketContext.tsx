@@ -4,13 +4,7 @@ import { Difficulty } from "@prisma/client";
 import { io, Socket } from "socket.io-client";
 import useStore from "@/store/store";
 
-// export interface Contest {
-//   id: string;
-//   questions: QuestionOnContest[];
-//   startTime: string;
-//   endTime: string;
-//   duration: number;
-// }
+
 
 export interface QuestionPar {
   id: string;

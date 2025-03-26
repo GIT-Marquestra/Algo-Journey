@@ -6,8 +6,6 @@ export async function POST(req: Request) {
   const request = await req.json()
 
   const { accessToken } = request
-
-  console.log(accessToken)
  
   if (!accessToken) {
     return NextResponse.json({ message: "GitHub not connected" }, { status: 235 });
@@ -20,8 +18,6 @@ export async function POST(req: Request) {
       headers: { "X-GitHub-Api-Version": "2022-11-28" },
     });
     const repos = response.data.map((p) => p.name)
-
-    console.log(repos)
 
     const githubUsername = response.data[0].owner.login
 
