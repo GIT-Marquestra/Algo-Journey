@@ -805,7 +805,7 @@ const UnifiedGroupManagement = () => {
 
   return (isLoading ? (<Card className="max-w-6xl mx-auto shadow-md border border-gray-100 mt-20 animate-pulse">
     {/* Header Skeleton */}
-    <CardHeader className="bg-gradient-to-r from-indigo-500 to-indigo-700 text-white">
+    <CardHeader className="bg-gradient-to-r text-white">
       <div className="flex items-center">
         <div className="bg-white/20 p-2 rounded-full mr-3">
           <Users className="h-5 w-5 text-white" />
@@ -844,11 +844,11 @@ const UnifiedGroupManagement = () => {
   </Card>) :
     (<Card className="max-w-6xl mx-auto shadow-md border border-gray-100 mt-20">
       <div className="flex items-center justify-between mb-8">
-        <div className='flex p-2 items-center justify-evenly'>
-          <h1 className="text-3xl font-bold text-gray-800 p-2">
+        <div className='p-2 items-center'>
+          <h1 className="text-3xl font-bold text-gray-800">
             Group <span className="text-indigo-600">Management</span>
           </h1>
-          <p className="text-gray-600 mt-1">Collaborate and Improve together!</p>
+          <p className="text-gray-600 mt-1 p-2">Collaborate and Improve together!</p>
         </div>
       </div>
       <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
