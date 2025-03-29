@@ -44,20 +44,50 @@ export async function fetchLatestSubmissionsCodeForces(username: string){
 } 
 
 export async function fetchUserStats(username: string) {
-    try {
-      const response = await axios.get(`https://leetcode-rest-api.onrender.com/profile`, { data: { username } });
-      const total = await fetchLatestSubmissionsLeetCode(username)
-      const returnData = {
-        ...response.data.data.submitStatsGlobal,
-        questionCount: total?.allQuestionsCount,  
-        ranking: total?.matchedUser?.profile.ranking, 
-        leetcodeUsername: username  
+  try {
+    const query = {
+      query: `{
+        matchedUser(username: "${username}") {
+          username
+          submitStats: submitStatsGlobal {
+            acSubmissionNum {
+              difficulty
+              count
+              submissions
+            }
+          }
+        }
+      }`
+    };
+
+    const response = await axios.post("https://leetcode.com/graphql", query, {
+      headers: {
+        "Content-Type": "application/json"
       }
-      return returnData;
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
+    });
+
+
+    const userData = response.data?.data?.matchedUser;
+    if (!userData) {
+      throw new Error("User not found on LeetCode");
     }
+    const result = {
+        leetcodeUsername: userData.username,
+        totalSolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "All")?.count || 0,
+        easySolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "Easy")?.count || 0,
+        mediumSolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "Medium")?.count || 0,
+        hardSolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "Hard")?.count || 0
+      }
+
+
+    return result;
+
+
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    return null;
   }
+}
   
 
 export async function fetchCodeforcesUserData(username: string) {

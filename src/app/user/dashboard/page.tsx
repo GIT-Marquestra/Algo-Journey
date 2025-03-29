@@ -44,7 +44,7 @@ import { useSession } from 'next-auth/react';
 import { cn } from "@/lib/utils"
 import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { fetchCodeforcesUserData, fetchUserStats } from '@/serverActions/fetch';
+import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
 import ProjectRatingNotification from '@/components/Notification';
 import { CodeforcesSkeleton, ContestsSkeleton, LeetCodeSkeleton, StatsCardSkeleton } from '@/components/Skeletons';
@@ -227,25 +227,32 @@ export default function Dashboard() {
       fetchUserStats(usernames.data.leetcodeUsername),
       fetchCodeforcesUserData(usernames.data.codeforcesUsername),
     ]);
-  
-  
+
+
+    const responseTotal = await fetchLatestSubmissionsLeetCode(usernames.data.leetcodeUsername)
+
+
     const leetcodeData = {
-      totalSolved: leetData.acSubmissionNum[0].count,
-      totalQuestions: leetData.questionCount[0].count,
-      easySolved: leetData.acSubmissionNum[1].count,
-      totalEasy: leetData.questionCount[1].count,
-      mediumSolved: leetData.acSubmissionNum[2].count,
-      leetcodeUsername: leetData.leetcodeUsername,
-      totalMedium: leetData.questionCount[2].count,
-      hardSolved: leetData.acSubmissionNum[3].count,
-      totalHard: leetData.questionCount[3].count,
-      ranking: leetData.ranking
+      totalSolved: leetData?.totalSolved,
+      totalQuestions: responseTotal?.allQuestionsCount[0]?.count,
+      easySolved: leetData?.easySolved,
+      totalEasy: responseTotal?.allQuestionsCount[1]?.count,
+      mediumSolved: leetData?.mediumSolved,
+      leetcodeUsername: leetData?.leetcodeUsername,
+      totalMedium: responseTotal?.allQuestionsCount[2].count,
+      hardSolved: leetData?.hardSolved,
+      totalHard: responseTotal?.allQuestionsCount[3]?.count,
+      ranking: responseTotal?.matchedUser?.profile.ranking
   
     }
 
+
+    console.log(leetData)
+
   
     return {
-      leetcodeData: leetcodeData,
+      //@ts-expect-error: dont know what to do here
+      leetcodeData: leetcodeData || null,
       codeforcesData: codeforcesData || null
     };
     } catch(error) {
