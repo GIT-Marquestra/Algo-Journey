@@ -64,9 +64,11 @@ export async function POST(req: NextRequest) {
                 await Promise.all(
                     questions.map(async (questionId) => {
                         const question = await prisma.questionOnContest.findFirst({
-                            where: { id: questionId },
+                            where: { questionId: questionId },
                             include: { question: true },
                         });
+
+                        console.log('question: ', question)
 
                         if (!question || !question.question) {
                             throw new Error(`Invalid questionId: ${questionId}`);

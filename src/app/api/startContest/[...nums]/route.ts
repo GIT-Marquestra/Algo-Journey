@@ -119,12 +119,11 @@ export async function POST(
                 }, { status: 490 });
             }
 
-           
             const existingSubmission = await prisma.submission.findFirst({
                 where: {
                     userId: user.id,
                     contestId: contest.id,
-                    status: "PENDING"
+                    status: { in: ['PENDING', "ACCEPTED"] }
                 }   
             });
             

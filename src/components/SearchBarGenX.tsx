@@ -3,7 +3,7 @@ import axios from 'axios';
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2, X } from 'lucide-react';
 
-// Types for our search configuration
+
 type SearchMode = 'clientSide' | 'serverSide';
 
 interface BaseSearchConfig<T> {
