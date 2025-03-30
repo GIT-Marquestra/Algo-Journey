@@ -20,6 +20,7 @@ import {
 import { Skeleton } from './ui/skeleton';
 import useStore from '@/store/store';
 import { HintsComponent } from './Modals/Hints';
+import useTagStore from '@/store/tagsStore';
 
 interface Question {
   id: string;
@@ -62,24 +63,7 @@ interface QuestionTag {
   name: string;
 }
 
-const AVAILABLE_TAGS = [
-  "PrefixSum",
-  "TwoPointers",
-  "1DArrays",
-  "Graph",
-  "2DArrays",
-  "TimeComplexity",
-  "BasicMaths",
-  "SpaceComplexity",
-  "BinarySearch",
-  "DP",
-  "Sorting",
-  "LinearSearch",
-  "Exponentiation",
-  "Recursion",
-  "String",
-  "HashMaps/Dictionary"
-];
+
 
 const DIFFICULTIES = [
   { value: 'ALL', label: 'All Difficulties' },
@@ -91,6 +75,7 @@ const DIFFICULTIES = [
 ];
 
 const QuestionSolving = () => {
+  const { tags } = useTagStore()
   const { array } = useParams();
   const [loading, setLoading] = useState<boolean>(true);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
@@ -319,7 +304,7 @@ const QuestionSolving = () => {
               <div className="space-y-3">
                 <p className="text-sm font-medium text-gray-700">Filter by tags:</p>
                 <div className="flex flex-wrap gap-2">
-                  {AVAILABLE_TAGS.map(tag => (
+                  {tags.map(tag => (
                     <Button
                       key={tag}
                       variant={selectedTags.includes(tag) ? "default" : "outline"}

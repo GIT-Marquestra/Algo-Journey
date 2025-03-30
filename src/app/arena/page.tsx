@@ -6,79 +6,54 @@ import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
 import { Code, BookOpen, Brain, ChevronRight, Target, Trophy } from 'lucide-react';
 import CustomizeDropdown from '@/components/ArenaDropdown';
+import useTagStore from '@/store/tagsStore';
 
-const topics = [
-  "PrefixSum",
-  "TwoPointers",
-  "1DArrays",
-  "Graph",
-  "2DArrays",
-  "TimeComplexity",
-  "BasicMaths",
-  "SpaceComplexity",
-  "BinarySearch",
-  "DP",
-  "Sorting",
-  "LinearSearch",
-  "Exponentiation",
-  "Recursion"
-] as const;
+// Topic categories for color assignment with specific types
+type TopicCategory = 'algorithms' | 'dataStructures' | 'concepts';
 
-type TopicType = typeof topics[number];
-
-// Simplified topic categories for color assignment
-const topicCategories: Record<TopicType, 'algorithms' | 'dataStructures' | 'concepts'> = {
-  "PrefixSum": 'algorithms',
-  "TwoPointers": 'algorithms',
-  "BinarySearch": 'algorithms',
-  "LinearSearch": 'algorithms',
-  "Sorting": 'algorithms',
-  "DP": 'algorithms',
-  "Recursion": 'algorithms',
-  "1DArrays": 'dataStructures',
-  "2DArrays": 'dataStructures',
-  "Graph": 'dataStructures',
-  "TimeComplexity": 'concepts',
-  "SpaceComplexity": 'concepts',
-  "BasicMaths": 'concepts',
-  "Exponentiation": 'concepts'
+// Mapping for icons and categories - maintained in frontend
+const topicMappings: Record<string, {
+  category: TopicCategory;
+  icon: React.ReactNode;
+}> = {
+  "PrefixSum": { category: 'algorithms', icon: <Code className="h-5 w-5" /> },
+  "TwoPointers": { category: 'algorithms', icon: <Code className="h-5 w-5" /> },
+  "BinarySearch": { category: 'algorithms', icon: <Brain className="h-5 w-5" /> },
+  "LinearSearch": { category: 'algorithms', icon: <Target className="h-5 w-5" /> },
+  "Sorting": { category: 'algorithms', icon: <Code className="h-5 w-5" /> },
+  "DP": { category: 'algorithms', icon: <Brain className="h-5 w-5" /> },
+  "Recursion": { category: 'algorithms', icon: <Brain className="h-5 w-5" /> },
+  "1DArrays": { category: 'dataStructures', icon: <Code className="h-5 w-5" /> },
+  "2DArrays": { category: 'dataStructures', icon: <Code className="h-5 w-5" /> },
+  "Graph": { category: 'dataStructures', icon: <Code className="h-5 w-5" /> },
+  "TimeComplexity": { category: 'concepts', icon: <Code className="h-5 w-5" /> },
+  "SpaceComplexity": { category: 'concepts', icon: <Code className="h-5 w-5" /> },
+  "BasicMaths": { category: 'concepts', icon: <BookOpen className="h-5 w-5" /> },
+  "Exponentiation": { category: 'concepts', icon: <BookOpen className="h-5 w-5" /> }
 };
 
-// Topic icon mapping
-const topicIcons: Record<TopicType, React.ReactNode> = {
-  "PrefixSum": <Code className="h-5 w-5" />,
-  "TwoPointers": <Code className="h-5 w-5" />,
-  "1DArrays": <Code className="h-5 w-5" />,
-  "Graph": <Code className="h-5 w-5" />,
-  "2DArrays": <Code className="h-5 w-5" />,
-  "TimeComplexity": <Code className="h-5 w-5" />,
-  "BasicMaths": <BookOpen className="h-5 w-5" />,
-  "SpaceComplexity": <Code className="h-5 w-5" />,
-  "BinarySearch": <Brain className="h-5 w-5" />,
-  "DP": <Brain className="h-5 w-5" />,
-  "Sorting": <Code className="h-5 w-5" />,
-  "LinearSearch": <Target className="h-5 w-5" />,
-  "Exponentiation": <BookOpen className="h-5 w-5" />,
-  "Recursion": <Brain className="h-5 w-5" />
+// Default fallbacks for unknown topics
+const defaultMapping = {
+  category: 'concepts' as TopicCategory,
+  icon: <Code className="h-5 w-5" />
 };
 
-// Get color for each topic based on category
-const getTopicColor = (topic: TopicType): {bg: string, border: string, text: string, lightBg: string} => {
-  const category = topicCategories[topic];
-  
-  // Reduced color palette based on category
-  const categoryColors = {
-    'algorithms': {bg: "bg-indigo-500", border: "border-indigo-400", text: "text-indigo-500", lightBg: "bg-indigo-50"},
-    'dataStructures': {bg: "bg-teal-500", border: "border-teal-400", text: "text-teal-500", lightBg: "bg-teal-50"},
-    'concepts': {bg: "bg-blue-500", border: "border-blue-400", text: "text-blue-500", lightBg: "bg-blue-50"}
-  };
-  
-  return categoryColors[category];
+// Color schemes based on category
+const categoryColors: Record<TopicCategory, {
+  bg: string, 
+  border: string, 
+  text: string, 
+  lightBg: string
+}> = {
+  'algorithms': {bg: "bg-indigo-500", border: "border-indigo-400", text: "text-indigo-500", lightBg: "bg-indigo-50"},
+  'dataStructures': {bg: "bg-teal-500", border: "border-teal-400", text: "text-teal-500", lightBg: "bg-teal-50"},
+  'concepts': {bg: "bg-blue-500", border: "border-blue-400", text: "text-blue-500", lightBg: "bg-blue-50"}
 };
 
 const TopicGrid: React.FC = () => {
+  const { tags } = useTagStore();
   const [loading, setLoading] = useState<boolean>(false);
-  const [currentTopic, setCurrentTopic] = useState<TopicType | ''>('');
+  const [currentTopic, setCurrentTopic] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
   const [topicProgress, setTopicProgress] = useState<Record<string, { 
     total: number; 
@@ -105,7 +80,7 @@ const TopicGrid: React.FC = () => {
     }
   };
 
-  const handleTopicClick = async (topic: TopicType): Promise<void> => {
+  const handleTopicClick = async (topic: string): Promise<void> => {
     setLoading(true);
     setCurrentTopic(topic);
     setProgress(0);
@@ -134,6 +109,15 @@ const TopicGrid: React.FC = () => {
     }
   };
 
+  // Helper function to get styling for a topic
+  const getTopicStyling = (topic: string) => {
+    const mapping = topicMappings[topic] || defaultMapping;
+    return {
+      icon: mapping.icon,
+      colors: categoryColors[mapping.category]
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20 space-y-8">
@@ -153,8 +137,8 @@ const TopicGrid: React.FC = () => {
             <p className="text-gray-600 mt-1">Master these topics to ace your technical interviews!</p>
           </div>
           <div className='flex p-2 justify-center items-center'>
-          <CustomizeDropdown/>
-          <Trophy className="h-10 w-10 mx-3 text-indigo-500" />
+            <CustomizeDropdown/>
+            <Trophy className="h-10 w-10 mx-3 text-indigo-500" />
           </div>
         </div>
         
@@ -185,8 +169,8 @@ const TopicGrid: React.FC = () => {
               </Card>
             ))
           ) : (
-            topics.map((topic) => {
-              const colorScheme = getTopicColor(topic);
+            tags.map((topic) => {
+              const { colors, icon } = getTopicStyling(topic);
               const topicData = topicProgress[topic] || { total: 0, solved: 0, percentage: 0 };
               
               return (
@@ -208,19 +192,19 @@ const TopicGrid: React.FC = () => {
                       border border-gray-200
                       rounded-lg
                       overflow-hidden
-                      border-l-4 ${colorScheme.border}
+                      border-l-4 ${colors.border}
                       bg-white
-                      ${loading && currentTopic === topic ? colorScheme.lightBg : 'bg-white'}
+                      ${loading && currentTopic === topic ? colors.lightBg : 'bg-white'}
                     `}
                     onClick={() => handleTopicClick(topic)}
                   >
                     <CardHeader className="pb-2">
                       <div className="flex items-center justify-between">
-                        <h3 className={`text-lg font-semibold ${colorScheme.text}`}>
+                        <h3 className={`text-lg font-semibold ${colors.text}`}>
                           {topic}
                         </h3>
-                        <div className={`${colorScheme.lightBg} p-1 rounded-full`}>
-                          {topicIcons[topic]}
+                        <div className={`${colors.lightBg} p-1 rounded-full`}>
+                          {icon}
                         </div>
                       </div>
                     </CardHeader>
@@ -229,7 +213,7 @@ const TopicGrid: React.FC = () => {
                         <div className="relative">
                           <div className="w-full bg-gray-100 rounded-full h-2.5">
                             <div 
-                              className={`${colorScheme.bg} h-2.5 rounded-full`} 
+                              className={`${colors.bg} h-2.5 rounded-full`} 
                               style={{ width: `${topicData.percentage}%` }}
                             ></div>
                           </div>
@@ -241,10 +225,9 @@ const TopicGrid: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      
                     </CardContent>
                     <CardFooter>
-                      <div className={`w-full px-3 py-2 rounded-md flex items-center justify-center ${colorScheme.lightBg} ${colorScheme.text} text-sm font-medium`}>
+                      <div className={`w-full px-3 py-2 rounded-md flex items-center justify-center ${colors.lightBg} ${colors.text} text-sm font-medium`}>
                         Practice Questions <ChevronRight className="ml-1 h-4 w-4" />
                       </div>
                     </CardFooter>

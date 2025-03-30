@@ -25,26 +25,9 @@ import useStore from '@/store/store';
 import { useRouter } from 'next/navigation';
 import { HintsComponent } from './Modals/Hints';
 import UpdateQuestionComponent from './Modals/UpdateQuestion';
-import SearchBar, { ServerSideSearchConfig } from './SearchBarGenX';
-
-const AVAILABLE_TAGS = [
-  "PrefixSum",
-  "TwoPointers",
-  "1DArrays",
-  "Graph",
-  "2DArrays",
-  "TimeComplexity",
-  "BasicMaths",
-  "SpaceComplexity",
-  "BinarySearch",
-  "DP",
-  "Sorting",
-  "LinearSearch",
-  "Exponentiation",
-  "Recursion",
-  "String",
-  "HashMaps/Dictionary"
-];
+import SearchBar, { ClientSideSearchConfig, ServerSideSearchConfig } from './SearchBarGenX';
+import TagManager from './Modals/TagManager';
+import useTagStore from '@/store/tagsStore';
 
 const DIFFICULTY_LEVELS = [
   { id: "all", value: "all", label: "All Difficulties" },
@@ -74,7 +57,7 @@ interface QuestionTag {
 }
 
 export default function AllQuestions() {
-  // State declarations preserved from original component
+  const { tags } = useTagStore()
   const [questions, setQuestions] = useState<Question[]>([]);
   const [numberofArenaQuestions, setNumberofArenaQuestions] = useState(0)
   const [dbQuestionsCount, setDbQuestionsCount] = useState(0)
@@ -90,6 +73,7 @@ export default function AllQuestions() {
   const [duration, setDuration] = useState(120);
   const [contestName, setContestName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [dbSearch, setDBSearch] = useState(true)
   const { isAdmin } = useStore()
   const Router = useRouter()
 
@@ -114,6 +98,7 @@ export default function AllQuestions() {
       } else {
         toast.error("Failed to fetch questions");
       }
+      
     } catch (error) {
       console.error("Error fetching questions:", error);
       toast.error("Failed to fetch questions");
@@ -145,6 +130,12 @@ export default function AllQuestions() {
   };
 
   useEffect(() => {
+
+    if(selectedDifficulty === "all"){
+      setDBSearch(true)
+    } else {
+      setDBSearch(false)
+    }
     if (questions.length > 0) {
       let filtered = questions;
 
@@ -163,9 +154,42 @@ export default function AllQuestions() {
     }
   }, [selectedTags, selectedDifficulty, questions]);
 
-  const handleDifficultyChange = (value: string) => {
+  // Updated handleDifficultyChange function
+const handleDifficultyChange = async (value: string) => {
+  try {
+    setIsLoading(true);
     setSelectedDifficulty(value);
-  };
+    
+    // Call the API with the selected difficulty
+    const response = await axios.post("/api/questions/filterByDifficulty", {
+      difficulty: value
+    });
+    
+    if (response.status === 200) {
+      setQuestions(response.data.questions);
+      setDbQuestionsCount(response.data.questionsCount);
+      setNumberofArenaQuestions(response.data.questionsInArena);
+      
+      // Apply any tag filters if necessary
+      if (selectedTags?.length > 0) {
+        const filtered = response.data.questions.filter((q: Question) => {
+          const questionTagNames = q.questionTags.map((tag: QuestionTag) => tag.name);
+          return selectedTags.some(selectedTag => questionTagNames.includes(selectedTag));
+        });
+        setFilteredQuestions(filtered);
+      } else {
+        setFilteredQuestions(response.data.questions);
+      }
+    } else {
+      toast.error("Failed to filter questions");
+    }
+  } catch (error) {
+    console.error("Error filtering questions:", error);
+    toast.error("Failed to filter questions");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const addToTest = (question: Question) => {
     if (selectedQuestions?.some(q => q.id === question.id)) {
@@ -350,6 +374,53 @@ export default function AllQuestions() {
       }
     }
   };
+
+
+const clientConfig: ClientSideSearchConfig<Question> = {
+  mode: "clientSide",
+  data: questions,
+  filterFn: (item, query) => {
+    const lowercaseQuery = query.toLowerCase();
+    
+    // Search by slug (name)
+    if (item.slug.toLowerCase().includes(lowercaseQuery)) {
+      return true;
+    }
+    
+    // Search by difficulty
+    if (item.difficulty.toLowerCase().includes(lowercaseQuery)) {
+      return true;
+    }
+    
+    // Search by tags
+    if (item.questionTags.some(tag => tag.name.toLowerCase().includes(lowercaseQuery))) {
+      return true;
+    }
+    
+    return false;
+  },
+  placeholder: "Search questions...",
+  debounceMs: 300,
+  minQueryLength: 2,
+  onResultSelect: (item) => {
+    setFilteredQuestions([item]);
+  },
+  renderItem: (item) => (
+    <div className="flex flex-col">
+      <span className="font-medium">{item.slug}</span>
+      <div className="flex items-center gap-2 mt-1">
+        <Badge className={getDifficultyColor(item.difficulty)}>
+          {item.difficulty.charAt(0) + item.difficulty.slice(1).toLowerCase()}
+        </Badge>
+        {item.questionTags.slice(0, 2).map(tag => (
+          <Badge key={tag.id} variant="outline" className="bg-gray-50 text-xs">
+            {tag.name}
+          </Badge>
+        ))}
+      </div>
+    </div>
+  )
+};
 
   const serverConfig: ServerSideSearchConfig<string> = {
     mode: "serverSide",
@@ -546,6 +617,7 @@ export default function AllQuestions() {
                 )}
               </CardContent>
             </Card>
+            <TagManager/>
           </div>
 
           {/* Main Content */}
@@ -558,9 +630,11 @@ export default function AllQuestions() {
                     Available Questions
                   </CardTitle>
                   <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                   <SearchBar
-                   config={serverConfig}
-                   />
+                   {
+                    dbSearch ? <SearchBar
+                    config={serverConfig}
+                    /> : <SearchBar config={clientConfig}/> 
+                   }
                   </CardTitle>
                 </div>
               </CardHeader>
@@ -593,7 +667,7 @@ export default function AllQuestions() {
                     <div className="w-full sm:w-2/3">
                       <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                       <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-md bg-white max-h-20 overflow-y-auto">
-                        {AVAILABLE_TAGS.map(tag => (
+                        {tags.map(tag => (
                           <Badge
                             key={tag}
                             variant={selectedTags.includes(tag) ? "default" : "outline"}

@@ -28,6 +28,7 @@ import {
   LucideSword
 } from 'lucide-react';
 import useStore from '@/store/store';
+import useTagStore from '@/store/tagsStore';
 
 const Navbar = () => {
   const router = useRouter();
@@ -35,6 +36,8 @@ const Navbar = () => {
   const { isAdmin, setIsAdmin } = useStore();
   const [username, setUsername] = useState('');
   const [token, setToken] = useState<string | null>(null);
+  const { setTags } = useTagStore()
+
   
   useEffect(() => {
     const checkIfAdmin = async () => {
@@ -55,13 +58,22 @@ const Navbar = () => {
       checkIfAdmin();
     }
   }, [status, setIsAdmin]);
+  const fn = async () => {
+    const res = await axios.get('api/getTags')
+    console.log(res)
+    //@ts-expect-error: not needed here.
+    const tags = res.data.map((p) => p.name)
+    setTags(tags)
+  }
 
   useEffect(() => {
     const accessToken = localStorage.getItem('githubAccessToken')
     if(accessToken){
       setToken(accessToken)
     }
+    fn()
   }, []);
+
 
   const navigationItems = [
     { href: '/user/dashboard', label: 'Home', icon: Home, color: 'text-indigo-500' },
