@@ -9,7 +9,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Invalid input format" }, { status: 400 });
       }
   
-      // Ensure tags are unique
       const newTags = tags.map((tag) => ({
         name: tag,
       }));

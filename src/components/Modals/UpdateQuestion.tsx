@@ -41,26 +41,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import useTagStore from '@/store/tagsStore';
 
-// Predefined constants
-const AVAILABLE_TAGS = [
-  "PrefixSum",
-  "TwoPointers",
-  "1DArrays",
-  "Graph",
-  "2DArrays",
-  "TimeComplexity",
-  "BasicMaths",
-  "SpaceComplexity",
-  "BinarySearch",
-  "DP",
-  "Sorting",
-  "LinearSearch",
-  "Exponentiation",
-  "Recursion",
-  "String",
-  "HashMaps/Dictionary"
-];
 
 const DIFFICULTY_LEVELS = [
   { id: "beginner", value: "BEGINNER", label: "Beginner" },
@@ -131,6 +113,7 @@ const UpdateQuestionComponent: React.FC<UpdateQuestionComponentProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const { tags } = useTagStore()
 
   // Initialize the form
   const form = useForm<QuestionFormValues>({
@@ -371,7 +354,7 @@ const UpdateQuestionComponent: React.FC<UpdateQuestionComponentProps> = ({
                     <div className="border rounded-md p-2">
                       <ScrollArea className="h-48 w-full">
                         <div className="space-y-2">
-                          {AVAILABLE_TAGS.map(tag => (
+                          {tags.map(tag => (
                             <div key={tag} className="flex items-center space-x-2">
                               <Checkbox 
                                 id={`tag-${tag}`} 
