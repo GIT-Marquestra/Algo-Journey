@@ -269,7 +269,7 @@ export default function Signup() {
 
                 <Button 
                   type="submit" 
-                  className="w-full" 
+                  className="w-full bg-indigo-600" 
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Signing Up..." : "Create Account"}
