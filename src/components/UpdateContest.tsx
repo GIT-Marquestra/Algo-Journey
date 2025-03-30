@@ -120,7 +120,8 @@ export default function UpdateContestPage({ dbQuestions }: { dbQuestions: Questi
 
       setAllGroups(groupsResponse.data.groups);
       setFilteredGroups(groupsResponse.data.groups);
-      setSelectedGroups(permissionsResponse.data.permittedGroups);
+      //@ts-expect-error: no need here...
+      setSelectedGroups(permissionsResponse.data.permittedGroups.map((p) => p.id));
 
     } catch (error) {
       console.error('Error fetching contest details:', error);

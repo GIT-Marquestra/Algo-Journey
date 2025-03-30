@@ -71,11 +71,10 @@ const ContestQuest: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
   const { isAdmin } = useStore()
   
-  // Use Zustand store instead of context
+
   const { questions, setQuestions } = useSocket()
   
-  // Initialize socket with store
-  // const socket = useSocketWithStore();
+
 
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
@@ -272,7 +271,7 @@ const ContestQuest: React.FC = () => {
       setShowStartConfirmation(false);
       setloadingStartTest(true);
       
-      // Show loading toast
+
       const loader = toast.loading('Initializing test environment...');
       
       const response = await axios.post(`/api/startContest/${id}`, 
@@ -302,7 +301,7 @@ const ContestQuest: React.FC = () => {
             }
           })
           
-          // Enhanced success message with time information
+
           toast.success(`Test Started! You have ${response.data.contest.duration} min to complete it. Good luck!`, {
             duration: 5000,
             icon: '🚀'
@@ -322,7 +321,7 @@ const ContestQuest: React.FC = () => {
           401: 'Not Authenticated, Please SignIn'
         };
         
-        // Enhanced error handling with custom icons for certain errors
+
         if (response.status === 404) {
           toast.error(errorMessages[404], {
             duration: 4000,

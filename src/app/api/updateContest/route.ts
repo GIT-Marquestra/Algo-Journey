@@ -16,6 +16,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { contestId, questions, startTime, endTime, duration, permittedGroups } = body;
 
+    console.log(permittedGroups)
+
     // Validate required input
     if (!contestId) {
       return NextResponse.json({ error: "Contest ID is required" }, { status: 400 });
@@ -54,13 +56,13 @@ export async function POST(req: Request) {
 
       // Handle questions update if provided
       if (questions && Array.isArray(questions) && questions.length > 0) {
-        console.log('in questions update')
+
         // Delete existing questions
         await tx.questionOnContest.deleteMany({
           where: { contestId: parsedContestId },
         });
 
-        console.log(questions)
+
 
         // Create new question connections
         const questionConnections = questions
@@ -92,12 +94,13 @@ export async function POST(req: Request) {
         // Create new group permissions
         if (permittedGroups.length > 0) {
           const groupPermissionData = permittedGroups.map(groupId => ({
-            groupId: groupId.id,
+            groupId,
             contestId: parsedContestId,
           }));
 
           await tx.groupPermission.createMany({
             data: groupPermissionData,
+            skipDuplicates: true
           });
         }
       }
@@ -124,7 +127,7 @@ export async function POST(req: Request) {
       maxWait: 5000, // Optional: Set max wait time before transaction starts
     });
 
-    console.log(result?.questions)
+
 
 
     return NextResponse.json({ 
