@@ -14,6 +14,7 @@ export async function POST(req: Request) {
         { error: "Contest ID is required" },
         { status: 400 }
       );
+      // 
     }
 
     if (isAllSelected) {
