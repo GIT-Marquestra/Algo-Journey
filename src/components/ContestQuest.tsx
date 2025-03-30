@@ -473,7 +473,7 @@ const ContestQuest: React.FC = () => {
           {/* Question List */}
           <div className="grid gap-6">
             {questions.map((q) => {
-              const isVerified = verifiedProblems.has(q.id);
+              const isVerified = verifiedProblems.has(q.question.id);
               const difficultyColor = 
                 q.question.difficulty === 'EASY' ? 'bg-green-500/10 text-green-500' :
                 q.question.difficulty === 'MEDIUM' ? 'bg-yellow-500/10 text-yellow-500' :
@@ -557,7 +557,7 @@ const ContestQuest: React.FC = () => {
                             <ExternalLink className="ml-2 h-4 w-4" />
                           </Button>
                         </Link>
-                        {!isVerified  || q.question.isSolved && (
+                        {!isVerified && (
                           <Button
                             variant="outline"
                             size="sm"

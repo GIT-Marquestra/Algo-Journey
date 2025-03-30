@@ -127,11 +127,11 @@ export async function POST(
                 }   
             });
             
-            if (existingSubmission) {
-                return NextResponse.json({
-                    message: "User has already participated in this contest"
-                }, { status: 430 });
-            }
+            // if (existingSubmission) {
+            //     return NextResponse.json({
+            //         message: "User has already participated in this contest"
+            //     }, { status: 430 });
+            // }
 
         
             if (currentTimeIST < contestStart) {
