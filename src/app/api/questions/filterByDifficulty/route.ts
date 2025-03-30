@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     // Otherwise, filter by the selected difficulty
     const questions = await prisma.question.findMany({
       where: {
-        difficulty: difficulty as any, // Cast to Difficulty enum
+        difficulty: difficulty, // Cast to Difficulty enum
       },
       include: {
         questionTags: true,

@@ -21,6 +21,7 @@ export async function POST(req: Request) {
   
       return NextResponse.json({ message: "Tags updated successfully" });
     } catch (error) {
+        console.log(error)
       return NextResponse.json({ error: "Failed to update tags" }, { status: 500 });
     }
   }
