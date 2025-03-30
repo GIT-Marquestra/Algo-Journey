@@ -75,7 +75,7 @@ const DIFFICULTIES = [
 ];
 
 const QuestionSolving = () => {
-  const { tags } = useTagStore()
+  const { tags, setTags } = useTagStore()
   const { array } = useParams();
   const [loading, setLoading] = useState<boolean>(true);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
@@ -83,14 +83,25 @@ const QuestionSolving = () => {
   const [selectSolved, setSelectSolved] = useState<boolean>(false); 
   const [score, setScore] = useState<number>(0);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const newString = Array.isArray(array) ? array.join('/') : null;
   const newArray = newString ? newString.split('/s/') : null;
   const topics = newArray ? newArray[0].split('/') : null;
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const difficulties = newArray ? newArray[1].split('/') : null;
   const [isVerifying, setIsVerifying] = useState<{ [key: string]: boolean }>({}); 
+  const fn = async () => {
+    const res = await axios.get('/api/getTags')
+    console.log(res)
+    //@ts-expect-error: not needed here.
+    const tags = res.data.map((p) => p.name)
+    setTags(tags)
+  }
+
+  useEffect(() => {
+    fn()
+  }, []);
 
 
   const verifySubmission = async (
@@ -193,7 +204,10 @@ const QuestionSolving = () => {
     if (selectedTags.length > 0) {
       filtered = filtered.filter(q => {
         const questionTagNames = q.questionTags.map(tag => tag.name);
-        return selectedTags.some(selectedTag => questionTagNames.includes(selectedTag));
+        return (
+          selectedTags.every(selectedTag => questionTagNames.includes(selectedTag)) &&
+          questionTagNames.length === selectedTags.length
+        );
       });
     }
   

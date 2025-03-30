@@ -51,7 +51,7 @@ const categoryColors: Record<TopicCategory, {
 };
 
 const TopicGrid: React.FC = () => {
-  const { tags } = useTagStore();
+  const { tags, setTags } = useTagStore();
   const [loading, setLoading] = useState<boolean>(false);
   const [currentTopic, setCurrentTopic] = useState<string>('');
   const [progress, setProgress] = useState<number>(0);
@@ -61,6 +61,21 @@ const TopicGrid: React.FC = () => {
     percentage: number; 
   }>>({});
   const [shimmerLoading, setShimmerLoading] = useState<boolean>(true);
+
+  const fn = async () => {
+    const res = await axios.get('/api/getTags')
+    console.log(res)
+    //@ts-expect-error: not needed here.
+    const tags = res.data.map((p) => p.name)
+    setTags(tags)
+  }
+
+  useEffect(() => {
+    fn()
+  }, []);
+
+
+  
 
   useEffect(() => {
     fetchTopicProgress();

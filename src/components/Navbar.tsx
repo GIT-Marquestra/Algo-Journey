@@ -59,7 +59,7 @@ const Navbar = () => {
     }
   }, [status, setIsAdmin]);
   const fn = async () => {
-    const res = await axios.get('api/getTags')
+    const res = await axios.get('/api/getTags')
     console.log(res)
     //@ts-expect-error: not needed here.
     const tags = res.data.map((p) => p.name)
