@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const permissions = await Promise.all(
       groups.map(async (groupId: string) => {
         return prisma.groupPermission.upsert({
-          where: { groupId },
+          where: { groupId_contestId: { groupId, contestId } },
           update: { contestId },
           create: { groupId, contestId },
         });
