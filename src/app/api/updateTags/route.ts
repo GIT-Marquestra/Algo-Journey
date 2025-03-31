@@ -9,24 +9,27 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Invalid input format" }, { status: 400 });
         }
 
-
         const existingTags = await prisma.questionTag.findMany({
-            where: { name: { in: tags } },
             select: { name: true }
         });
 
         const existingTagNames = new Set(existingTags.map(tag => tag.name));
-        
+        const incomingTagNames = new Set(tags);
 
-        const newTags = tags
-            .filter(tag => !existingTagNames.has(tag))
-            .map(tag => ({ name: tag }));
 
-        if (newTags.length > 0) {
-            await prisma.$transaction([
-                prisma.questionTag.createMany({ data: newTags })
-            ]);
-        }
+        const tagsToRemove = [...existingTagNames].filter(tag => !incomingTagNames.has(tag));
+
+
+        const tagsToAdd = [...incomingTagNames].filter(tag => !existingTagNames.has(tag)).map(tag => ({ name: tag }));
+
+        await prisma.$transaction([
+            prisma.questionTag.deleteMany({
+                where: { name: { in: tagsToRemove } }
+            }),
+            prisma.questionTag.createMany({
+                data: tagsToAdd
+            })
+        ]);
 
         return NextResponse.json({ message: "Tags updated successfully" });
     } catch (error) {

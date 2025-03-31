@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { Tag, Plus, X, Save } from "lucide-react";
+import { Tag, Plus, X, Save, Loader } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import {
@@ -22,14 +22,21 @@ const TagManager = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
 
+  // ✅ Fetch tags safely
   useEffect(() => {
     const fetchTags = async () => {
       try {
         setIsLoading(true);
         const res = await axios.get("/api/getTags");
-        setTags(res.data.map((tag: { name: string }) => tag.name));
+
+        if (res.status === 200 && Array.isArray(res.data)) {
+          setTags(res.data.map((tag: { name: string }) => tag.name));
+        } else {
+          toast.error("Invalid data received");
+        }
       } catch (error) {
         console.error("Error fetching tags:", error);
         toast.error("Failed to load tags");
@@ -40,13 +47,21 @@ const TagManager = () => {
     fetchTags();
   }, []);
 
+  // ✅ Safe method to add a tag
   const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag("");
-    } else if (tags.includes(newTag.trim())) {
-      toast.error("Tag already exists");
+    const trimmedTag = newTag.trim().toLowerCase(); // Normalize tags
+
+    if (!trimmedTag) {
+      toast.error("Tag cannot be empty");
+      return;
     }
+    if (tags.includes(trimmedTag)) {
+      toast.error("Tag already exists");
+      return;
+    }
+
+    setTags([...tags, trimmedTag]);
+    setNewTag("");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -55,29 +70,28 @@ const TagManager = () => {
     }
   };
 
+  // ✅ Safe method to remove a tag
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
+  // ✅ Safe method to save tags
   const saveTags = async () => {
+    setIsSaving(true);
     try {
-      setIsLoading(true);
-      const res = await axios.post("/api/updateTags", {
-        tags
-      });
+      const res = await axios.post("/api/updateTags", { tags });
 
-      if (res.status !== 200) {
+      if (res.status === 200) {
+        toast.success("Tags updated successfully");
+        setShowConfirmation(false);
+      } else {
         toast.error("Unable to update tags");
-        return;
       }
-
-      toast.success("Tags updated successfully");
-      setShowConfirmation(false);
     } catch (error) {
       console.error("Error updating tags:", error);
       toast.error("Failed to update tags");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
@@ -107,13 +121,13 @@ const TagManager = () => {
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}
                 className="border-gray-200 focus:border-indigo-500 focus:ring-indigo-500"
-                disabled={isLoading}
+                disabled={isLoading || isSaving}
               />
             </div>
-            <Button 
+            <Button
               className="bg-indigo-500 hover:bg-indigo-600 text-white"
               onClick={addTag}
-              disabled={isLoading}
+              disabled={isLoading || isSaving}
             >
               <Plus className="mr-1 h-4 w-4" /> Add
             </Button>
@@ -122,21 +136,17 @@ const TagManager = () => {
           <div className="flex flex-wrap gap-2 min-h-32">
             {isLoading ? (
               <div className="w-full flex justify-center items-center py-8">
-                <div className="animate-pulse flex space-x-2">
-                  <div className="h-4 w-16 bg-gray-200 rounded"></div>
-                  <div className="h-4 w-20 bg-gray-200 rounded"></div>
-                  <div className="h-4 w-12 bg-gray-200 rounded"></div>
-                </div>
+                <Loader className="animate-spin h-6 w-6 text-indigo-500" />
               </div>
             ) : tags.length > 0 ? (
               tags.map((tag, index) => (
-                <span 
-                  key={index} 
+                <span
+                  key={index}
                   className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md flex items-center gap-1 hover:bg-indigo-200 transition-colors"
                 >
                   {tag}
-                  <button 
-                    onClick={() => removeTag(tag)} 
+                  <button
+                    onClick={() => removeTag(tag)}
                     className="ml-1 text-indigo-500 hover:text-indigo-700"
                     aria-label="Remove tag"
                   >
@@ -153,11 +163,16 @@ const TagManager = () => {
         </CardContent>
         <CardFooter className="border-t border-gray-100 pt-4 flex justify-end">
           <Button
-            className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm"
+            className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm flex items-center"
             onClick={() => setShowConfirmation(true)}
-            disabled={isLoading}
+            disabled={isLoading || isSaving}
           >
-            <Save className="mr-1 h-4 w-4" /> Save Tags
+            {isSaving ? (
+              <Loader className="animate-spin h-4 w-4 mr-2" />
+            ) : (
+              <Save className="mr-1 h-4 w-4" />
+            )}
+            Save Tags
           </Button>
         </CardFooter>
       </Card>
@@ -174,10 +189,12 @@ const TagManager = () => {
             <AlertDialogCancel className="text-gray-600 border-gray-200 hover:bg-gray-50">
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction 
-              className="bg-indigo-500 text-white hover:bg-indigo-600"
+            <AlertDialogAction
+              className="bg-indigo-500 text-white hover:bg-indigo-600 flex items-center"
               onClick={saveTags}
+              disabled={isSaving}
             >
+              {isSaving ? <Loader className="animate-spin h-4 w-4 mr-2" /> : <Save className="mr-1 h-4 w-4" />}
               Save
             </AlertDialogAction>
           </AlertDialogFooter>
