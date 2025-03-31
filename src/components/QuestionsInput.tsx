@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Target, X, Save, CheckCircle2, ExternalLink, AlertCircle } from "lucide-react";
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import useTagStore from '@/store/tagsStore';
 
 interface Question {
   slug: string;
@@ -29,24 +30,6 @@ const difficultyPoints = {
 };
 
 
-const availableTags = [
-  "PrefixSum",
-  "TwoPointers",
-  "1DArrays",
-  "Graph",
-  "2DArrays",
-  "TimeComplexity",
-  "BasicMaths",
-  "SpaceComplexity",
-  "BinarySearch",
-  "DP",
-  "Sorting",
-  "LinearSearch",
-  "Exponentiation",
-  "Recursion",
-  "String",
-  "HashMaps/Dictionary"
-];
 
 const getDifficultyColor = (difficulty: string) => {
   const colors = {
@@ -88,6 +71,7 @@ const extractSlugFromUrl = (url: string, platform: string): string => {
 export default function QuestionForm() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
+  const { tags } = useTagStore()
   const [currentQuestion, setCurrentQuestion] = useState<Question>({
     slug: "",
     leetcodeUrl: "",
@@ -356,7 +340,7 @@ export default function QuestionForm() {
                   <div className={`flex flex-wrap gap-2 max-h-36 overflow-y-auto p-2 border rounded-md ${
                     formErrors.tags ? "border-red-500" : ""
                   }`}>
-                    {availableTags.map((tag) => (
+                    {tags.map((tag) => (
                       <Badge
                         key={tag}
                         variant={currentQuestion.tags.includes(tag) ? "default" : "outline"}
