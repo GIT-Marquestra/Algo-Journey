@@ -26,7 +26,7 @@ import { useRouter } from 'next/navigation';
 import { HintsComponent } from './Modals/Hints';
 import UpdateQuestionComponent from './Modals/UpdateQuestion';
 import SearchBar, { ClientSideSearchConfig, ServerSideSearchConfig } from './SearchBarGenX';
-// import TagManager from './Modals/TagManager';
+import TagManager from './Modals/TagManager';
 import useTagStore from '@/store/tagsStore';
 
 const DIFFICULTY_LEVELS = [
@@ -617,7 +617,7 @@ const clientConfig: ClientSideSearchConfig<Question> = {
                 )}
               </CardContent>
             </Card>
-            {/* <TagManager/> */}
+            <TagManager/>
           </div>
 
           {/* Main Content */}
