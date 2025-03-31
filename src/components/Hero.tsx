@@ -13,10 +13,13 @@ import dashboard from '@/images/dashboard.png';
 import arena0 from '@/images/arena0.png'
 import arena from '@/images/arena.png'
 import projectEval from '@/images/projectEval.png'
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 
 const FollowerPointer = ({ children }: { children: React.ReactNode }) => {
   const ref = useRef<HTMLDivElement>(null)
   const mouseX = useMotionValue(0)
+  
   const mouseY = useMotionValue(0)
 
   const followerX = useSpring(mouseX, {
@@ -99,6 +102,8 @@ const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; titl
 
 const LandingPage = () => {
   const { scrollYProgress } = useScroll()
+  const { data: session } = useSession()
+  const Router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const sentence = "We are dedicated to providing an exceptional learning experience."
 
@@ -293,15 +298,13 @@ const LandingPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              <Button className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-8 py-6 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300">
-                Get Started <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button
-                variant="outline"
-                className="border-2 border-blue-200 hover:border-blue-300 text-blue-700 px-8 py-6 rounded-full text-lg"
-              >
-                Explore Features
-              </Button>
+              {
+                !session && <Button onClick={() => {
+                  Router.push('/auth/signin')
+                }} className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-8 py-6 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              }
             </motion.div>
           </motion.div>
 
@@ -415,7 +418,7 @@ const LandingPage = () => {
           </div>
           <p className="text-sm text-gray-500 mt-4">Note: This is a read-only account with limited functionality.</p>
           <div className="mt-6 flex justify-center">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">Try Demo Account</Button>
+            <Button onClick={() => Router.push('/auth/signin')} className="bg-blue-600 hover:bg-blue-700 text-white">Try Demo Account</Button>
           </div>
         </motion.div>
       </section>
@@ -509,14 +512,19 @@ const LandingPage = () => {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-8 py-6 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300">
+            {
+              !session && <Button onClick={() => {
+                Router.push('/auth/signin')
+              }} className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-8 py-6 rounded-full text-lg shadow-lg hover:shadow-xl transition-all duration-300">
               Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            </Button> 
+            }
             <Button
               variant="outline"
+              onClick={() => Router.push('/about')}
               className="border-2 border-blue-200 hover:border-blue-300 text-blue-700 px-8 py-6 rounded-full text-lg"
             >
-              View Documentation
+              About AlgoJourney
             </Button>
           </div>
         </motion.div>
