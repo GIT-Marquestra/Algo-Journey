@@ -28,6 +28,7 @@ import UpdateQuestionComponent from './Modals/UpdateQuestion';
 import SearchBar, { ClientSideSearchConfig, ServerSideSearchConfig } from './SearchBarGenX';
 import TagManager from './Modals/TagManager';
 import useTagStore from '@/store/tagsStore';
+// import LeetCodeStatsCollector from './Modals/Leetcode';
 
 const DIFFICULTY_LEVELS = [
   { id: "all", value: "all", label: "All Difficulties" },
@@ -618,6 +619,7 @@ const clientConfig: ClientSideSearchConfig<Question> = {
               </CardContent>
             </Card>
             <TagManager/>
+            {/* <LeetCodeStatsCollector/> */}
           </div>
 
           {/* Main Content */}

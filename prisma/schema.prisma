@@ -232,6 +232,19 @@ model GroupApplication {
   @@index([applicantId, status])
 }
 
+model LeetCodeStats {
+  id                String    @id @default(uuid())
+  username          String    @unique
+  email             String
+  leetcodeUsername  String
+  userProfileUrl    String?
+  totalSolved       Int       @default(0)
+  easySolved        Int       @default(0)
+  mediumSolved      Int       @default(0)
+  hardSolved        Int       @default(0)
+  lastUpdated       DateTime  @default(now())
+}
+
 enum ApplicationStatus {
   PENDING
   ACCEPTED

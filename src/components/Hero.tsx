@@ -370,7 +370,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6 }}
             >
               <CardContainer className="inter-var w-full md:w-1/2">
-                <CardBody className="bg-gray-50 relative group/card hover:shadow-2xl hover:shadow-blue-500/[0.1] bg-white border-white/[0.2] border-black/[0.1] w-full h-auto rounded-xl p-6 border">
+                <CardBody className="relative group/card hover:shadow-2xl hover:shadow-blue-500/[0.1] bg-white border-white/[0.2] w-full h-auto rounded-xl p-6 border">
                   <CardItem translateZ="50" className="w-full">
                     <Image
                       src={item.image || "/placeholder.svg"}

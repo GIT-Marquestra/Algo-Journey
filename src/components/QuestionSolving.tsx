@@ -204,10 +204,8 @@ const QuestionSolving = () => {
     if (selectedTags.length > 0) {
       filtered = filtered.filter(q => {
         const questionTagNames = q.questionTags.map(tag => tag.name);
-        return (
-          selectedTags.every(selectedTag => questionTagNames.includes(selectedTag)) &&
-          questionTagNames.length === selectedTags.length
-        );
+        // Only check that all selected tags are included, don't check length
+        return selectedTags.every(selectedTag => questionTagNames.includes(selectedTag));
       });
     }
   
