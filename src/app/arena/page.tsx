@@ -4,8 +4,7 @@ import axios from 'axios';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
-import { Code, BookOpen, Brain, ChevronRight, Target, Trophy } from 'lucide-react';
-import CustomizeDropdown from '@/components/ArenaDropdown';
+import { Code, BookOpen, Brain, ChevronRight, Target, Trophy } from 'lucide-react'
 import useTagStore from '@/store/tagsStore';
 
 // Topic categories for color assignment with specific types
@@ -152,7 +151,6 @@ const TopicGrid: React.FC = () => {
             <p className="text-gray-600 mt-1">Master these topics to ace your technical interviews!</p>
           </div>
           <div className='flex p-2 justify-center items-center'>
-            <CustomizeDropdown/>
             <Trophy className="h-10 w-10 mx-3 text-indigo-500" />
           </div>
         </div>

@@ -127,24 +127,26 @@ model Question {
   questionTags      QuestionTag[]     
   inContest         Boolean               @default(false)
   inArena           Boolean               @default(false) 
-  arenaAddedAt      DateTime?             // New field to track when question was added to arena
+  arenaAddedAt      DateTime?             
   slug              String                @unique
   contests          QuestionOnContest[]   @relation("QuestionToContest")
   submissions       Submission[]          @relation("QuestionToSubmission")
   createdAt         DateTime              @default(now())
   temporary         TempContestQuestion[] @relation("QuestionToTemp")
   updatedAt         DateTime              @updatedAt
-  hint              Hint?               
+  tagHints          TagHint[]            
+  hint              Hint?      
 
-  @@index([inArena, arenaAddedAt]) // Add index for efficient querying
+  @@index([inArena, arenaAddedAt])
   @@map("questions")
 }
 
 model QuestionTag {
-  id          String    @id @default(uuid())
-  name        String    @unique
+  id          String      @id @default(uuid())
+  name        String      @unique
   questions   Question[]
-  createdAt   DateTime  @default(now())
+  tagHints    TagHint[]   // New relation to TagHint model
+  createdAt   DateTime    @default(now())
 }
 
 enum QuestionPlatform {
@@ -160,13 +162,16 @@ enum Difficulty {
   VERYHARD
 }
 
-model Hint{
-  id                String              @id @default(uuid())
-  questionId        String              @unique
-  question          Question            @relation(fields: [questionId], references: [id])
-  hint1             String
-  hint2             String
-  hint3             String
+model Hintnew {
+  id          String    @id @default(uuid())
+  tagHintId   String    @default("default")
+  tagHint     TagHint   @relation(fields: [tagHintId], references: [id], onDelete: Cascade)
+  content     String    @default("Default content")
+  sequence    Int       @default(0)
+  createdAt   DateTime  @default(now())
+
+  @@unique([tagHintId, sequence])
+  @@index([tagHintId, sequence])
 }
 
 model QuestionOnContest {
@@ -178,6 +183,30 @@ model QuestionOnContest {
   createdAt         DateTime            @default(now())
 
   @@unique([contestId, questionId])
+}
+
+model TagHint {
+  id          String        @id @default(uuid())
+  questionId  String
+  question    Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  tagId       String
+  tag         QuestionTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  hints       Hintnew[]        // One-to-many relation to Hint model
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([questionId, tagId])
+  @@index([questionId])
+  @@index([tagId])
+}
+
+model Hint{
+  id                String              @id @default(uuid())
+  questionId        String              @unique
+  question          Question            @relation(fields: [questionId], references: [id])
+  hint1             String
+  hint2             String
+  hint3             String
 }
 
 

@@ -23,11 +23,12 @@ import ContestPermissionModal from './Modals/ContestPermissionModal';
 import Image from 'next/image';
 import useStore from '@/store/store';
 import { useRouter } from 'next/navigation';
-import { HintsComponent } from './Modals/Hints';
 import UpdateQuestionComponent from './Modals/UpdateQuestion';
 import SearchBar, { ClientSideSearchConfig, ServerSideSearchConfig } from './SearchBarGenX';
 import TagManager from './Modals/TagManager';
 import useTagStore from '@/store/tagsStore';
+import MigrationButton from './MigrationsButtons/Button';
+import HintsComponent from './Modals/Hints';
 // import LeetCodeStatsCollector from './Modals/Leetcode';
 
 const DIFFICULTY_LEVELS = [
@@ -620,6 +621,7 @@ const clientConfig: ClientSideSearchConfig<Question> = {
             </Card>
             <TagManager/>
             {/* <LeetCodeStatsCollector/> */}
+            <MigrationButton/>
           </div>
 
           {/* Main Content */}
@@ -712,7 +714,7 @@ const clientConfig: ClientSideSearchConfig<Question> = {
                         isAdmin={isAdmin}
                         question={q}
                         >
-                      <HintsComponent questionId={q.id} key={q.id} questionSlug={q.slug} isAdmin={isAdmin}>
+                      <HintsComponent questionId={q.id} key={q.id} questionSlug={q.slug} isAdmin={true}>
                       <Card key={q.id} className="border border-gray-200 hover:border-gray-300 transition-colors">
                         <CardContent className="p-4">
                                 {q.inArena && (

@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from './ui/skeleton';
 import useStore from '@/store/store';
-import { HintsComponent } from './Modals/Hints';
 import useTagStore from '@/store/tagsStore';
+import HintsComponent from './Modals/Hints';
 
 interface Question {
   id: string;
@@ -75,7 +75,8 @@ const DIFFICULTIES = [
 ];
 
 const QuestionSolving = () => {
-  const { tags, setTags } = useTagStore()
+  const { setTags } = useTagStore()
+  const [localTags, setLocalTags] = useState<string[]>([]); 
   const { array } = useParams();
   const [loading, setLoading] = useState<boolean>(true);
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
@@ -173,8 +174,13 @@ const QuestionSolving = () => {
         }
 
         const questionsRes = await axios.post('/api/questions', topics && difficulties ? { topics: [...topics], difficulties: [...difficulties] } : {})
- 
+        questionsRes.data.questionsWithSolvedStatus.forEach((q: Question) => {
+          setLocalTags((prev) => {
+            return [...new Set([...prev, ...q.questionTags.map((tags: QuestionTag) => tags.name)])];
+          })
+        })
         setQuestions(questionsRes.data.questionsWithSolvedStatus);
+        
         setScore(questionsRes.data.individualPoints);
       } catch (error) {
         console.error(error);
@@ -316,7 +322,7 @@ const QuestionSolving = () => {
               <div className="space-y-3">
                 <p className="text-sm font-medium text-gray-700">Filter by tags:</p>
                 <div className="flex flex-wrap gap-2">
-                  {tags.map(tag => (
+                  {localTags.map(tag => (
                     <Button
                       key={tag}
                       variant={selectedTags.includes(tag) ? "default" : "outline"}
@@ -355,141 +361,157 @@ const QuestionSolving = () => {
       ) : (
         <div className="grid gap-6">
           {filteredQuestions.map((q) => {
-            
-            // Get difficulty color
-            let difficultyColor = "";
-            switch (q.difficulty) {
-              case "BEGINNER":
-              case "EASY":
-                difficultyColor = "bg-green-500/10 text-green-700 border-green-200";
-                break;
-              case "MEDIUM":
-                difficultyColor = "bg-amber-500/10 text-amber-700 border-amber-200";
-                break;
-              case "HARD":
-              case "VERYHARD":
-                difficultyColor = "bg-red-500/10 text-red-700 border-red-200";
-                break;
-              default:
-                difficultyColor = "bg-gray-500/10 text-gray-700 border-gray-200";
-            }
-            
-            return (
-              <Card 
-  key={q.id}
-  className={`transition-all duration-300 hover:shadow-md ${
-    q.isSolved || solvedProblems.has(q.id) 
-      ? 'bg-green-50/50 border-green-200' 
-      : 'bg-white border-gray-100 hover:border-indigo-200'
-  }`}
->
-  <CardHeader className="pb-3">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <CardTitle className={`text-xl ${q.isSolved ? 'text-green-800' : 'text-indigo-800'}`}>
-          {q.slug}
-        </CardTitle>
-        {q.isSolved || solvedProblems.has(q.id) || solvedProblems.has(q.id) && (
-          <div className="flex items-center gap-1">
-            <Check className="h-5 w-5 text-green-600" />
-            <span className="text-xs font-medium text-green-600">Solved</span>
+  // Get difficulty color
+  let difficultyColor = "";
+  switch (q.difficulty) {
+    case "BEGINNER":
+    case "EASY":
+      difficultyColor = "bg-green-500/10 text-green-700 border-green-200";
+      break;
+    case "MEDIUM":
+      difficultyColor = "bg-amber-500/10 text-amber-700 border-amber-200";
+      break;
+    case "HARD":
+    case "VERYHARD":
+      difficultyColor = "bg-red-500/10 text-red-700 border-red-200";
+      break;
+    default:
+      difficultyColor = "bg-gray-500/10 text-gray-700 border-gray-200";
+  }
+  
+  // Get primary tag (first tag, or Two Pointers if it exists)
+  //@ts-expect-error: not needed here.  
+  const primaryTag = topics[1]
+
+  console.log(primaryTag)
+  
+  return (
+    <Card 
+      key={q.id}
+      className={`transition-all duration-300 hover:shadow-md ${
+        q.isSolved || solvedProblems.has(q.id) 
+          ? 'bg-green-50/50 border-green-200' 
+          : 'bg-white border-gray-100 hover:border-indigo-200'
+      }`}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CardTitle className={`text-xl ${q.isSolved ? 'text-green-800' : 'text-indigo-800'}`}>
+              {q.slug}
+            </CardTitle>
+            {q.isSolved || solvedProblems.has(q.id) && (
+              <div className="flex items-center gap-1">
+                <Check className="h-5 w-5 text-green-600" />
+                <span className="text-xs font-medium text-green-600">Solved</span>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-      <Badge 
-        variant="secondary" 
-        className={`${difficultyColor} ${
-          q.isSolved || solvedProblems.has(q.id) ? 'opacity-75' : ''
-        } px-3 py-1 rounded-full text-xs font-medium`}
-      >
-        {q.difficulty}
-      </Badge>
-    </div>
-    <div className="flex flex-wrap gap-2 mt-3">
-      {q.questionTags.map((tag: AnyTag) => (
-        <Badge
-          key={tag.id}
-          variant="outline"
-          className={`text-xs bg-white border-gray-200 text-gray-600 ${
-            selectedTags.includes(tag.name) 
-              ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
-              : ''
-          }`}
-        >
-          {tag.name}
-        </Badge>
-      ))}
-    </div>
-  </CardHeader>
-  <CardContent className="pt-0 pb-4">
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-100">
-      <div className="flex items-center gap-2">
-        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
-          q.isSolved || solvedProblems.has(q.id) ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
-        }`}>
-          <span className="text-sm font-bold">{Math.floor(q.points / 2)}</span>
-        </div>
-        <p className="text-sm text-gray-600">
-          Practice Points
-        </p>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-        <HintsComponent questionId={q.id} questionSlug={q.slug} />
-        
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            if(q.isSolved || solvedProblems.has(q.id)){
-              toast.error('Already verified');
-              return;
-            }
-            const response = await verifySubmission(q.leetcodeUrl ? 'Leetcode' : 'Codeforces', q.slug, q.leetcodeUrl ? pUsernames.leetcodeUsername : pUsernames.codeforcesUsername, q.id); 
-            if(response){
-              updateScoreInDatabase(q.id, null, q.points);  
-            } else {
-              toast.error('Submission not verified');
-            }
-          }}
-          disabled={isVerifying[q.id]}
-          className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full sm:w-auto"
-        >
-          {isVerifying[q.id] ? 
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Verifying...
-            </>
-          : q.isSolved || solvedProblems.has(q.id) ? 
-            <>Verified <CheckCircle className="ml-2 h-4 w-4 text-green-400" /></>
-           : <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>}
-        </Button>
-        
-        <Link 
-          href={q.leetcodeUrl || q.codeforcesUrl || '#'}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full sm:w-auto"
-        >
-          <Button 
-            variant={q.isSolved ? "outline" : "default"}
-            size="sm"
-            className={`w-full ${
-              q.isSolved || solvedProblems.has(q.id) 
-                ? 'border-green-200 text-green-700 hover:bg-green-50' 
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            }`}
+          <Badge 
+            variant="secondary" 
+            className={`${difficultyColor} ${
+              q.isSolved || solvedProblems.has(q.id) ? 'opacity-75' : ''
+            } px-3 py-1 rounded-full text-xs font-medium`}
           >
-            {q.isSolved || solvedProblems.has(q.id) ? 'View Problem' : 'Solve Now'} 
-            <ExternalLink className="ml-2 h-4 w-4" />
-          </Button>
-        </Link>
-      </div>
-    </div>
-  </CardContent>
-</Card>
-            );
-          })}
+            {q.difficulty}
+          </Badge>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {q.questionTags.map((tag: AnyTag) => (
+            <Badge
+              key={tag.id}
+              variant="outline"
+              className={`text-xs bg-white border-gray-200 text-gray-600 ${
+                selectedTags.includes(tag.name) 
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                  : ''
+              } ${
+                primaryTag && tag.name === primaryTag
+                  ? 'bg-blue-50 border-blue-200 text-blue-700'
+                  : ''
+              }`}
+            >
+              {tag.name}
+              {primaryTag && tag.name === primaryTag && (
+                <span className="ml-1 text-xs">(Primary)</span>
+              )}
+            </Badge>
+          ))}
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-gray-100">
+          <div className="flex items-center gap-2">
+            <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
+              q.isSolved || solvedProblems.has(q.id) ? 'bg-green-100 text-green-600' : 'bg-indigo-100 text-indigo-600'
+            }`}>
+              <span className="text-sm font-bold">{Math.floor(q.points / 2)}</span>
+            </div>
+            <p className="text-sm text-gray-600">
+              Practice Points
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <HintsComponent
+              questionId={q.id} 
+              questionSlug={q.slug} 
+              primaryTagName={primaryTag}
+            />
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                if(q.isSolved || solvedProblems.has(q.id)){
+                  toast.error('Already verified');
+                  return;
+                }
+                const response = await verifySubmission(q.leetcodeUrl ? 'Leetcode' : 'Codeforces', q.slug, q.leetcodeUrl ? pUsernames.leetcodeUsername : pUsernames.codeforcesUsername, q.id); 
+                if(response){
+                  updateScoreInDatabase(q.id, null, q.points);  
+                } else {
+                  toast.error('Submission not verified');
+                }
+              }}
+              disabled={isVerifying[q.id]}
+              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full sm:w-auto"
+            >
+              {isVerifying[q.id] ? 
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              : q.isSolved || solvedProblems.has(q.id) ? 
+                <>Verified <CheckCircle className="ml-2 h-4 w-4 text-green-400" /></>
+               : <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>}
+            </Button>
+            
+            <Link 
+              href={q.leetcodeUrl || q.codeforcesUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto"
+            >
+              <Button 
+                variant={q.isSolved ? "outline" : "default"}
+                size="sm"
+                className={`w-full ${
+                  q.isSolved || solvedProblems.has(q.id) 
+                    ? 'border-green-200 text-green-700 hover:bg-green-50' 
+                    : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                }`}
+              >
+                {q.isSolved || solvedProblems.has(q.id) ? 'View Problem' : 'Solve Now'} 
+                <ExternalLink className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+})}
         </div>
       )}
       
