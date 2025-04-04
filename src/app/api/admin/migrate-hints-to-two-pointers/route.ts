@@ -1,6 +1,5 @@
-// app/api/admin/migrate-hints-to-two-pointers/route.ts
 import prisma from '@/lib/prisma';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 function createSSEStream() {
   const stream = new TransformStream();
@@ -9,7 +8,8 @@ function createSSEStream() {
   
   return {
     stream: stream.readable,
-    write: async (event: string, data: any) => {
+    //@ts-expect-error: not needed here
+    write: async (event: string, data) => {
       await writer.write(
         encoder.encode(`data: ${JSON.stringify({ type: event, data })}\n\n`)
       );
@@ -20,13 +20,10 @@ function createSSEStream() {
 
 export async function GET() {
   
-  // Create SSE stream
   const sse = createSSEStream();
   
-  // Create background task to handle the migration
   const backgroundTask = async () => {
     try {
-      // Make sure the Two Pointers tag exists, create if not
       let twoPointersTag = await prisma.questionTag.findUnique({
         where: { name: "Two Pointers" }
       });
@@ -37,10 +34,8 @@ export async function GET() {
         });
       }
       
-      // Send initial progress
       await sse.write('status', 'Starting migration...');
       
-      // Get all existing hints
       const existingHints = await prisma.hint.findMany({
         include: { question: true }
       });
@@ -48,11 +43,10 @@ export async function GET() {
       const totalHints = existingHints.length;
       await sse.write('status', `Found ${totalHints} existing hints to migrate`);
       
-      // For each hint, create a TagHint and Hintnew entries
       let migratedCount = 0;
       
       for (const hint of existingHints) {
-        // Check if this question already has a TagHint for Two Pointers
+
         const existingTagHint = await prisma.tagHint.findUnique({
           where: {
             questionId_tagId: {
@@ -63,7 +57,6 @@ export async function GET() {
         });
         
         if (!existingTagHint) {
-          // Create TagHint for Two Pointers
           const tagHint = await prisma.tagHint.create({
             data: {
               question: { connect: { id: hint.questionId } },
@@ -71,7 +64,6 @@ export async function GET() {
             }
           });
           
-          // Create three Hintnew entries for this TagHint
           await prisma.hintnew.createMany({
             data: [
               {
@@ -95,7 +87,6 @@ export async function GET() {
           migratedCount++;
         }
         
-        // Report progress
         if (migratedCount % 5 === 0 || migratedCount === totalHints) {
           await sse.write('progress', {
             total: totalHints,
@@ -105,7 +96,6 @@ export async function GET() {
         }
       }
       
-      // Send final results
       await sse.write('complete', {
         message: `Migration completed. Migrated ${migratedCount} questions' hints to Two Pointers tag.`,
         migratedCount
@@ -123,10 +113,8 @@ export async function GET() {
     }
   };
   
-  // Start the background task without waiting for it
   backgroundTask();
   
-  // Return the SSE stream response
   return new NextResponse(sse.stream, {
     headers: {
       'Content-Type': 'text/event-stream',
