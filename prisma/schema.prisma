@@ -28,7 +28,6 @@ model User {
   coordinatedGroup    Group?              @relation("GroupCoordinator") 
   contestPermissions  ContestPermission[]
   contestTime         TempContestTime[]
-  
   @@index([groupId]) 
 }
 

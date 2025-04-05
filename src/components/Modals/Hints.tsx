@@ -18,7 +18,7 @@ import axios from "axios";
 interface HintsComponentProps {
   questionId: string;
   questionSlug: string;
-  primaryTagName?: string; // Primary tag name to show hints for
+  primaryTagName?: string; 
   isAdmin?: boolean;
   children?: ReactNode;
   onSave?: () => void;
@@ -74,14 +74,12 @@ export default function HintsComponent({
   const [primaryTagId, setPrimaryTagId] = useState<string>("");
   const [tagHints, setTagHints] = useState<TagHint[]>([]);
   
-  // Fetch available tags and hints when modal opens
   useEffect(() => {
     if (!open) return;
     
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch all tags for this question
         const tagsResponse = await axios.get(`/api/questions/${questionId}/tags`);
         if (tagsResponse.data) {
           setAvailableTags(tagsResponse.data);
@@ -94,7 +92,6 @@ export default function HintsComponent({
             );
           }
           
-          // If no primary tag specified or not found, fallback to Two Pointers or first available
           if (!tagToUse) {
             tagToUse = tagsResponse.data.find((tag: TagOption) => 
               tag.name === "Two Pointers"
@@ -107,12 +104,9 @@ export default function HintsComponent({
           }
         }
         
-        // Fetch all tag hints for this question
         const hintsResponse = await axios.get(`/api/tag-hints/${questionId}`);
         if (hintsResponse.data) {
           setTagHints(hintsResponse.data);
-          
-          // Find the tag hint by tag name
           const tagHintForPrimary = hintsResponse.data.find((th: TagHint) => 
             primaryTagName ? 
               th.tagName.toLowerCase() === primaryTagName.toLowerCase() :
@@ -120,7 +114,6 @@ export default function HintsComponent({
           );
           
           if (tagHintForPrimary) {
-            // Found the tag hint we're looking for
             setPrimaryTagId(tagHintForPrimary.tagId);
             setSelectedTagId(tagHintForPrimary.tagId);
             
@@ -135,7 +128,6 @@ export default function HintsComponent({
             setHint(hintData);
             setOriginalHint(JSON.parse(JSON.stringify(hintData)));
           } else if (hintsResponse.data.length > 0) {
-            // If specific tag hint not found, use the first available
             const fallbackHint = hintsResponse.data[0];
             setPrimaryTagId(fallbackHint.tagId);
             setSelectedTagId(fallbackHint.tagId);
@@ -304,7 +296,7 @@ export default function HintsComponent({
   const renderEditableTabs = () => (
     <div className="space-y-6">
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+        <label className="block text-sm font-medium text-gray-700 mb-2 items-center">
           <TagIcon className="h-4 w-4 mr-2 text-indigo-500" />
           Tag for these hints:
         </label>

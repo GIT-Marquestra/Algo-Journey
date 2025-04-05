@@ -130,7 +130,6 @@ const ChatComponent: React.FC = () => {
             }
           }
         } 
-        // No code markers in this chunk
         else {
           if (inCodeBlock) {
             codeBuffer += text;
@@ -140,7 +139,6 @@ const ChatComponent: React.FC = () => {
         }
       }
       
-      // Send any remaining content
       if (inCodeBlock && codeBuffer.trim()) {
         onStreamUpdate({ text: codeBuffer, isCode: true, language: codeLanguage });
       } else if (accumulatedText.trim()) {
