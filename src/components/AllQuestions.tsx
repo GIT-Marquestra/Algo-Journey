@@ -28,7 +28,6 @@ import SearchBar, { ClientSideSearchConfig, ServerSideSearchConfig } from './Sea
 import TagManager from './Modals/TagManager';
 import useTagStore from '@/store/tagsStore';
 import HintsComponent from './Modals/Hints';
-import MigrationButton from './MigrationsButtons/Button';
 import LeetCodeStatsCollector from './Modals/Leetcode';
 // import LeetCodeStatsCollector from './Modals/Leetcode';
 

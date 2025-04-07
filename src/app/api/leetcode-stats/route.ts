@@ -2,10 +2,8 @@ import { NextResponse } from 'next/server';
 import axios from 'axios';
 import prisma from '@/lib/prisma';
 
-// Helper function for rate limiting
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Fetch single user's LeetCode stats
 async function fetchUserStats(username: string) {
   try {
     const query = {
@@ -96,25 +94,23 @@ export async function POST() {
     const successCount = { success: 0, failed: 0 };
     const failedUsers: string[] = [];
     
-    // Process users in batches to avoid API rate limits
     const BATCH_SIZE = 5;
-    const DELAY_BETWEEN_USERS = 1000; // 1 second between each user
-    const DELAY_BETWEEN_BATCHES = 5000; // 5 seconds between batches
+    const DELAY_BETWEEN_USERS = 1000; 
+    const DELAY_BETWEEN_BATCHES = 5000; 
 
     for (let i = 0; i < users.length; i += BATCH_SIZE) {
       const batch = users.slice(i, i + BATCH_SIZE);
       
-      // Process batch with concurrent promises but with individual delays
       const batchPromises = batch.map((user, index) => 
         new Promise<void>(async (resolve) => {
-          // Add delay between each user in the batch
+
           await delay(index * DELAY_BETWEEN_USERS);
           
           try {
             const stats = await fetchUserStats(user.leetcodeUsername);
             
             if (stats) {
-              // Create or update LeetCodeStats
+
               await prisma.leetCodeStats.upsert({
                 where: { username: user.username },
                 update: {
@@ -151,10 +147,10 @@ export async function POST() {
         })
       );
       
-      // Wait for all users in the batch to finish
+
       await Promise.all(batchPromises);
       
-      // Add delay between batches
+
       if (i + BATCH_SIZE < users.length) {
         await delay(DELAY_BETWEEN_BATCHES);
       }
