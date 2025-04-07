@@ -18,7 +18,6 @@ export default function LeetCodeStatsCollector() {
   const collectStats = async () => {
     try {
       setLoading(true);
-      toast.loading('This might take a few minutes, Please wait...')
       setStatus(null);
       
       const response = await fetch('/api/leetcode-stats', {
@@ -34,6 +33,7 @@ export default function LeetCodeStatsCollector() {
           ? `Failed users: ${data.failedUsers.join(', ')}` 
           : undefined
       });
+      toast.success(data.message)
     } catch (error) {
       setStatus({
         message: 'An error occurred while collecting stats',
@@ -42,7 +42,6 @@ export default function LeetCodeStatsCollector() {
       });
     } finally {
       setLoading(false);
-      toast.dismiss()
     }
   };
 

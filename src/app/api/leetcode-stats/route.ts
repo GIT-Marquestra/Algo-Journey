@@ -74,6 +74,26 @@ export async function GET() {
 
 export async function POST() {
   try {
+    // Start the background process without awaiting its completion
+    processUsersInBackground();
+    
+    // Immediately return success response
+    return NextResponse.json({
+      message: "LeetCode stats collection process started",
+      status: "processing"
+    });
+  } catch (error) {
+    console.error("Error initiating LeetCode stats collection:", error);
+    return NextResponse.json(
+      { message: "Failed to initiate LeetCode stats collection", error: String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+// This function will run in the background
+async function processUsersInBackground() {
+  try {
     // Get all users with leetcodeUsername
     const users = await prisma.user.findMany({
       select: {
@@ -103,14 +123,12 @@ export async function POST() {
       
       const batchPromises = batch.map((user, index) => 
         new Promise<void>(async (resolve) => {
-
           await delay(index * DELAY_BETWEEN_USERS);
           
           try {
             const stats = await fetchUserStats(user.leetcodeUsername);
             
             if (stats) {
-
               await prisma.leetCodeStats.upsert({
                 where: { username: user.username },
                 update: {
@@ -146,25 +164,21 @@ export async function POST() {
           resolve();
         })
       );
-      
 
       await Promise.all(batchPromises);
-      
 
       if (i + BATCH_SIZE < users.length) {
         await delay(DELAY_BETWEEN_BATCHES);
       }
     }
 
-    return NextResponse.json({
-      message: `Processed ${totalUsers} users: ${successCount.success} successful, ${successCount.failed} failed`,
-      failedUsers,
-    });
+    // Log completion statistics when finished
+    console.log(`Background process completed: Processed ${totalUsers} users: ${successCount.success} successful, ${successCount.failed} failed`);
+    console.log("Failed users:", failedUsers);
+    
+    // Optionally, store the result in the database or use webhooks to notify completion
+    
   } catch (error) {
-    console.error("Error in LeetCode stats collection:", error);
-    return NextResponse.json(
-      { message: "Failed to collect LeetCode stats", error: String(error) },
-      { status: 500 }
-    );
+    console.error("Error in background LeetCode stats collection:", error);
   }
 }
