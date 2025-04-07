@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Settings } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function LeetCodeStatsCollector() {
   const [loading, setLoading] = useState(false);
@@ -17,6 +18,7 @@ export default function LeetCodeStatsCollector() {
   const collectStats = async () => {
     try {
       setLoading(true);
+      toast.loading('This might take a few minutes, Please wait...')
       setStatus(null);
       
       const response = await fetch('/api/leetcode-stats', {
@@ -40,6 +42,7 @@ export default function LeetCodeStatsCollector() {
       });
     } finally {
       setLoading(false);
+      toast.dismiss()
     }
   };
 
@@ -74,7 +77,7 @@ export default function LeetCodeStatsCollector() {
         <Button 
           onClick={collectStats} 
           disabled={loading}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 bg-blue-700"
         >
           {loading ? 'Processing...' : 'Collect LeetCode Stats'}
           {loading && <RefreshCw className="h-4 w-4 animate-spin" />}

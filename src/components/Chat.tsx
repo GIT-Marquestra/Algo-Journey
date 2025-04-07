@@ -8,7 +8,6 @@ import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
 import { Octokit } from "@octokit/core";
 import ThinkingLoader from './ThinkingLoader';
-// import { AITypingEffect } from './AITypingEffect';
 import gemini from '@/images/google-gemini-icon.svg'
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Image from 'next/image';
@@ -76,30 +75,22 @@ const ChatComponent: React.FC = () => {
       let accumulatedText = "";
       let codeBuffer = "";
       let inCodeBlock = false;
-      let codeLanguage = "javascript"; // Default language
+      let codeLanguage = "javascript"; 
   
       for await (const chunk of responseStream.stream) {
         const text = chunk.text();
-        
-        // Check for code block markers
         if (text.includes("```")) {
           const segments = text.split("```");
           
           for (let i = 0; i < segments.length; i++) {
-            // Toggle code block state for each marker
             if (i > 0) {
               inCodeBlock = !inCodeBlock;
-              
-              // When we enter a code block
               if (inCodeBlock) {
-                // First, send any accumulated regular text
                 if (accumulatedText.trim()) {
                   const cleanText = accumulatedText.replace(/\*/g, "");
                   onStreamUpdate({ text: cleanText, isCode: false });
                   accumulatedText = "";
                 }
-                
-                // Check for language specification
                 const langMatch = segments[i].match(/^(\w+)\n/);
                 if (langMatch) {
                   codeLanguage = langMatch[1];
@@ -155,7 +146,6 @@ const ChatComponent: React.FC = () => {
   const handleAIResponse = async (userMessage: string) => {
     if (!userMessage.trim()) return;
   
-    // Add user message to state
     const userMessageObj: Message = {
       id: Date.now().toString(),
       sender: "user",
@@ -165,11 +155,10 @@ const ChatComponent: React.FC = () => {
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMessageObj]);
-  
-    // Create separate messages for each content type
+
     setIsLoading(true)
+
     await sendToGeminiStream(userMessage, (chunk) => {
-      // Create a new message for each chunk received
       const newMessage: Message = {
         id: Date.now().toString(),
         sender: "ai",
@@ -440,10 +429,8 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
   const copyToClipboard = async (text: string, id: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedMessageId(id); // Mark message as copied
+      setCopiedMessageId(id); 
       toast.success("Copied to clipboard! 📋");
-
-      // Reset copied state after 2 seconds
       setTimeout(() => setCopiedMessageId(null), 2000);
     } catch (err) {
       console.error(err)
@@ -453,12 +440,10 @@ const handleProjectSubmit = async (e: React.FormEvent) => {
 
   return (
     <div className="flex mt-24 flex-col w-full h-[90vh] max-w-[70%] mx-auto relative">
-      {/* Messages area */}
       {loading && <ThinkingLoader/>}
       <div className="flex-1 p-4 pb-24 overflow-y-auto relative">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            {/* <Bot size={48} className="mb-4 text-blue-300" /> */}
             <p className="text-center">Chat/Rate with</p>
             <span className='flex items-center justify-center'><Image src={gemini} alt='gemini' className='size-8'/>Gemini</span>
             
