@@ -79,7 +79,7 @@ export async function POST() {
     
     // Immediately return success response
     return NextResponse.json({
-      message: "LeetCode stats collection process started",
+      message: "LeetCode stats collection process has started running in backend",
       status: "processing"
     });
   } catch (error) {
