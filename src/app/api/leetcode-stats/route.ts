@@ -29,7 +29,7 @@ async function fetchUserStats(username: string) {
 
     const userData = response.data?.data?.matchedUser;
     if (!userData) {
-      throw new Error("User not found on LeetCode");
+      console.log("User not found on LeetCode");
     }
     
     const result = {
