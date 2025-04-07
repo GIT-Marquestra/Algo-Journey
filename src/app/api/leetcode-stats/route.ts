@@ -36,10 +36,14 @@ async function fetchUserStats(username: string) {
     
     const result = {
       leetcodeUsername: userData.username,
-      totalSolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "All")?.count || 0,
-      easySolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "Easy")?.count || 0,
-      mediumSolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "Medium")?.count || 0,
-      hardSolved: userData.submitStats.acSubmissionNum.find((item: any) => item.difficulty === "Hard")?.count || 0
+      //@ts-expect-error: no need here...
+      totalSolved: userData.submitStats.acSubmissionNum.find((item) => item.difficulty === "All")?.count || 0,
+      //@ts-expect-error: no need here...
+      easySolved: userData.submitStats.acSubmissionNum.find((item) => item.difficulty === "Easy")?.count || 0,
+      //@ts-expect-error: no need here...
+      mediumSolved: userData.submitStats.acSubmissionNum.find((item) => item.difficulty === "Medium")?.count || 0,
+      //@ts-expect-error: no need here...
+      hardSolved: userData.submitStats.acSubmissionNum.find((item) => item.difficulty === "Hard")?.count || 0
     };
 
     return result;
