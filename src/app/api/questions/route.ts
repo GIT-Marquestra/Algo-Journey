@@ -18,7 +18,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Custom ordering for difficulty levels
     const difficultyOrder = {
       BEGINNER: 1,
       EASY: 2,
@@ -26,6 +25,14 @@ export async function POST(request: Request) {
       HARD: 4,
       VERYHARD: 5
     };
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: userEmail,
+      }
+    });
+
+    
 
     const questions = await prisma.question.findMany({
       where: {
@@ -52,10 +59,8 @@ export async function POST(request: Request) {
       }
     });
 
-    // Sort the questions
     const sortedQuestions = questions.sort((a, b) => {
       
-      // Fall back to difficulty sorting if arenaOrder is not available
       const diffA = difficultyOrder[a.difficulty];
       const diffB = difficultyOrder[b.difficulty];
       
@@ -63,7 +68,6 @@ export async function POST(request: Request) {
         return diffA - diffB;
       }
       
-      // Finally sort by arenaAddedAt
       if (!a.arenaAddedAt && !b.arenaAddedAt) return 0;
       if (!a.arenaAddedAt) return 1;
       if (!b.arenaAddedAt) return -1;
@@ -71,11 +75,19 @@ export async function POST(request: Request) {
       return a.arenaAddedAt.getTime() - b.arenaAddedAt.getTime();
     });
 
-    const user = await prisma.user.findUnique({
+    const bookmarks = await prisma.bookmark.findMany({
       where: {
-        email: userEmail,
+        userId: user?.id,
+        questionId: {
+          in: sortedQuestions.map(q => q.id)
+        }
+      },
+      select: {
+        questionId: true
       }
     });
+
+    
 
     const acceptedSubmissions = await prisma.submission.findMany({
       where: {
@@ -89,11 +101,13 @@ export async function POST(request: Request) {
 
     const solvedQuestionIds = new Set(acceptedSubmissions.map(sub => sub.questionId));
 
-    // Add index to each question
+    const bookmarkedQuestionIds = new Set(bookmarks.map(bookmark => bookmark.questionId));
+
     const questionsWithSolvedStatus = sortedQuestions.map((question, index) => ({
       ...question,
-      index: index, // Explicit index field for ordering
+      index: index,
       isSolved: solvedQuestionIds.has(question.id),
+      isBookmarked: bookmarkedQuestionIds.has(question.id) // Add this line
     }));
 
     return NextResponse.json({ 

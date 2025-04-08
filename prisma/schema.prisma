@@ -24,7 +24,8 @@ model User {
   individualPoints    Int                 @default(0)
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
-  applications        GroupApplication[]   @relation("GroupApplications")
+  applications        GroupApplication[]  @relation("GroupApplications")
+  bookmarks        Bookmark[]
   coordinatedGroup    Group?              @relation("GroupCoordinator") 
   contestPermissions  ContestPermission[]
   contestTime         TempContestTime[]
@@ -132,6 +133,7 @@ model Question {
   submissions       Submission[]          @relation("QuestionToSubmission")
   createdAt         DateTime              @default(now())
   temporary         TempContestQuestion[] @relation("QuestionToTemp")
+  bookmarks        Bookmark[]
   updatedAt         DateTime              @updatedAt
   tagHints          TagHint[]            
   hint              Hint?      
@@ -144,13 +146,26 @@ model QuestionTag {
   id          String      @id @default(uuid())
   name        String      @unique
   questions   Question[]
-  tagHints    TagHint[]   // New relation to TagHint model
+  tagHints    TagHint[]  
   createdAt   DateTime    @default(now())
 }
 
 enum QuestionPlatform {
   LEETCODE
   CODEFORCES
+}
+
+model Bookmark {
+  id          String    @id @default(uuid())
+  userId      String
+  questionId  String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question    Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([userId, questionId])
+  @@index([userId])
+  @@index([questionId])
 }
 
 enum Difficulty {
@@ -184,13 +199,14 @@ model QuestionOnContest {
   @@unique([contestId, questionId])
 }
 
+
 model TagHint {
   id          String        @id @default(uuid())
   questionId  String
   question    Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
   tagId       String
   tag         QuestionTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  hints       Hintnew[]        // One-to-many relation to Hint model
+  hints       Hintnew[]     
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 

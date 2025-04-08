@@ -16,9 +16,7 @@ export async function POST(req: Request) {
         const existingTagNames = new Set(existingTags.map(tag => tag.name));
         const incomingTagNames = new Set(tags);
 
-
         const tagsToRemove = [...existingTagNames].filter(tag => !incomingTagNames.has(tag));
-
 
         const tagsToAdd = [...incomingTagNames].filter(tag => !existingTagNames.has(tag)).map(tag => ({ name: tag }));
 
@@ -37,3 +35,5 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Failed to update tags" }, { status: 500 });
     }
 }
+
+

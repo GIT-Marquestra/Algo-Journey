@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useParams } from 'next/navigation';
-import { ExternalLink, Check, Loader2, CheckCircle } from 'lucide-react';
+import { ExternalLink, Check, Loader2, CheckCircle, BookmarkPlus, Bookmark } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { Difficulty } from '@prisma/client';
@@ -29,10 +29,11 @@ interface Question {
   difficulty: Difficulty;
   points: number;
   isSolved: boolean;
+  isBookmarked: boolean; // Add this line
   leetcodeUrl: string | null;
   codeforcesUrl: string | null;
   questionTags: QuestionTag[];
-  index: number; // Add this new field
+  index: number;
   submissions?: {
     status: string;
     score: number;
@@ -77,8 +78,10 @@ const DIFFICULTIES = [
 const QuestionSolving = () => {
   const { setTags } = useTagStore()
   const [localTags, setLocalTags] = useState<string[]>([]); 
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState<boolean>(false);
   const { array } = useParams();
   const [loading, setLoading] = useState<boolean>(true);
+  const [isBookmarking, setIsBookmarking] = useState<{ [key: string]: boolean }>({});
   const [solvedProblems, setSolvedProblems] = useState<Set<string>>(new Set());
   const { pUsernames, setPUsernames } = useStore()
   const [selectSolved, setSelectSolved] = useState<boolean>(false); 
@@ -133,6 +136,34 @@ const QuestionSolving = () => {
       return false;
     } finally{
       setIsVerifying(prev => ({ ...prev, [questionId]: false }));
+    }
+  };
+
+  const toggleBookmark = async (questionId: string, currentBookmarkStatus: boolean) => {
+    setIsBookmarking(prev => ({ ...prev, [questionId]: true }));
+    
+    try {
+      const action = currentBookmarkStatus ? 'remove' : 'add';
+      const response = await axios.post('/api/bookmark', {
+        questionId,
+        action
+      });
+      
+      if (response.status === 200) {
+        // Update local state to reflect the change
+        setQuestions(prev => 
+          prev.map(q => 
+            q.id === questionId ? { ...q, isBookmarked: !currentBookmarkStatus } : q
+          )
+        );
+        
+        toast.success(currentBookmarkStatus ? 'Bookmark removed' : 'Question bookmarked');
+      }
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+      toast.error('Failed to update bookmark');
+    } finally {
+      setIsBookmarking(prev => ({ ...prev, [questionId]: false }));
     }
   };
 
@@ -199,7 +230,13 @@ const QuestionSolving = () => {
     // Sort by index before applying any filters
     filtered.sort((a, b) => a.index - b.index);
     
-    if(selectSolved){
+    // Apply bookmark filter if enabled
+    if (showBookmarkedOnly) {
+      filtered = filtered.filter(q => q.isBookmarked);
+    }
+    
+    // Existing filters
+    if (selectSolved) {
       filtered = filtered.filter(q => !q.isSolved && !solvedProblems.has(q.id));
     }
   
@@ -210,13 +247,12 @@ const QuestionSolving = () => {
     if (selectedTags.length > 0) {
       filtered = filtered.filter(q => {
         const questionTagNames = q.questionTags.map(tag => tag.name);
-        // Only check that all selected tags are included, don't check length
         return selectedTags.every(selectedTag => questionTagNames.includes(selectedTag));
       });
     }
   
     setFilteredQuestions(filtered);
-  }, [selectedTags, selectedDifficulty, questions, setSelectSolved, selectSolved, solvedProblems]);
+  }, [selectedTags, selectedDifficulty, questions, selectSolved, solvedProblems, showBookmarkedOnly]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
@@ -316,6 +352,26 @@ const QuestionSolving = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button 
+                  className={`${
+                    showBookmarkedOnly 
+                      ? 'bg-yellow-500 hover:bg-yellow-600' 
+                      : 'bg-indigo-600 hover:bg-indigo-500'
+                  } text-white`} 
+                  onClick={() => setShowBookmarkedOnly((prev) => !prev)}
+                >
+                  {showBookmarkedOnly ? (
+                    <>
+                      <Bookmark className="mr-2 h-4 w-4 fill-white" />
+                      Showing Bookmarked
+                    </>
+                  ) : (
+                    <>
+                      <BookmarkPlus className="mr-2 h-4 w-4" />
+                      Show Bookmarked Only
+                    </>
+                  )}
+                </Button>
                 <Button className='bg-indigo-600 hover:bg-indigo-500' onClick={() => setSelectSolved((p) => !p)}>Toggle not Solved</Button>
               </div>
   
@@ -353,6 +409,8 @@ const QuestionSolving = () => {
             onClick={() => {
               setSelectedTags([]);
               setSelectedDifficulty("ALL");
+              setShowBookmarkedOnly(false); // Add this line
+              setSelectSolved(false); // You might want to reset this too
             }}
           >
             Clear filters
@@ -458,6 +516,34 @@ const QuestionSolving = () => {
               questionSlug={q.slug} 
               primaryTagName={primaryTag}
             />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toggleBookmark(q.id, q.isBookmarked)}
+              disabled={isBookmarking[q.id]}
+              className={`border-indigo-200 ${
+                q.isBookmarked 
+                  ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100' 
+                  : 'text-indigo-700 hover:bg-indigo-50'
+              } w-full sm:w-auto`}
+            >
+              {isBookmarking[q.id] ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : q.isBookmarked ? (
+                <>
+                  <Bookmark className="mr-2 h-4 w-4 fill-yellow-500" />
+                  Bookmarked
+                </>
+              ) : (
+                <>
+                  <BookmarkPlus className="mr-2 h-4 w-4" />
+                  Bookmark
+                </>
+              )}
+            </Button>
             
             <Button
               variant="outline"
@@ -486,6 +572,7 @@ const QuestionSolving = () => {
                 <>Verified <CheckCircle className="ml-2 h-4 w-4 text-green-400" /></>
                : <>Verify <CheckCircle className="ml-2 h-4 w-4" /></>}
             </Button>
+            
             
             <Link 
               href={q.leetcodeUrl || q.codeforcesUrl || '#'}
@@ -518,6 +605,11 @@ const QuestionSolving = () => {
       {questions.length > 0 && (
         <div className="mt-6 text-center text-sm text-gray-600">
           Showing {filteredQuestions.length} of {questions.length} questions
+          {showBookmarkedOnly && (
+            <span className="ml-1">
+              (Bookmarked only)
+            </span>
+          )}
         </div>
       )}
     </div>

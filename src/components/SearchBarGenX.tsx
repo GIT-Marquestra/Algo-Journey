@@ -54,7 +54,7 @@ function getDataFromPath(obj, path?: string) {
   }, obj);
 }
 
-// Custom hook to handle the search logic
+
 function useSearch<T>(config: SearchConfig<T>): UseSearchResult<T> {
   const [query, setQuery] = useState<string>('');
   const [results, setResults] = useState<T[]>([]);
@@ -63,7 +63,7 @@ function useSearch<T>(config: SearchConfig<T>): UseSearchResult<T> {
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Clear timeout on unmount
+
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {

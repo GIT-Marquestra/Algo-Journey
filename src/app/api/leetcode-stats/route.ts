@@ -74,10 +74,7 @@ export async function GET() {
 
 export async function POST() {
   try {
-    // Start the background process without awaiting its completion
     processUsersInBackground();
-    
-    // Immediately return success response
     return NextResponse.json({
       message: "LeetCode stats collection process has started running in backend",
       status: "processing"
