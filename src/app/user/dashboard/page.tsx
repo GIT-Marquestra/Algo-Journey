@@ -46,7 +46,6 @@ import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
-import ProjectRatingNotification from '@/components/Notification';
 import { CodeforcesSkeleton, ContestsSkeleton, LeetCodeSkeleton, StatsCardSkeleton } from '@/components/Skeletons';
 
 interface GroupMember {
@@ -155,9 +154,7 @@ export default function Dashboard() {
   const [loadingMembers, setLoadingMembers] = useState<boolean>(false); 
   const router = useRouter();
   const { data: session, status } = useSession();
-  const [notification, setNotification] = useState<boolean>(true);
   const [showTeamMembers, setShowTeamMembers] = useState(false);
-  const [token, setToken] = useState<string | null>(null)
   const fetchDashboardData = async (): Promise<DashboardData> => {
     try {
       setLoadingContest(true)
@@ -299,24 +296,17 @@ export default function Dashboard() {
   }, [status]);
 
 
-  // Calculate difficulty percentages for LeetCode
   const getLeetCodeDifficultyPercentage = (solved: number, total: number) => {
     return solved && total ? Math.round((solved / total) * 100) : 0;
   };
 
-  // Format date function
   const formatDate = (dateString: string) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     //@ts-expect-error: don't know about this 
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem('githubAccessToken');
-    if (accessToken) {
-      setToken(accessToken);
-    }
-  }, []);
+  
 
   // Format time function
   const formatTime = (timeString: string) => {
@@ -830,10 +820,5 @@ export default function Dashboard() {
     </>
 
   </div>
-  {notification && <ProjectRatingNotification onGetRated={() => {
-    router.push(token ? '/chat/true' : '/chat/false')
-  }} onClose={() => {
-    setNotification(false)
-  }}/>}
 </div> );
 }
