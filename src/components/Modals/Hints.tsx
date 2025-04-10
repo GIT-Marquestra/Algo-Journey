@@ -335,7 +335,7 @@ export default function HintsComponent({
                 placeholder="Enter the first hint (basic direction)"
                 value={hint.hint1}
                 onChange={(e) => handleInputChange("hint1", e.target.value)}
-                className="min-h-32 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                className="min-h-32 h-64 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </TabsContent>
             
@@ -345,7 +345,7 @@ export default function HintsComponent({
                 placeholder="Enter the second hint (more specific approach)"
                 value={hint.hint2}
                 onChange={(e) => handleInputChange("hint2", e.target.value)}
-                className="min-h-32 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                className="min-h-32 h-64 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </TabsContent>
             
@@ -355,7 +355,7 @@ export default function HintsComponent({
                 placeholder="Enter the third hint (almost solution)"
                 value={hint.hint3}
                 onChange={(e) => handleInputChange("hint3", e.target.value)}
-                className="min-h-32 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                className="min-h-32 h-64 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
             </TabsContent>
           </CardContent>
@@ -392,13 +392,13 @@ export default function HintsComponent({
         
         <Card className="border-amber-100 shadow-sm">
           <CardContent className="p-0">
-            <TabsContent value="hint1" className="p-6 bg-amber-50 rounded-md m-0">
+            <TabsContent value="hint1" className="p-6 bg-amber-50 rounded-md m-0 max-h-64 overflow-y-auto">
               <p className="whitespace-pre-wrap text-gray-800">{hint.hint1 || "No hint available."}</p>
             </TabsContent>
-            <TabsContent value="hint2" className="p-6 bg-amber-50 rounded-md m-0">
+            <TabsContent value="hint2" className="p-6 bg-amber-50 rounded-md m-0 max-h-64 overflow-y-auto">
               <p className="whitespace-pre-wrap text-gray-800">{hint.hint2 || "No hint available."}</p>
             </TabsContent>
-            <TabsContent value="hint3" className="p-6 bg-amber-50 rounded-md m-0">
+            <TabsContent value="hint3" className="p-6 bg-amber-50 rounded-md m-0 max-h-64 overflow-y-auto">
               <p className="whitespace-pre-wrap text-gray-800">{hint.hint3 || "No hint available."}</p>
             </TabsContent>
           </CardContent>
@@ -460,7 +460,7 @@ export default function HintsComponent({
           </DialogTrigger>
         )}
         
-        <DialogContent className="sm:max-w-2xl bg-white/95 backdrop-blur-sm border-gray-100 shadow-lg">
+        <DialogContent className="sm:max-w-2xl bg-white/95 backdrop-blur-sm border-gray-100 shadow-lg max-h-[90vh] flex flex-col">
           <DialogHeader className="border-b border-gray-100 pb-4">
             <div className="flex justify-between items-center">
               <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -496,7 +496,7 @@ export default function HintsComponent({
               <span className="ml-2 text-gray-600">Loading hints...</span>
             </div>
           ) : (
-            <div className="py-4">
+            <div className="py-4 overflow-y-auto flex-1">
               {isEditMode ? renderEditableTabs() : renderReadOnlyTabs()}
               
               {isEditMode && (
