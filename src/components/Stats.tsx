@@ -65,6 +65,7 @@ const StatsCard = ({
 
 
 const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
+  const { isAdmin } = useStore()
   
   if (loading) {
     return (
@@ -94,9 +95,9 @@ const UserList = ({ loading, users }: { loading: boolean, users: User[] }) => {
               {u.username.charAt(0).toUpperCase()}
               </div>
               <div className="space-y-1">
-                <Link href={`/user/updateProfile/${u.username}`} target='_blank'>
+                {isAdmin ? <Link href={`/user/updateProfile/${u.username}`} target='_blank'>
                   <h4 className="font-medium text-indigo-700 hover:text-indigo-800 transition-colors">{u.email.split('@nst')[0].split('.')[0].toUpperCase()} {u.email.split('@nst')[0].split('.')[1].split('2024')[0].toUpperCase()}</h4>
-                </Link>
+                </Link> : <h4 className="font-medium text-indigo-700 hover:text-indigo-800 transition-colors">{u.email.split('@nst')[0].split('.')[0].toUpperCase()} {u.email.split('@nst')[0].split('.')[1].split('2024')[0].toUpperCase()}</h4>}
                 <p className="text-sm text-gray-600">Section {u.section}</p>
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import useStore from "@/store/store";
 
 interface User {
   id: string;
@@ -128,6 +129,7 @@ const GroupRankings = ({ groups }: { groups: Group[] | undefined }) => {
 };
 
 const WeeklyRankings = ({ users }: { users: User[] | undefined }) => {
+  const { isAdmin } = useStore()
   if (!users || users.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500 bg-white/90 rounded-lg shadow-sm">
@@ -151,11 +153,13 @@ const WeeklyRankings = ({ users }: { users: User[] | undefined }) => {
           </div>
           <div className="flex-1 flex items-center gap-3">
             <User className="h-5 w-5 text-gray-500" />
-            <Link href={`/user/updateProfile/${user.username}`} target="_blank">
+            {isAdmin ? <Link href={`/user/updateProfile/${user.username}`} target="_blank">
               <p className="font-semibold text-blue-700 hover:text-blue-800 transition-colors">
                 {user.username}
               </p>
-            </Link>
+            </Link> : <p className="font-semibold text-blue-700 hover:text-blue-800 transition-colors">
+                {user.username}
+              </p>}
           </div>
           <div className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-indigo-500" />
