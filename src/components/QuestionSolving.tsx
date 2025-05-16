@@ -89,15 +89,15 @@ const QuestionSolving = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("ALL");
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
-  const newString = Array.isArray(array) ? array.join('/') : null;
+  let newString = Array.isArray(array) ? array.join('/') : null;
+  newString = "/" + newString
   const newArray = newString ? newString.split('/s/') : null;
-  const topics = newArray ? newArray[0].split('/') : null;
+  const topics = newArray ? newArray[1].split('/') : null;
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const difficulties = newArray ? newArray[1].split('/') : null;
+  const difficulties = newArray ? newArray[2].split('/') : null;
   const [isVerifying, setIsVerifying] = useState<{ [key: string]: boolean }>({}); 
   const fn = async () => {
     const res = await axios.get('/api/getTags')
-    console.log(res)
     //@ts-expect-error: not needed here.
     const tags = res.data.map((p) => p.name)
     setTags(tags)
@@ -204,7 +204,11 @@ const QuestionSolving = () => {
           });
         }
 
-        const questionsRes = await axios.post('/api/questions', topics && difficulties ? { topics: [...topics], difficulties: [...difficulties] } : {})
+        const newTopics = topics?.map((topic) => {
+          return decodeURIComponent(topic)
+        }) 
+
+        const questionsRes = await axios.post('/api/questions', newTopics && difficulties ? { topics: [...newTopics], difficulties: [...difficulties] } : {})
         questionsRes.data.questionsWithSolvedStatus.forEach((q: Question) => {
           setLocalTags((prev) => {
             return [...new Set([...prev, ...q.questionTags.map((tags: QuestionTag) => tags.name)])];

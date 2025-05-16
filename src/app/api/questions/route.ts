@@ -8,6 +8,7 @@ export async function POST(request: Request) {
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const userEmail = session.user.email;
     const body = await request.json();
     const { topics, difficulties } = body;
