@@ -46,7 +46,7 @@ import { redirect } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { fetchCodeforcesUserData, fetchLatestSubmissionsLeetCode, fetchUserStats } from '@/serverActions/fetch';
 import { useQuery } from '@tanstack/react-query';
-import { CodeforcesSkeleton, ContestsSkeleton, LeetCodeSkeleton, StatsCardSkeleton } from '@/components/Skeletons';
+import useStore from '@/store/store';
 
 interface GroupMember {
   username: string;
@@ -150,6 +150,7 @@ const StatusBadge = ({ status }: { status: StatusType }) => {
 export default function Dashboard() {
   const [members, setMembers] = useState<GroupMember[]>([]);  
   const [loadingPlatformData, setLoadingPlatformData] = useState(false);
+  const { isDarkMode } = useStore();
   const [loadingContest, setLoadingContest] = useState(false)
   const [loadingMembers, setLoadingMembers] = useState<boolean>(false); 
   const router = useRouter();
@@ -316,415 +317,608 @@ export default function Dashboard() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-  <div className="container mx-auto p-8 pt-20 space-y-8">
-    <>
-      {/* Welcome header with avatar */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">
-            Welcome back, <span className="text-indigo-600">{dashboardData?.username}</span>
-          </h1>
-          <p className="text-gray-600 mt-1">Let&apos;s continue your coding journey!</p>
+  <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
+    <div className="container mx-auto p-8 pt-20 space-y-8">
+      <>
+        {/* Welcome header with avatar */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+              Welcome back, <span className={`${isDarkMode ? 'text-indigo-400' : 'text-indigo-600'}`}>{dashboardData?.username}</span>
+            </h1>
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-1`}>Let&apos;s continue your coding journey!</p>
+          </div>
+          {/* Dark mode toggle button */}
         </div>
-      </div>
-      
-      {/* Stats cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-blue-400 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Target className="h-4 w-4 text-blue-500" />
-              Submissions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gray-800">{dashboardData?.userStats.totalSubmissions}</p>
-            <p className="text-xs text-gray-500 mt-1">Total problems attempted</p>
-          </CardContent>
-        </Card>}
-
-        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-teal-400 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Trophy className="h-4 w-4 text-teal-500" />
-              Individual Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gray-800">{dashboardData?.userStats.totalPoints}</p>
-            <p className="text-xs text-gray-500 mt-1">Your personal points</p>
-          </CardContent>
-        </Card>}
-
-        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-amber-400 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Users className="h-4 w-4 text-amber-500" />
-              Team
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-xl font-bold text-gray-800 truncate">
-              {dashboardData?.userStats.groupName || 'No Team'}
-            </p>
-            {dashboardData?.userStats.groupName && (
-              <p className="text-xs text-gray-500 mt-1">
-                {dashboardData.userStats.groupMembers} team members
-              </p>
-            )}
-          </CardContent>
-        </Card>}
-
-        {loadingContest ? <StatsCardSkeleton/> : <Card className="bg-white border-l-4 border-l-rose-400 shadow-sm hover:shadow-md transition-all">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Award className="h-4 w-4 text-rose-500" />
-              Team Score
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-gray-800">
-              {dashboardData?.userStats.groupPoints || 0}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">Combined team points</p>
-          </CardContent>
-        </Card>}
-      </div>
-
-      {/* Platform Statistics */}
-      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-        {/* LeetCode card */}
-        {loadingPlatformData ? <LeetCodeSkeleton/> : <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
-          <CardHeader className="border-b border-gray-100 pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Code className="h-5 w-5 text-indigo-500" />
-                LeetCode Progress
+        
+        {/* Stats cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {loadingContest ? <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm p-4 animate-pulse`}>
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`h-4 w-4 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      <div className={`h-4 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`h-8 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+    <div className={`h-3 w-24 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+  </div> : <Card className={`${
+            isDarkMode 
+              ? 'bg-gray-800 border-l-4 border-l-blue-400' 
+              : 'bg-white border-l-4 border-l-blue-400'
+          } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className="pb-2">
+              <CardTitle className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} flex items-center gap-2`}>
+                <Target className="h-4 w-4 text-blue-500" />
+                Submissions
               </CardTitle>
-              <ExternalLink className="h-4 w-4 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <p className={`text-3xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{dashboardData?.userStats.totalSubmissions}</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Total problems attempted</p>
+            </CardContent>
+          </Card>}
+
+          {loadingContest ? <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm p-4 animate-pulse`}>
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`h-4 w-4 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      <div className={`h-4 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`h-8 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+    <div className={`h-3 w-24 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+  </div> : <Card className={`${
+            isDarkMode 
+              ? 'bg-gray-800 border-l-4 border-l-teal-400' 
+              : 'bg-white border-l-4 border-l-teal-400'
+          } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className="pb-2">
+              <CardTitle className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} flex items-center gap-2`}>
+                <Trophy className="h-4 w-4 text-teal-500" />
+                Individual Score
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className={`text-3xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{dashboardData?.userStats.totalPoints}</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Your personal points</p>
+            </CardContent>
+          </Card>}
+
+          {loadingContest ? <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm p-4 animate-pulse`}>
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`h-4 w-4 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      <div className={`h-4 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`h-8 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+    <div className={`h-3 w-24 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+  </div> : <Card className={`${
+            isDarkMode 
+              ? 'bg-gray-800 border-l-4 border-l-amber-400' 
+              : 'bg-white border-l-4 border-l-amber-400'
+          } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className="pb-2">
+              <CardTitle className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} flex items-center gap-2`}>
+                <Users className="h-4 w-4 text-amber-500" />
+                Team
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} truncate`}>
+                {dashboardData?.userStats.groupName || 'No Team'}
+              </p>
+              {dashboardData?.userStats.groupName && (
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                  {dashboardData.userStats.groupMembers} team members
+                </p>
+              )}
+            </CardContent>
+          </Card>}
+
+          {loadingContest ? <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm p-4 animate-pulse`}>
+    <div className="flex items-center gap-2 mb-2">
+      <div className={`h-4 w-4 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      <div className={`h-4 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`h-8 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+    <div className={`h-3 w-24 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+  </div> : <Card className={`${
+            isDarkMode 
+              ? 'bg-gray-800 border-l-4 border-l-rose-400' 
+              : 'bg-white border-l-4 border-l-rose-400'
+          } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className="pb-2">
+              <CardTitle className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'} flex items-center gap-2`}>
+                <Award className="h-4 w-4 text-rose-500" />
+                Team Score
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className={`text-3xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                {dashboardData?.userStats.groupPoints || 0}
+              </p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>Combined team points</p>
+            </CardContent>
+          </Card>}
+        </div>
+
+        {/* Platform Statistics */}
+        <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+          {/* LeetCode card */}
+          {loadingPlatformData ? <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm p-6 animate-pulse`}>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <div className={`h-5 w-5 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+        <div className={`h-6 w-32 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      </div>
+      <div className={`h-4 w-4 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`h-4 w-48 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded mb-6`}></div>
+    
+    <div className="flex justify-between items-center mb-4">
+      <div className={`h-4 w-24 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      <div className={`h-5 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`w-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-2.5 mb-4`}>
+      <div className={`${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'} h-2.5 rounded-full w-1/3`}></div>
+    </div>
+    
+    <div className="grid grid-cols-3 gap-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className={`p-3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+          <div className={`h-3 w-8 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+          <div className={`h-5 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+          <div className={`w-full ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full h-1.5`}>
+            <div className={`${isDarkMode ? 'bg-gray-500' : 'bg-gray-300'} h-1.5 rounded-full w-1/2`}></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div> : <Card className={`${
+            isDarkMode 
+              ? 'bg-gray-800/90 border-gray-700' 
+              : 'bg-white/90 border-gray-100'
+          } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-b pb-4`}>
+              <div className="flex items-center justify-between">
+                <CardTitle className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-2`}>
+                  <Code className="h-5 w-5 text-indigo-500" />
+                  LeetCode Progress
+                </CardTitle>
+                <ExternalLink className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              </div>
+              <CardDescription className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Track your problem-solving journey
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                    Problems Solved
+                  </span>
+                  <span className={`text-lg font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {platformData?.leetcodeData?.totalSolved || 0} / {platformData?.leetcodeData?.totalQuestions || 0}
+                  </span>
+                </div>
+                <div className={`w-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full h-2.5`}>
+                  {platformData?.leetcodeData && <div 
+                    className="bg-indigo-500 h-2.5 rounded-full" 
+                    style={{ width: `${(platformData?.leetcodeData?.totalSolved / platformData?.leetcodeData?.totalQuestions * 100) || 0}%` }}
+                  ></div>}
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className={`p-3 ${
+                    isDarkMode 
+                      ? 'bg-green-500/20 border border-green-500/30' 
+                      : 'bg-green-50'
+                  } rounded-lg`}>
+                    <div className={`text-xs ${isDarkMode ? 'text-green-400' : 'text-green-700'}`}>Easy</div>
+                    <div className={`text-lg font-semibold ${isDarkMode ? 'text-green-400' : 'text-green-800'}`}>
+                      {platformData?.leetcodeData?.easySolved || 0} 
+                      <span className={`text-xs ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>/{platformData?.leetcodeData?.totalEasy || 0}</span>
+                    </div>
+                    <div className={`w-full ${isDarkMode ? 'bg-green-900/30' : 'bg-green-200'} rounded-full h-1.5 mt-1`}>
+                      {platformData?.leetcodeData && <div 
+                        className="bg-green-500 h-1.5 rounded-full" 
+                        style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.easySolved, platformData?.leetcodeData?.totalEasy)}%` }}
+                      ></div>}
+                    </div>
+                  </div>
+                  <div className={`p-3 ${
+                    isDarkMode 
+                      ? 'bg-amber-500/20 border border-amber-500/30' 
+                      : 'bg-amber-50'
+                  } rounded-lg`}>
+                    <div className={`text-xs ${isDarkMode ? 'text-amber-400' : 'text-amber-700'}`}>Medium</div>
+                    <div className={`text-lg font-semibold ${isDarkMode ? 'text-amber-400' : 'text-amber-800'}`}>
+                      {platformData?.leetcodeData?.mediumSolved || 0}
+                      <span className={`text-xs ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`}>/{platformData?.leetcodeData?.totalMedium || 0}</span>
+                    </div>
+                    <div className={`w-full ${isDarkMode ? 'bg-amber-900/30' : 'bg-amber-200'} rounded-full h-1.5 mt-1`}>
+                      {platformData?.leetcodeData && <div 
+                        className="bg-amber-500 h-1.5 rounded-full" 
+                        style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.mediumSolved, platformData?.leetcodeData?.totalMedium)}%` }}
+                      ></div>}
+                    </div>
+                  </div>
+                  <div className={`p-3 ${
+                    isDarkMode 
+                      ? 'bg-red-500/20 border border-red-500/30' 
+                      : 'bg-red-50'
+                  } rounded-lg`}>
+                    <div className={`text-xs ${isDarkMode ? 'text-red-400' : 'text-red-700'}`}>Hard</div>
+                    <div className={`text-lg font-semibold ${isDarkMode ? 'text-red-400' : 'text-red-800'}`}>
+                      {platformData?.leetcodeData?.hardSolved || 0}
+                      <span className={`text-xs ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>/{platformData?.leetcodeData?.totalHard || 0}</span>
+                    </div>
+                    <div className={`w-full ${isDarkMode ? 'bg-red-900/30' : 'bg-red-200'} rounded-full h-1.5 mt-1`}>
+                      {platformData?.leetcodeData && <div 
+                        className="bg-red-500 h-1.5 rounded-full" 
+                        style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.hardSolved, platformData?.leetcodeData?.totalHard)}%` }}
+                      ></div>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-t pt-4`}>
+              <div className="flex justify-between items-center w-full">
+                <div className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <span className="font-medium">Global Rank:</span> #{platformData?.leetcodeData?.ranking || 'N/A'}
+                </div>
+                <Link href={`https://leetcode.com/u/${platformData?.leetcodeData?.leetcodeUsername}/`} target='_blank'>
+                <Button variant={!isDarkMode ? "outline" : "ghost"} size="sm" className={`${
+                  isDarkMode 
+                    ? 'border-gray-600 text-indigo-400 hover:bg-gray-700' 
+                    : 'border-gray-200 hover:bg-indigo-50 text-indigo-600'
+                }`}>
+                  View Profile <ArrowUpRight className="ml-1 h-3 w-3" />
+                </Button>
+                </Link>
+              </div>
+            </CardFooter>
+          </Card>}
+
+          {/* Codeforces card */}
+         {loadingPlatformData ? <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm p-6 animate-pulse`}>
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <div className={`h-5 w-5 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+        <div className={`h-6 w-36 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      </div>
+      <div className={`h-4 w-4 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+    </div>
+    <div className={`h-4 w-52 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded mb-6`}></div>
+    
+    <div className="flex flex-col items-center justify-center p-6">
+      <div className={`w-32 h-32 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full mb-4`}></div>
+      <div className={`h-4 w-40 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-6`}></div>
+      <div className={`w-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-1.5 mb-1`}>
+        <div className={`${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'} h-1.5 rounded-full w-1/4`}></div>
+      </div>
+      <div className="flex justify-between w-full mt-1">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className={`h-3 w-8 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+        ))}
+      </div>
+    </div>
+  </div> :  <Card className={`${
+           isDarkMode 
+             ? 'bg-gray-800/90 border-gray-700' 
+             : 'bg-white/90 border-gray-100'
+         } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-b pb-4`}>
+              <div className="flex items-center justify-between">
+                <CardTitle className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-2`}>
+                  <Activity className="h-5 w-5 text-teal-500" />
+                  Codeforces Rating
+                </CardTitle>
+                <ExternalLink className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              </div>
+              <CardDescription className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                Track your competitive programming progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pt-4">
+              <div className="flex flex-col items-center justify-center p-6">
+                <div className="relative w-32 h-32 rounded-full flex items-center justify-center mb-4">
+                  {/* Outer ring */}
+                  <div className={`absolute inset-0 border-4 ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} rounded-full`}></div>
+                  {/* Progress ring */}
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
+                    <circle 
+                      cx="50" cy="50" r="46" 
+                      fill="none" 
+                      stroke="rgb(20, 184, 166)" 
+                      strokeWidth="8" 
+                      strokeDasharray="289.27"
+                      strokeDashoffset={(289.27 * (1 - Math.min((platformData?.codeforcesData?.rating || 0) / 2000, 1)))}
+                      transform="rotate(-90 50 50)"
+                    />
+                  </svg>
+                  {/* Rating value */}
+                  <div className={`text-3xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                    {platformData?.codeforcesData?.rating || 0}
+                  </div>
+                </div>
+
+                <div className={`text-sm text-center ${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mt-2`}>
+                  Keep practicing to improve your rating!
+                </div>
+
+                <div className={`w-full ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full h-1.5 mt-6`}>
+                  <div 
+                    className="bg-teal-500 h-1.5 rounded-full" 
+                    style={{ width: `${Math.min((platformData?.codeforcesData?.rating || 0) / 20, 100)}%` }}
+                  ></div>
+                </div>
+
+                <div className={`flex justify-between w-full text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                  <span>0</span>
+                  <span>500</span>
+                  <span>1000</span>
+                  <span>1500</span>
+                  <span>2000+</span>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-t pt-4`}>
+            <Link href={`https://codeforces.com/profile/${platformData?.codeforcesData?.codeforcesUsername}`} target='_blank'>
+              <Button variant={!isDarkMode ? "outline" : "ghost"} size="sm" className={`ml-auto ${
+                isDarkMode 
+                  ? 'border-gray-600 text-teal-400 hover:bg-teal-900/50' 
+                  : 'border-gray-200 hover:bg-teal-50 text-teal-600'
+              }`}>
+                View Profile <ArrowUpRight className="ml-1 h-3 w-3" />
+              </Button>
+            </Link>
+            </CardFooter>
+          </Card>}
+        </div>
+
+        {/* Latest Contests */}
+        {loadingContest ?  <div className={`${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} border rounded-lg shadow-sm animate-pulse`}>
+    <div className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-b p-6`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`h-5 w-5 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+            <div className={`h-6 w-32 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+          </div>
+          <div className={`h-4 w-48 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+        </div>
+        <div className={`h-8 w-8 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+      </div>
+    </div>
+    <div className="p-6">
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className={`rounded-lg ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border overflow-hidden`}>
+            <div className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} px-4 py-3 flex justify-between items-center`}>
+              <div className="flex items-center gap-2">
+                <div className={`h-8 w-8 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full`}></div>
+                <div>
+                  <div className={`h-4 w-32 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+                  <div className={`h-3 w-24 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-300'} rounded`}></div>
+                </div>
+              </div>
+              <div className={`h-6 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full`}></div>
             </div>
-            <CardDescription className="text-gray-500">
-              Track your problem-solving journey
-            </CardDescription>
+            <div className={`px-4 py-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} flex justify-between items-center`}>
+              <div className="flex items-center gap-3">
+                <div className={`px-3 py-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+                  <div className={`h-3 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mb-1`}></div>
+                  <div className={`h-4 w-8 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+                </div>
+              </div>
+              <div className={`h-8 w-24 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div> : <Card className={`${
+          isDarkMode 
+            ? 'bg-gray-800/90 border-gray-700' 
+            : 'bg-white/90 border-gray-100'
+        } shadow-sm hover:shadow-md transition-all`}>
+          <CardHeader className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-b pb-4`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-2`}>
+                  <Award className="h-5 w-5 text-indigo-500" />
+                  Latest Contests
+                </CardTitle>
+                <CardDescription className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Ready for your next challenge?
+                </CardDescription>
+              </div>
+              <Button variant={!isDarkMode ? "outline" : "ghost"} size="icon" className={`${
+                isDarkMode 
+                  ? 'border-gray-600 hover:bg-gray-700' 
+                  : 'border-gray-200 hover:bg-gray-50'
+              }`}>
+                <Clock className={`h-4 w-4 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">
-                  Problems Solved
-                </span>
-                <span className="text-lg font-bold text-gray-800">
-                  {platformData?.leetcodeData?.totalSolved || 0} / {platformData?.leetcodeData?.totalQuestions || 0}
-                </span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2.5">
-                {platformData?.leetcodeData && <div 
-                  className="bg-indigo-500 h-2.5 rounded-full" 
-                  style={{ width: `${(platformData?.leetcodeData?.totalSolved / platformData?.leetcodeData?.totalQuestions * 100) || 0}%` }}
-                ></div>}
-              </div>
-              
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <div className="text-xs text-green-700">Easy</div>
-                  <div className="text-lg font-semibold text-green-800">
-                    {platformData?.leetcodeData?.easySolved || 0} 
-                    <span className="text-xs text-green-600">/{platformData?.leetcodeData?.totalEasy || 0}</span>
-                  </div>
-                  <div className="w-full bg-green-200 rounded-full h-1.5 mt-1">
-                    {platformData?.leetcodeData && <div 
-                      className="bg-green-500 h-1.5 rounded-full" 
-                      style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.easySolved, platformData?.leetcodeData?.totalEasy)}%` }}
-                    ></div>}
-                  </div>
-                </div>
-                <div className="p-3 bg-amber-50 rounded-lg">
-                  <div className="text-xs text-amber-700">Medium</div>
-                  <div className="text-lg font-semibold text-amber-800">
-                    {platformData?.leetcodeData?.mediumSolved || 0}
-                    <span className="text-xs text-amber-600">/{platformData?.leetcodeData?.totalMedium || 0}</span>
-                  </div>
-                  <div className="w-full bg-amber-200 rounded-full h-1.5 mt-1">
-                    {platformData?.leetcodeData && <div 
-                      className="bg-amber-500 h-1.5 rounded-full" 
-                      style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.mediumSolved, platformData?.leetcodeData?.totalMedium)}%` }}
-                    ></div>}
-                  </div>
-                </div>
-                <div className="p-3 bg-red-50 rounded-lg">
-                  <div className="text-xs text-red-700">Hard</div>
-                  <div className="text-lg font-semibold text-red-800">
-                    {platformData?.leetcodeData?.hardSolved || 0}
-                    <span className="text-xs text-red-600">/{platformData?.leetcodeData?.totalHard || 0}</span>
-                  </div>
-                  <div className="w-full bg-red-200 rounded-full h-1.5 mt-1">
-                    {platformData?.leetcodeData && <div 
-                      className="bg-red-500 h-1.5 rounded-full" 
-                      style={{ width: `${getLeetCodeDifficultyPercentage(platformData?.leetcodeData?.hardSolved, platformData?.leetcodeData?.totalHard)}%` }}
-                    ></div>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t border-gray-100 pt-4">
-            <div className="flex justify-between items-center w-full">
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">Global Rank:</span> #{platformData?.leetcodeData?.ranking || 'N/A'}
-              </div>
-              <Link href={`https://leetcode.com/u/${platformData?.leetcodeData?.leetcodeUsername}/`} target='_blank'>
-              <Button variant="outline" size="sm" className="border-gray-200 hover:bg-indigo-50 text-indigo-600">
-                View Profile <ArrowUpRight className="ml-1 h-3 w-3" />
-              </Button>
-              </Link>
-            </div>
-          </CardFooter>
-        </Card>}
-
-        {/* Codeforces card */}
-       {loadingPlatformData ? <CodeforcesSkeleton/> :  <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
-          <CardHeader className="border-b border-gray-100 pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Activity className="h-5 w-5 text-teal-500" />
-                Codeforces Rating
-              </CardTitle>
-              <ExternalLink className="h-4 w-4 text-gray-500" />
-            </div>
-            <CardDescription className="text-gray-500">
-              Track your competitive programming progress
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-4">
-            <div className="flex flex-col items-center justify-center p-6">
-              <div className="relative w-32 h-32 rounded-full flex items-center justify-center mb-4">
-                {/* Outer ring */}
-                <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
-                {/* Progress ring */}
-                <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                  <circle 
-                    cx="50" cy="50" r="46" 
-                    fill="none" 
-                    stroke="rgb(20, 184, 166)" 
-                    strokeWidth="8" 
-                    strokeDasharray="289.27"
-                    strokeDashoffset={(289.27 * (1 - Math.min((platformData?.codeforcesData?.rating || 0) / 2000, 1)))}
-                    transform="rotate(-90 50 50)"
-                  />
-                </svg>
-                {/* Rating value */}
-                <div className="text-3xl font-bold text-gray-800">
-                  {platformData?.codeforcesData?.rating || 0}
-                </div>
-              </div>
-
-              <div className="text-sm text-center text-gray-600 mt-2">
-                Keep practicing to improve your rating!
-              </div>
-
-              <div className="w-full bg-gray-100 rounded-full h-1.5 mt-6">
-                <div 
-                  className="bg-teal-500 h-1.5 rounded-full" 
-                  style={{ width: `${Math.min((platformData?.codeforcesData?.rating || 0) / 20, 100)}%` }}
-                ></div>
-              </div>
-
-              <div className="flex justify-between w-full text-xs text-gray-500 mt-1">
-                <span>0</span>
-                <span>500</span>
-                <span>1000</span>
-                <span>1500</span>
-                <span>2000+</span>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="border-t border-gray-100 pt-4">
-          <Link href={`https://codeforces.com/profile/${platformData?.codeforcesData?.codeforcesUsername}`} target='_blank'>
-            <Button variant="outline" size="sm" className="ml-auto border-gray-200 hover:bg-teal-50 text-teal-600">
-              View Profile <ArrowUpRight className="ml-1 h-3 w-3" />
-            </Button>
-          </Link>
-          </CardFooter>
-        </Card>}
-      </div>
-
-      {/* Latest Contests */}
-      {loadingContest ? <ContestsSkeleton/> : <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
-        <CardHeader className="border-b border-gray-100 pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Award className="h-5 w-5 text-indigo-500" />
-                Latest Contests
-              </CardTitle>
-              <CardDescription className="text-gray-500">
-                Ready for your next challenge?
-              </CardDescription>
-            </div>
-            <Button variant="outline" size="icon" className="border-gray-200 hover:bg-gray-50">
-              <Clock className="h-4 w-4 text-gray-500" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-4">
-          <div className="space-y-4">
-            {dashboardData?.contests.map((contest) => (
-              <div key={contest.id} className="rounded-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                      #{contest.id}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-800">{contest.name}</h3>
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <Calendar className="h-3 w-3" /> 
-                        {formatDate(contest.startTime)}
-                        <span className="mx-1">•</span>
-                        <Timer className="h-3 w-3" /> 
-                        {formatTime(contest.startTime)}
-                      </p>
-                    </div>
-                  </div>
-                  <StatusBadge status={contest.status} />
-                </div>
-                <div className="px-4 py-3 bg-white flex flex-wrap md:flex-nowrap justify-between items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="px-3 py-2 bg-blue-50 rounded-lg">
-                      <p className="text-xs text-blue-600">Duration</p>
-                      <p className="text-sm font-medium text-blue-800">{contest.duration} min</p>
-                    </div>
-                    {contest.status === 'COMPLETED' && (
-                      <div className="px-3 py-2 bg-green-50 rounded-lg">
-                        <p className="text-xs text-green-600">Completed</p>
-                        <p className="text-sm font-medium text-green-800"><Check className='size-5'/></p>
+              {dashboardData?.contests.map((contest) => (
+                <div key={contest.id} className={`rounded-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} overflow-hidden`}>
+                  <div className={`${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} px-4 py-3 flex justify-between items-center`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`h-8 w-8 rounded-full ${
+                        isDarkMode 
+                          ? 'bg-indigo-900/50 text-indigo-400' 
+                          : 'bg-indigo-100 text-indigo-600'
+                      } flex items-center justify-center`}>
+                        #{contest.id}
                       </div>
+                      <div>
+                        <h3 className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{contest.name}</h3>
+                        <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'} flex items-center gap-1`}>
+                          <Calendar className="h-3 w-3" /> 
+                          {formatDate(contest.startTime)}
+                          <span className="mx-1">•</span>
+                          <Timer className="h-3 w-3" /> 
+                          {formatTime(contest.startTime)}
+                        </p>
+                      </div>
+                    </div>
+                    <StatusBadge status={contest.status} />
+                  </div>
+                  <div className={`px-4 py-3 ${isDarkMode ? 'bg-gray-800' : 'bg-white'} flex flex-wrap md:flex-nowrap justify-between items-center gap-4`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`px-3 py-2 ${
+                        isDarkMode 
+                          ? 'bg-blue-500/20 border border-blue-500/30' 
+                          : 'bg-blue-50'
+                      } rounded-lg`}>
+                        <p className={`text-xs ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>Duration</p>
+                        <p className={`text-sm font-medium ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>{contest.duration} min</p>
+                      </div>
+                      {contest.status === 'COMPLETED' && (
+                        <div className={`px-3 py-2 ${
+                          isDarkMode 
+                            ? 'bg-green-500/20 border border-green-500/30' 
+                            : 'bg-green-50'
+                        } rounded-lg`}>
+                          <p className={`text-xs ${isDarkMode ? 'text-green-400' : 'text-green-600'}`}>Completed</p>
+                          <p className={`text-sm font-medium ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}><Check className='size-5'/></p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {contest.status === 'ACTIVE' && (
+                      <Button 
+                      variant={!isDarkMode ? "outline" : "ghost"}
+                        className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-md transition-all"
+                        onClick={() => router.push(`/contest/${contest.id}`)}
+                      >
+                        Start Contest <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    )}
+                    {contest.status === 'COMPLETED' && (
+                      <Button 
+                        variant={!isDarkMode ? "outline" : "ghost"}
+                        className={`${
+                          isDarkMode 
+                            ? 'border-gray-600 text-indigo-400 hover:bg-indigo-900/50' 
+                            : 'border-gray-200 hover:bg-indigo-50 text-indigo-600'
+                        }`}
+                        onClick={() => router.push(`/contestsPage`)}
+                      >
+                        View Results <ChevronRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    )}
+                    {contest.status === 'INACTIVE' && (
+                      <Button 
+                        variant={!isDarkMode ? "outline" : "ghost"}
+                        className={`${
+                          isDarkMode 
+                            ? 'border-gray-600 text-gray-400 opacity-50 cursor-not-allowed' 
+                            : 'border-gray-200 hover:bg-gray-50 text-gray-600 opacity-50 cursor-not-allowed'
+                        }`}
+                        disabled
+                      >
+                        Coming Soon <Clock className="ml-1 h-4 w-4" />
+                      </Button>
                     )}
                   </div>
-                  
-                  {contest.status === 'ACTIVE' && (
-                    <Button 
-                      className="bg-indigo-500 hover:bg-indigo-600 text-white shadow-md transition-all"
-                      onClick={() => router.push(`/contest/${contest.id}`)}
-                    >
-                      Start Contest <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  )}
-                  {contest.status === 'COMPLETED' && (
-                    <Button 
-                      variant="outline"
-                      className="border-gray-200 hover:bg-indigo-50 text-indigo-600"
-                      onClick={() => router.push(`/contestsPage`)}
-                    >
-                      View Results <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  )}
-                  {contest.status === 'INACTIVE' && (
-                    <Button 
-                      variant="outline"
-                      className="border-gray-200 hover:bg-gray-50 text-gray-600 opacity-50 cursor-not-allowed"
-                      disabled
-                    >
-                      Coming Soon <Clock className="ml-1 h-4 w-4" />
-                    </Button>
-                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>}
+
+        {/* Team Members */}
+        {dashboardData?.userStats.groupName ? (
+          <Card className={`${
+            isDarkMode 
+              ? 'bg-gray-800/90 border-gray-700' 
+              : 'bg-white/90 border-gray-100'
+          } shadow-sm hover:shadow-md transition-all`}>
+            <CardHeader className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-b pb-4`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-2`}>
+                    <Users className="h-5 w-5 text-amber-500" />
+                    Team: {dashboardData.userStats.groupName}
+                  </CardTitle>
+                  <CardDescription className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Team score: {dashboardData.userStats.groupPoints} points
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  className="p-0 hover:bg-transparent"
+                  onClick={async () => {
+                    try{
+                      setLoadingMembers(true)
+                      const response = await axios.get('/api/getGroupMembersForMember');
+                      if(response.status !== 200){{
+                        toast.error('Error fethcing members')
+                      }}
+                      setMembers(response.data.members);  
+                      setShowTeamMembers(!showTeamMembers)
+
+                    } catch (error){
+                      console.error('Error fetching team members:', error);
+                      toast.error('Failed to fetch team members');
+                    } finally {
+                      setShowTeamMembers(!showTeamMembers);
+                      setLoadingMembers(false)
+                    }
+                  }}
+                >
+                  <ChevronDown className={`h-5 w-5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} transition-transform ${showTeamMembers ? 'transform rotate-180' : ''}`} />
+                </Button>
+              </div>
+            </CardHeader>
+            {loadingMembers ? <div className="pt-4">
+    <div className={`overflow-hidden rounded-lg ${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border`}>
+      <div className={`${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} border-b p-3`}>
+        <div className="grid grid-cols-4 gap-4">
+          <div className={`h-4 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+          <div className={`h-4 w-16 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+          <div className={`h-4 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded ml-auto`}></div>
+          <div className={`h-4 w-20 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded ml-auto`}></div>
+        </div>
+      </div>
+      <div>
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className={`${isDarkMode ? 'border-gray-700' : 'border-gray-50'} border-b p-3 animate-pulse`}>
+            <div className="grid grid-cols-4 gap-4 items-center">
+              <div className="text-center">
+                <div className={`h-5 w-5 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full mx-auto`}></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className={`h-8 w-8 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded-full`}></div>
+                <div className={`h-4 w-24 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+              </div>
+              <div className="text-right">
+                <div className={`h-4 w-12 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded mx-auto`}></div>
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <div className={`h-4 w-8 ${isDarkMode ? 'bg-gray-600' : 'bg-gray-200'} rounded`}></div>
+                <div className={`w-16 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full h-1.5 overflow-hidden`}>
+                  <div className={`${isDarkMode ? 'bg-gray-600' : 'bg-gray-300'} h-1.5 rounded-full w-1/2`}></div>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>}
-
-      {/* Team Members */}
-      {dashboardData?.userStats.groupName ? (
-        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
-          <CardHeader className="border-b border-gray-100 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-amber-500" />
-                  Team: {dashboardData.userStats.groupName}
-                </CardTitle>
-                <CardDescription className="text-gray-500">
-                  Team score: {dashboardData.userStats.groupPoints} points
-                </CardDescription>
-              </div>
-              <Button 
-                variant="ghost" 
-                className="p-0 hover:bg-transparent"
-                onClick={async () => {
-                  try{
-                    setLoadingMembers(true)
-                    const response = await axios.get('/api/getGroupMembersForMember');
-                    if(response.status !== 200){{
-                      toast.error('Error fethcing members')
-                    }}
-                    setMembers(response.data.members);  
-                    setShowTeamMembers(!showTeamMembers)
-
-                  } catch (error){
-                    console.error('Error fetching team members:', error);
-                    toast.error('Failed to fetch team members');
-                  } finally {
-                    setShowTeamMembers(!showTeamMembers);
-                    setLoadingMembers(false)
-                  }
-                }}
-              >
-                <ChevronDown className={`h-5 w-5 text-gray-600 transition-transform ${showTeamMembers ? 'transform rotate-180' : ''}`} />
-              </Button>
             </div>
-          </CardHeader>
-          {loadingMembers ? (<CardContent className="pt-4">
-      <div className="overflow-hidden rounded-lg border border-gray-100">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50 border-b border-gray-100">
-              <TableHead className="text-gray-700">Rank</TableHead>
-              <TableHead className="text-gray-700">Member</TableHead>
-              <TableHead className="text-right text-gray-700">Points</TableHead>
-              <TableHead className="text-right text-gray-700">Contribution</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={index} className="border-b border-gray-50 animate-pulse">
-                <TableCell className="py-3 text-center">
-                  <div className="h-5 w-5 bg-gray-200 rounded-full mx-auto"></div>
-                </TableCell>
-                <TableCell className="py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
-                    <div className="h-4 w-24 bg-gray-200 rounded"></div>
-                  </div>
-                </TableCell>
-                <TableCell className="py-3 text-right">
-                  <div className="h-4 w-12 bg-gray-200 rounded mx-auto"></div>
-                </TableCell>
-                <TableCell className="py-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="h-4 w-8 bg-gray-200 rounded"></div>
-                    <div className="w-16 bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-gray-300 h-1.5 rounded-full w-1/2"></div>
-                    </div>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+          </div>
+        ))}
       </div>
-    </CardContent>) : showTeamMembers && (
+    </div>
+  </div> : showTeamMembers && (
             <CardContent className="pt-4">
-              <div className="overflow-hidden rounded-lg border border-gray-100">
+              <div className={`overflow-hidden rounded-lg border ${isDarkMode ? 'border-gray-700' : 'border-gray-100'}`}>
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-50 border-b border-gray-100">
-                      <TableHead className="text-gray-700">Rank</TableHead>
-                      <TableHead className="text-gray-700">Member</TableHead>
-                      <TableHead className="text-right text-gray-700">Points</TableHead>
-                      <TableHead className="text-right text-gray-700">Contribution</TableHead>
+                    <TableRow className={`${isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-100'} border-b`}>
+                      <TableHead className={`${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Rank</TableHead>
+                      <TableHead className={`${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Member</TableHead>
+                      <TableHead className={`text-right ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Points</TableHead>
+                      <TableHead className={`text-right ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>Contribution</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -738,8 +932,8 @@ export default function Dashboard() {
                           <TableRow 
                             key={member.username} 
                             className={cn(
-                              "border-b border-gray-50",
-                              member.username === dashboardData.username ? "bg-amber-50" : ""
+                              `${isDarkMode ? 'border-gray-700' : 'border-gray-50'} border-b`,
+                              member.username === dashboardData.username ? (isDarkMode ? "bg-amber-900/30" : "bg-amber-50") : ""
                             )}
                           >
                             <TableCell className="py-3 text-center">
@@ -747,7 +941,7 @@ export default function Dashboard() {
                                 {index === 0 ? (
                                   <Crown className="h-5 w-5 text-amber-500" />
                                 ) : (
-                                  <span className="font-medium text-gray-700">
+                                  <span className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                                     {index + 1}
                                   </span>
                                 )}
@@ -755,23 +949,23 @@ export default function Dashboard() {
                             </TableCell>
                             <TableCell className="py-3">
                               <div className="flex items-center gap-2">
-                                <div className="h-8 w-8 bg-amber-100 rounded-full flex items-center justify-center text-amber-700 font-bold">
+                                <div className={`h-8 w-8 ${isDarkMode ? 'bg-amber-900/50' : 'bg-amber-100'} rounded-full flex items-center justify-center ${isDarkMode ? 'text-amber-300' : 'text-amber-700'} font-bold`}>
                                   {member.username.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
                                   <Link href={`/user/updateProfile/${member.username}`} target='_blank'>
-                                  <p className="font-medium text-blue-700">{member.username}</p>
+                                  <p className={`font-medium ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{member.username}</p>
                                   </Link>
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="py-3 text-right font-medium text-gray-700">
+                            <TableCell className={`py-3 text-right font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                               {member.individualPoints}
                             </TableCell>
                             <TableCell className="py-3 text-right">
                               <div className="flex items-center justify-end gap-2">
-                                <span className="text-sm font-medium text-gray-700">{contribution}%</span>
-                                <div className="w-16 bg-gray-100 rounded-full h-1.5">
+                                <span className={`text-sm font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-700'}`}>{contribution}%</span>
+                                <div className={`w-16 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-full h-1.5`}>
                                   <div 
                                     className="bg-amber-500 h-1.5 rounded-full" 
                                     style={{ width: `${contribution}%` }}
@@ -787,31 +981,39 @@ export default function Dashboard() {
               </div>
             </CardContent>
           )}
-          <CardFooter className="border-t border-gray-100 pt-4 flex justify-between">
+          <CardFooter className={`${isDarkMode ? 'border-gray-700' : 'border-gray-100'} border-t pt-4 flex justify-between`}>
             <Button onClick={() => {
               router.push('/groupCreation')
-            }} variant="outline" size="sm" className="border-gray-200 hover:bg-amber-50 text-amber-600">
+            }} variant={!isDarkMode ? "outline" : "ghost"} size="sm" className={`${
+              isDarkMode 
+                ? 'border-gray-600 text-amber-400 hover:bg-amber-900/50' 
+                : 'border-gray-200 hover:bg-amber-50 text-amber-600'
+            }`}>
               Team Settings <Settings className="ml-1 h-4 w-4" />
             </Button>
           </CardFooter>
         </Card>
       ) : (
-        <Card className="bg-white/90 shadow-sm hover:shadow-md transition-all border-gray-100">
+        <Card className={`${
+          isDarkMode 
+            ? 'bg-gray-800/90 border-gray-700' 
+            : 'bg-white/90 border-gray-100'
+        } shadow-sm hover:shadow-md transition-all`}>
           <CardHeader className="pb-4">
-            <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <CardTitle className={`text-xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} flex items-center gap-2`}>
               <Users className="h-5 w-5 text-blue-500" />
               Join a Team
             </CardTitle>
-            <CardDescription className="text-gray-500">
+            <CardDescription className={`${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Teams can earn more points and unlock special challenges
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-4 flex flex-col items-center justify-center p-8">
-            <div className="h-24 w-24 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-              <UsersIcon className="h-12 w-12 text-blue-300" />
+            <div className={`h-24 w-24 ${isDarkMode ? 'bg-blue-900/50' : 'bg-blue-50'} rounded-full flex items-center justify-center mb-4`}>
+              <UsersIcon className={`h-12 w-12 ${isDarkMode ? 'text-blue-400' : 'text-blue-300'}`} />
             </div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">Collaborate with others</h3>
-            <p className="text-gray-600 text-center mb-6 max-w-md">
+            <h3 className={`text-lg font-semibold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'} mb-2`}>Collaborate with others</h3>
+            <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} text-center mb-6 max-w-md`}>
               Join a team to collaborate with other developers, participate in team challenges, and climb the leaderboard together.
             </p>
           </CardContent>
@@ -820,5 +1022,6 @@ export default function Dashboard() {
     </>
 
   </div>
-</div> );
+</div>
+);
 }

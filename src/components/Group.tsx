@@ -40,7 +40,7 @@ interface Group {
 const UnifiedGroupManagement = () => {
   // Session and admin status
   const { data: session } = useSession();
-  const { isAdmin } = useStore()
+  const { isAdmin, isDarkMode } = useStore()
   const [isLoading, setIsLoading] = useState(true);
   
   // Group management view state
@@ -347,300 +347,406 @@ const UnifiedGroupManagement = () => {
   );
 
   const renderMemberSelectionList = () => (
-    <div className="space-y-2">
-      <div className="relative">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
-        <Input
-          type="text"
-          placeholder="Search users..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-        />
-      </div>
-
-      <ScrollArea className="h-96 border border-gray-200 rounded-md overflow-auto">
-        <div className="p-4 space-y-2">
-          {filteredUsers.length === 0 ? (
-            <div className="text-center py-4 text-gray-500">
-              No users found
-            </div>
-          ) : (
-            filteredUsers.map((user) => {
-              const isSelected = selectedUsers.includes(user.id);
-              return (
-                <div 
-                  key={user.id} 
-                  className={`flex items-center justify-between p-2 rounded-lg border ${
-                    isSelected ? 'bg-indigo-50 border-indigo-100' : 'border-gray-100'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => handleUserSelect(user.id)}
-                      id={`user-${user.id}`}
-                      className={isSelected ? "border-indigo-600 text-indigo-600" : "border-gray-300"}
-                    />
-                    <label htmlFor={`user-${user.id}`} className="cursor-pointer flex items-center">
-                      {user.username}
-                      {coordinator === user.id && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-700">
-                          Coordinator
-                        </span>
-                      )}
-                    </label>
-                  </div>
-                  {(
-                    <button
-                      className={`flex items-center px-2 py-1 rounded text-xs font-medium ml-2 ${
-                        coordinator === user.id 
-                          ? 'bg-amber-100 text-amber-700' 
-                          : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                      }`}
-                      onClick={() => handleCoordinatorSelect(user.id)}
-                    >
-                      <UserPlus className="h-3 w-3 mr-1" />
-                      {coordinator === user.id ? "Coordinator" : "Make Coordinator"}
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-      </ScrollArea>
+  <div className="space-y-2">
+    <div className="relative">
+      <Search className={`absolute left-3 top-2.5 h-4 w-4 ${
+        isDarkMode ? 'text-gray-400' : 'text-gray-500'
+      }`} />
+      <Input
+        type="text"
+        placeholder="Search users..."
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className={`w-full pl-9 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
+          isDarkMode 
+            ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
+            : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+        }`}
+      />
     </div>
-  );
 
-  const renderAddMembersDialog = () => {
-    const selectedGroup = existingGroups.find(g => g.id === selectedGroupId);
-    
-    return (
-      <Card className="bg-white shadow-md border border-gray-100 w-full max-w-2xl mx-auto">
-        <CardHeader className="bg-indigo-50 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="bg-indigo-100 p-2 rounded-full mr-3">
-                <UserPlus className="h-5 w-5 text-indigo-600" />
-              </div>
-              <div>
-                <CardTitle className="text-indigo-700">{selectedGroup?.name || 'Group'} - Add Members</CardTitle>
-                <CardDescription className="text-gray-600">Select users to add to this group</CardDescription>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowAddMembers(false)}
-              className="border-gray-200 hover:bg-gray-50"
-            >
-              Back to Groups
-            </Button>
+    <ScrollArea className={`h-96 border rounded-md overflow-auto ${
+      isDarkMode ? 'border-gray-600' : 'border-gray-200'
+    }`}>
+      <div className="p-4 space-y-2">
+        {filteredUsers.length === 0 ? (
+          <div className={`text-center py-4 ${
+            isDarkMode ? 'text-gray-400' : 'text-gray-500'
+          }`}>
+            No users found
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4 p-5">
-          {error && (
-            <Alert className="bg-red-50 border-l-4 border-l-red-500 text-red-800">
-              <AlertDescription className="text-red-600">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className="space-y-3">
-            {renderMemberSelectionList()}
-            
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <div>Selected: {selectedUsers.length} users</div>
-            </div>
-
-            <Button 
-              className={`w-full mt-6 ${
-                selectedUsers.length === 0 
-                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-              }`}
-              onClick={handleAddMembers}
-              disabled={isSubmitting || selectedUsers.length === 0}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding Members...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Add {selectedUsers.length} Member{selectedUsers.length !== 1 ? 's' : ''}
-                </>
-              )}
-            </Button>
-            
-            {selectedUsers.length > 0 && (
-              <div className="text-center mt-2">
-                <button 
-                  onClick={() => setSelectedUsers([])} 
-                  className="text-sm text-gray-500 hover:text-indigo-600"
+        ) : (
+          filteredUsers.map((user) => {
+            const isSelected = selectedUsers.includes(user.id);
+            return (
+              <div 
+                key={user.id} 
+                className={`flex items-center justify-between p-2 rounded-lg border ${
+                  isSelected 
+                    ? isDarkMode 
+                      ? 'bg-indigo-900/30 border-indigo-700' 
+                      : 'bg-indigo-50 border-indigo-100'
+                    : isDarkMode
+                      ? 'bg-gray-700 border-gray-600'
+                      : 'bg-white border-gray-100'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => handleUserSelect(user.id)}
+                    id={`user-${user.id}`}
+                    className={isSelected ? "border-indigo-600 text-indigo-600" : 
+                      isDarkMode ? "border-gray-500" : "border-gray-300"
+                    }
+                  />
+                  <label htmlFor={`user-${user.id}`} className={`cursor-pointer flex items-center ${
+                    isDarkMode ? 'text-gray-200' : 'text-gray-900'
+                  }`}>
+                    {user.username}
+                    {coordinator === user.id && (
+                      <span className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                        isDarkMode 
+                          ? 'bg-amber-900/30 text-amber-400' 
+                          : 'bg-amber-50 text-amber-700'
+                      }`}>
+                        Coordinator
+                      </span>
+                    )}
+                  </label>
+                </div>
+                <button
+                  className={`flex items-center px-2 py-1 rounded text-xs font-medium ml-2 ${
+                    coordinator === user.id 
+                      ? isDarkMode
+                        ? 'bg-amber-900/30 text-amber-400'
+                        : 'bg-amber-100 text-amber-700'
+                      : isDarkMode
+                        ? 'bg-gray-600 text-gray-300 hover:bg-gray-500'
+                        : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                  onClick={() => handleCoordinatorSelect(user.id)}
                 >
-                  Clear selection
+                  <UserPlus className="h-3 w-3 mr-1" />
+                  {coordinator === user.id ? "Coordinator" : "Make Coordinator"}
                 </button>
               </div>
-            )}
+            );
+          })
+        )}
+      </div>
+    </ScrollArea>
+  </div>
+);
+
+ const renderAddMembersDialog = () => {
+  const selectedGroup = existingGroups.find(g => g.id === selectedGroupId);
+  
+  return (
+    <Card className={`shadow-md border w-full max-w-2xl mx-auto ${
+      isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'
+    }`}>
+      <CardHeader className={`border-b ${
+        isDarkMode 
+          ? 'bg-gray-700 border-gray-600' 
+          : 'bg-indigo-50 border-gray-100'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className={`p-2 rounded-full mr-3 ${
+              isDarkMode ? 'bg-indigo-800' : 'bg-indigo-100'
+            }`}>
+              <UserPlus className="h-5 w-5 text-indigo-600" />
+            </div>
+            <div>
+              <CardTitle className={isDarkMode ? 'text-gray-100' : 'text-indigo-700'}>
+                {selectedGroup?.name || 'Group'} - Add Members
+              </CardTitle>
+              <CardDescription className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                Select users to add to this group
+              </CardDescription>
+            </div>
           </div>
-        </CardContent>
-      </Card>
-    );
-  };
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowAddMembers(false)}
+            className={`border ${
+              isDarkMode 
+                ? 'border-gray-600 hover:bg-gray-700 text-gray-200' 
+                : 'border-gray-200 hover:bg-gray-50 text-gray-900'
+            }`}
+          >
+            Back to Groups
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 p-5">
+        {error && (
+          <Alert className={`border-l-4 border-l-red-500 ${
+            isDarkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-800'
+          }`}>
+            <AlertDescription className={isDarkMode ? 'text-red-400' : 'text-red-600'}>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="space-y-3">
+          {renderMemberSelectionList()}
+          
+          <div className={`flex items-center justify-between text-sm ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            <div>Selected: {selectedUsers.length} users</div>
+          </div>
+
+          <Button 
+            className={`w-full mt-6 ${
+              selectedUsers.length === 0 
+                ? isDarkMode 
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            }`}
+            onClick={handleAddMembers}
+            disabled={isSubmitting || selectedUsers.length === 0}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding Members...
+              </>
+            ) : (
+              <>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add {selectedUsers.length} Member{selectedUsers.length !== 1 ? 's' : ''}
+              </>
+            )}
+          </Button>
+          
+          {selectedUsers.length > 0 && (
+            <div className="text-center mt-2">
+              <button 
+                onClick={() => setSelectedUsers([])} 
+                className={`text-sm hover:text-indigo-600 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}
+              >
+                Clear selection
+              </button>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
   const renderGroupCreationForm = () => (
-    <div className='max-w-3xl'>
-      <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded-lg">
-        <button
-          className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'create' 
-              ? 'bg-white text-indigo-700 shadow-sm' 
+  <div className='max-w-3xl'>
+    <div className={`grid grid-cols-2 gap-1 p-1 rounded-lg ${
+      isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+    }`}>
+      <button
+        className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          activeTab === 'create' 
+            ? isDarkMode 
+              ? 'bg-gray-600 text-indigo-400 shadow-sm' 
+              : 'bg-white text-indigo-700 shadow-sm'
+            : isDarkMode 
+              ? 'text-gray-300 hover:text-gray-100' 
               : 'text-gray-600 hover:text-gray-800'
-          }`}
-          onClick={() => {
-            resetForm();
-            setActiveTab('create');
-          }}
-        >
-          Create Group
-        </button>
-        <button
-          className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-            activeTab === 'update' 
-              ? 'bg-white text-indigo-700 shadow-sm' 
+        }`}
+        onClick={() => {
+          resetForm();
+          setActiveTab('create');
+        }}
+      >
+        Create Group
+      </button>
+      <button
+        className={`py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          activeTab === 'update' 
+            ? isDarkMode 
+              ? 'bg-gray-600 text-indigo-400 shadow-sm' 
+              : 'bg-white text-indigo-700 shadow-sm'
+            : isDarkMode 
+              ? 'text-gray-300 hover:text-gray-100' 
               : 'text-gray-600 hover:text-gray-800'
-          }`}
-          onClick={() => {
-            resetForm();
-            setActiveTab('update');
-          }}
-        >
-          Update Group
-        </button>
-      </div>
+        }`}
+        onClick={() => {
+          resetForm();
+          setActiveTab('update');
+        }}
+      >
+        Update Group
+      </button>
+    </div>
 
-      <div className="space-y-4">
-        <div className="grid gap-4">
-          {/* Group name input */}
-          <div>
-            {activeTab === 'update' ? (
-              <div className="flex gap-2 mb-2">
-                <Input
-                  type="text"
-                  placeholder="Enter existing group name"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                />
-                <Button 
-                  onClick={fetchGroupMembers} 
-                  disabled={isFetchingGroup}
-                  className="px-3 py-2 bg-blue-50 text-blue-600 border border-blue-100 rounded-md hover:bg-blue-100 transition-colors disabled:opacity-50"
-                >
-                  {isFetchingGroup ? (
-                    <div className="flex items-center">
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin text-blue-500" />
-                      <span>Loading</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center">
-                      <RefreshCw className="h-4 w-4 mr-1 text-blue-500" />
-                      <span>Fetch Group</span>
-                    </div>
-                  )}
-                </Button>
-              </div>
-            ) : (
+    <div className="space-y-4">
+      <div className="grid gap-4">
+        {/* Group name input */}
+        <div>
+          {activeTab === 'update' ? (
+            <div className="flex gap-2 mb-2">
               <Input
                 type="text"
-                placeholder="Enter new group name"
+                placeholder="Enter existing group name"
                 value={groupName}
                 onChange={(e) => setGroupName(e.target.value)}
-                className="w-full px-3 py-2 mb-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
+                className={`flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
+                    : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+                }`}
               />
-            )}
-            
-            {activeTab === 'update' && groupFetched && (
-              <Input
-                type="text"
-                placeholder="Enter new group name (leave blank to keep current name)"
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-              />
-            )}
-          </div>
-
-          {/* User selection */}
-          {renderMemberSelectionList()}
-
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <div>Selected: {selectedUsers.length} users</div>
-            {coordinator && (
-              <div>
-                Coordinator: {users.find(u => u.id === coordinator)?.username}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Submit button */}
-        <Button 
-          className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:bg-indigo-400"
-          onClick={handleCreateOrUpdateGroup}
-          disabled={isSubmitting || (activeTab === 'update' && !groupFetched)}
-        >
-          {isSubmitting ? (
-            <div className="flex items-center justify-center">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {activeTab === 'create' ? 'Creating...' : 'Updating...'}
+              <Button 
+                onClick={fetchGroupMembers} 
+                disabled={isFetchingGroup}
+                className={`px-3 py-2 border rounded-md transition-colors disabled:opacity-50 ${
+                  isDarkMode 
+                    ? 'bg-blue-900/30 text-blue-400 border-blue-700 hover:bg-blue-800/30' 
+                    : 'bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100'
+                }`}
+              >
+                {isFetchingGroup ? (
+                  <div className="flex items-center">
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin text-blue-500" />
+                    <span>Loading</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center">
+                    <RefreshCw className="h-4 w-4 mr-1 text-blue-500" />
+                    <span>Fetch Group</span>
+                  </div>
+                )}
+              </Button>
             </div>
           ) : (
-            activeTab === 'create' ? 'Create Group' : 'Update Group'
+            <Input
+              type="text"
+              placeholder="Enter new group name"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+              className={`w-full px-3 py-2 mb-2 border rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
+                  : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+              }`}
+            />
           )}
-        </Button>
+          
+          {activeTab === 'update' && groupFetched && (
+            <Input
+              type="text"
+              placeholder="Enter new group name (leave blank to keep current name)"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400' 
+                  : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+              }`}
+            />
+          )}
+        </div>
+
+        {/* User selection */}
+        {renderMemberSelectionList()}
+
+        <div className={`flex items-center justify-between text-sm ${
+          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        }`}>
+          <div>Selected: {selectedUsers.length} users</div>
+          {coordinator && (
+            <div>
+              Coordinator: {users.find(u => u.id === coordinator)?.username}
+            </div>
+          )}
+        </div>
       </div>
+
+      {/* Submit button */}
+      <Button 
+        className="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md transition-colors disabled:opacity-50 disabled:bg-indigo-400"
+        onClick={handleCreateOrUpdateGroup}
+        disabled={isSubmitting || (activeTab === 'update' && !groupFetched)}
+      >
+        {isSubmitting ? (
+          <div className="flex items-center justify-center">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            {activeTab === 'create' ? 'Creating...' : 'Updating...'}
+          </div>
+        ) : (
+          activeTab === 'create' ? 'Create Group' : 'Update Group'
+        )}
+      </Button>
     </div>
-  );
+  </div>
+);
 
   const renderGroupsList = () => (
-    <div className="space-y-6">
-      {error && (
-        <Alert className="bg-red-50 border-l-4 border-l-red-500 text-red-800">
-          <AlertDescription className="text-red-600">{error}</AlertDescription>
-        </Alert>
-      )}
+  <div className="space-y-6">
+    {error && (
+      <Alert className={`border-l-4 border-l-red-500 ${
+        isDarkMode ? 'bg-red-900/20 text-red-400' : 'bg-red-50 text-red-800'
+      }`}>
+        <AlertDescription className={isDarkMode ? 'text-red-400' : 'text-red-600'}>
+          {error}
+        </AlertDescription>
+      </Alert>
+    )}
 
-      {userGroup ? (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            <User className="h-4 w-4 text-amber-500" />
-            My Group
-          </h3>
-          <div className="rounded-lg border border-gray-100 overflow-hidden">
-            <div className="bg-amber-50 px-4 py-3 flex justify-between items-center border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
-                  {userGroup.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="font-medium text-gray-800">{userGroup.name}</h3>
-                </div>
+    {userGroup ? (
+      <div className="space-y-4">
+        <h3 className={`text-lg font-semibold flex items-center gap-2 ${
+          isDarkMode ? 'text-gray-200' : 'text-gray-800'
+        }`}>
+          <User className="h-4 w-4 text-amber-500" />
+          My Group
+        </h3>
+        <div className={`rounded-lg border overflow-hidden ${
+          isDarkMode ? 'border-gray-600' : 'border-gray-100'
+        }`}>
+          <div className={`px-4 py-3 flex justify-between items-center border-b ${
+            isDarkMode 
+              ? 'bg-amber-900/20 border-gray-600' 
+              : 'bg-amber-50 border-gray-100'
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold ${
+                isDarkMode 
+                  ? 'bg-amber-800 text-amber-200' 
+                  : 'bg-amber-100 text-amber-700'
+              }`}>
+                {userGroup.name.charAt(0).toUpperCase()}
               </div>
-              <div className="px-3 py-1.5 bg-amber-100 rounded-full">
-                <p className="text-xs font-medium text-amber-700">{userGroup._count.members} members</p>
+              <div>
+                <h3 className={`font-medium ${
+                  isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                }`}>{userGroup.name}</h3>
               </div>
             </div>
-            <div className="px-4 py-3 bg-white flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <div className="text-sm text-gray-600">
-                  <span className="font-medium">Points:</span> {userGroup.groupPoints || 0}
-                </div>
+            <div className={`px-3 py-1.5 rounded-full ${
+              isDarkMode ? 'bg-amber-800' : 'bg-amber-100'
+            }`}>
+              <p className={`text-xs font-medium ${
+                isDarkMode ? 'text-amber-200' : 'text-amber-700'
+              }`}>{userGroup._count.members} members</p>
+            </div>
+          </div>
+          <div className={`px-4 py-3 flex justify-between items-center ${
+            isDarkMode ? 'bg-gray-700' : 'bg-white'
+          }`}>
+            <div className="flex items-center gap-2">
+              <div className={`text-sm ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                <span className="font-medium">Points:</span> {userGroup.groupPoints || 0}
               </div>
-              <div className="flex gap-2">
+            </div>
+            <div className="flex gap-2">
               {isCoordinator && <Button 
                 variant="outline" 
                 size="sm"
@@ -649,126 +755,194 @@ const UnifiedGroupManagement = () => {
                   setSelectedUsers([]);
                   setShowAddMembers(true);
                 }}
-                className="border-gray-200 hover:bg-indigo-50 text-indigo-600 flex items-center gap-1"
+                className={`border text-indigo-600 flex items-center gap-1 ${
+                  isDarkMode 
+                    ? 'border-gray-600 hover:bg-indigo-900/20' 
+                    : 'border-gray-200 hover:bg-indigo-50'
+                }`}
               >
                 <UserPlus className="h-4 w-4" />
                 Add Members
               </Button>}
-                <Button 
-                  variant="outline" 
-                  onClick={() => handleLeaveGroup(userGroup.id)}
-                  className="border-gray-200 hover:bg-red-50 text-red-600"
-                  size="sm"
-                >
-                  Leave Group
-                </Button>
-              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => handleLeaveGroup(userGroup.id)}
+                className={`border text-red-600 ${
+                  isDarkMode 
+                    ? 'border-gray-600 hover:bg-red-900/20' 
+                    : 'border-gray-200 hover:bg-red-50'
+                }`}
+                size="sm"
+              >
+                Leave Group
+              </Button>
             </div>
           </div>
         </div>
-      ) : (
-        <div className="rounded-lg border border-gray-100 overflow-hidden bg-white">
-          <div className="px-4 py-4 text-center space-y-4">
-            <div className="h-16 w-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto">
-              <Users className="h-8 w-8 text-amber-300" />
-            </div>
-            <h3 className="text-lg font-semibold text-gray-800">Not in a group yet</h3>
-            <p className="text-sm text-gray-600 max-w-md mx-auto">
-              Join a team to collaborate with other developers, participate in team challenges, and climb the leaderboard together.
+      </div>
+    ) : (
+      <div className={`rounded-lg border overflow-hidden ${
+        isDarkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-100'
+      }`}>
+        <div className="px-4 py-4 text-center space-y-4">
+          <div className={`h-16 w-16 rounded-full flex items-center justify-center mx-auto ${
+            isDarkMode ? 'bg-amber-900/20' : 'bg-amber-50'
+          }`}>
+            <Users className="h-8 w-8 text-amber-300" />
+          </div>
+          <h3 className={`text-lg font-semibold ${
+            isDarkMode ? 'text-gray-200' : 'text-gray-800'
+          }`}>Not in a group yet</h3>
+          <p className={`text-sm max-w-md mx-auto ${
+            isDarkMode ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            Join a team to collaborate with other developers, participate in team challenges, and climb the leaderboard together.
+          </p>
+        </div>
+      </div>
+    )}
+
+    <div className="pt-4">
+      <Button 
+        onClick={fetchExistingGroups}
+        className="w-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center gap-2"
+      >
+        <Users className="h-4 w-4" />
+        {showExistingGroups ? 'Refresh Groups List' : 'View Existing Groups'}
+        <ChevronDown className={`h-4 w-4 transition-transform ${showExistingGroups ? 'transform rotate-180' : ''}`} />
+      </Button>
+    </div>
+
+    {showExistingGroups && (
+      <div className="space-y-4 pt-2">
+        <h3 className={`text-lg font-semibold flex items-center gap-2 ${
+          isDarkMode ? 'text-gray-200' : 'text-gray-800'
+        }`}>
+          <Users className="h-4 w-4 text-indigo-500" />
+          Available Groups
+        </h3>
+        
+        {existingGroups.length === 0 ? (
+          <div className={`text-center p-4 rounded-lg border ${
+            isDarkMode 
+              ? 'bg-gray-700 border-gray-600' 
+              : 'bg-gray-50 border-gray-100'
+          }`}>
+            <p className={`flex items-center justify-center gap-2 ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              <Info className="h-4 w-4" />
+              No groups found
             </p>
           </div>
-        </div>
-      )}
-
-      <div className="pt-4">
-        <Button 
-          onClick={fetchExistingGroups}
-          className="w-full bg-indigo-500 hover:bg-indigo-600 text-white flex items-center justify-center gap-2"
-        >
-          <Users className="h-4 w-4" />
-          {showExistingGroups ? 'Refresh Groups List' : 'View Existing Groups'}
-          <ChevronDown className={`h-4 w-4 transition-transform ${showExistingGroups ? 'transform rotate-180' : ''}`} />
-        </Button>
-      </div>
-
-      {showExistingGroups && (
-        <div className="space-y-4 pt-2">
-          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            <Users className="h-4 w-4 text-indigo-500" />
-            Available Groups
-          </h3>
-          
-          {existingGroups.length === 0 ? (
-            <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-100">
-              <p className="text-gray-600 flex items-center justify-center gap-2">
-                <Info className="h-4 w-4" />
-                No groups found
-              </p>
-            </div>
-          ) : (
-            existingGroups.map((group) => (
-              <div key={group.id} className="rounded-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gray-50 px-4 py-3 flex justify-between items-center border-b border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold">
-                      {group.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-gray-800">{group.name}</h3>
-                    </div>
+        ) : (
+          existingGroups.map((group) => (
+            <div key={group.id} className={`rounded-lg border overflow-hidden ${
+              isDarkMode ? 'border-gray-600' : 'border-gray-100'
+            }`}>
+              <div className={`px-4 py-3 flex justify-between items-center border-b ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600' 
+                  : 'bg-gray-50 border-gray-100'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <div className={`h-8 w-8 rounded-full flex items-center justify-center font-bold ${
+                    isDarkMode 
+                      ? 'bg-indigo-800 text-indigo-200' 
+                      : 'bg-indigo-100 text-indigo-700'
+                  }`}>
+                    {group.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="px-3 py-1.5 bg-indigo-100 rounded-full">
-                    <p className="text-xs font-medium text-indigo-700">{group._count.members} members</p>
+                  <div>
+                    <h3 className={`font-medium ${
+                      isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                    }`}>{group.name}</h3>
                   </div>
                 </div>
-                <div className="px-4 py-3 bg-white flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-600">
-                      Coordinator: <span className="font-medium">{group.coordinator.username}</span>
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    {!userGroup && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleJoinGroup(group.id)}
-                        className="border-gray-200 hover:bg-indigo-50 text-indigo-600"
-                      >
-                        Join Group <ChevronRight className="ml-1 h-4 w-4" />
-                      </Button>
-                    )}
-                    {isAdmin && (
+                <div className={`px-3 py-1.5 rounded-full ${
+                  isDarkMode ? 'bg-indigo-800' : 'bg-indigo-100'
+                }`}>
+                  <p className={`text-xs font-medium ${
+                    isDarkMode ? 'text-indigo-200' : 'text-indigo-700'
+                  }`}>{group._count.members} members</p>
+                </div>
+              </div>
+              <div className={`px-4 py-3 flex justify-between items-center ${
+                isDarkMode ? 'bg-gray-800' : 'bg-white'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <User className={`h-4 w-4 ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`} />
+                  <span className={`text-sm ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                  }`}>
+                    Coordinator: <span className="font-medium">{group.coordinator.username}</span>
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  {!userGroup && (
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleJoinGroup(group.id)}
+                      className={`border text-indigo-600 ${
+                        isDarkMode 
+                          ? 'border-gray-600 hover:bg-indigo-900/20' 
+                          : 'border-gray-200 hover:bg-indigo-50'
+                      }`}
+                    >
+                      Join Group <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  )}
+                  {isAdmin && (
                     <>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="border-gray-200 hover:bg-red-50 text-red-600 flex items-center gap-2"
+                            className={`border text-red-600 flex items-center gap-2 ${
+                              isDarkMode 
+                                ? 'border-gray-600 hover:bg-red-900/20' 
+                                : 'border-gray-200 hover:bg-red-50'
+                            }`}
                             disabled={isDeleting}
                           >
                             <Trash2 className="h-4 w-4" />
                             Delete
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-white p-0 overflow-hidden">
-                          <AlertDialogHeader className="bg-red-50 px-4 py-3 border-b border-gray-100">
-                            <AlertDialogTitle className="text-lg font-medium text-red-700 flex items-center gap-2">
+                        <AlertDialogContent className={`p-0 overflow-hidden ${
+                          isDarkMode ? 'bg-gray-800' : 'bg-white'
+                        }`}>
+                          <AlertDialogHeader className={`px-4 py-3 border-b ${
+                            isDarkMode 
+                              ? 'bg-red-900/20 border-gray-600' 
+                              : 'bg-red-50 border-gray-100'
+                          }`}>
+                            <AlertDialogTitle className={`text-lg font-medium flex items-center gap-2 ${
+                              isDarkMode ? 'text-red-400' : 'text-red-700'
+                            }`}>
                               <AlertCircle className="h-5 w-5" />
                               Delete Group
                             </AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
+                            <AlertDialogDescription className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
                               This action cannot be undone. All members will be removed from this group.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <div className="p-4">
-                            <p className="text-sm text-gray-600 mb-6">
+                            <p className={`text-sm mb-6 ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+                            }`}>
                               Are you sure you want to delete <span className="font-semibold">{group.name}</span>?
                             </p>
                             <AlertDialogFooter className="flex space-x-2 justify-end">
-                              <AlertDialogCancel className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded">
+                              <AlertDialogCancel className={`px-3 py-1.5 hover:bg-gray-200 text-sm font-medium rounded ${
+                                isDarkMode 
+                                  ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' 
+                                  : 'bg-gray-100 text-gray-700'
+                              }`}>
                                 Cancel
                               </AlertDialogCancel>
                               <AlertDialogAction
@@ -793,19 +967,29 @@ const UnifiedGroupManagement = () => {
                       </AlertDialog>
                     </>
                   )}
-                  </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
+            </div>
+          ))
+        )}
+      </div>
+    )}
+  </div>
+);
 
-  return (isLoading ? (<Card className="max-w-6xl mx-auto shadow-md border border-gray-100 mt-20 animate-pulse">
+  return (isLoading ? (
+  <div className={`mx-auto shadow-md border ${isDarkMode && 'border-gray-900'}`}>
+    <Card className={`max-w-6xl mt-20 mx-auto shadow-md border animate-pulse ${
+    isDarkMode 
+      ? 'bg-gray-800 border-gray-700' 
+      : 'bg-white border-gray-100'
+  }`}>
     {/* Header Skeleton */}
-    <CardHeader className="bg-gradient-to-r text-white">
+    <CardHeader className={`${
+      isDarkMode 
+        ? 'bg-gradient-to-r from-gray-700 to-gray-600 text-white' 
+        : 'bg-gradient-to-r text-white'
+    }`}>
       <div className="flex items-center">
         <div className="bg-white/20 p-2 rounded-full mr-3">
           <Users className="h-5 w-5 text-white" />
@@ -827,7 +1011,9 @@ const UnifiedGroupManagement = () => {
       <CardContent className="col-span-1 md:col-span-2 p-4">
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="w-full h-12 bg-gray-200 rounded-md" />
+            <Skeleton key={i} className={`w-full h-12 rounded-md ${
+              isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+            }`} />
           ))}
         </div>
       </CardContent>
@@ -835,38 +1021,56 @@ const UnifiedGroupManagement = () => {
       {/* Group Creation Form Loader (Only for Admins) */}
       <CardContent className="col-span-1 md:col-span-3 p-4">
         <div className="space-y-4">
-          <Skeleton className="w-48 h-6 bg-gray-200 rounded-md" />
-          <Skeleton className="w-full h-10 bg-gray-200 rounded-md" />
-          <Skeleton className="w-32 h-10 bg-gray-300 rounded-md" />
+          <Skeleton className={`w-48 h-6 rounded-md ${
+            isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+          }`} />
+          <Skeleton className={`w-full h-10 rounded-md ${
+            isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
+          }`} />
+          <Skeleton className={`w-32 h-10 rounded-md ${
+            isDarkMode ? 'bg-gray-500' : 'bg-gray-300'
+          }`} />
         </div>
       </CardContent>
     </div>
-  </Card>) :
-    (<Card className="max-w-6xl mx-auto shadow-md border border-gray-100 mt-20">
-      <div className="flex items-center justify-between mb-8">
-        <div className='p-2 items-center'>
-          <h1 className="text-3xl font-bold text-gray-800">
-            Group <span className="text-indigo-600">Management</span>
-          </h1>
-          <p className="text-gray-600 mt-1 p-2">Collaborate and Improve together!</p>
-        </div>
+  </Card>
+  </div>
+) : (
+  <div className={`mx-auto shadow-md border ${isDarkMode && 'border-gray-900'}`}>
+    <Card className={`max-w-6xl mt-20 mx-auto shadow-md border ${
+    isDarkMode 
+      ? 'bg-gray-800 border-gray-700' 
+      : 'bg-white border-gray-100'
+  }`}>
+    <div className="flex items-center justify-between mb-8">
+      <div className='p-2 items-center'>
+        <h1 className={`text-3xl font-bold ${
+          isDarkMode ? 'text-gray-100' : 'text-gray-800'
+        }`}>
+          Group <span className="text-indigo-600">Management</span>
+        </h1>
+        <p className={`mt-1 p-2 ${
+          isDarkMode ? 'text-gray-300' : 'text-gray-600'
+        }`}>Collaborate and Improve together!</p>
       </div>
-      <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
+    </div>
+    <div className='grid grid-cols-1 md:grid-cols-5 gap-4'>
       <CardContent className="col-span-1 md:col-span-2 p-4">
         {showAddMembers && selectedGroupId ? (
           renderAddMembersDialog()
         ) : (
           <>
-          {renderGroupsList()}
+            {renderGroupsList()}
           </>
         )}
       </CardContent>
       {isAdmin && <CardContent className='col-span-1 md:col-span-3 p-4'>
-      {renderGroupCreationForm()}
+        {renderGroupCreationForm()}
       </CardContent>}
-      </div>
-    </Card>)
-  );
+    </div>
+  </Card>
+  </div>
+))
 };
 
 export default UnifiedGroupManagement;
