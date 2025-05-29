@@ -211,7 +211,7 @@ const TopicGrid: React.FC = () => {
             const topicData = topicProgress[topic] || { total: 0, solved: 0, percentage: 0 };
             
             // Dark mode color variations for categories
-            const getDarkModeColors = (category: TopicCategory) => {
+            const getDarkModeColors = () => {
               const darkColorSchemes: Record<TopicCategory, {
                 bg: string, 
                 border: string, 
@@ -242,7 +242,7 @@ const TopicGrid: React.FC = () => {
               return darkColorSchemes[mapping.category];
             };
             
-            const adaptiveColors = getDarkModeColors(topicMappings[topic]?.category || 'concepts');
+            const adaptiveColors = getDarkModeColors();
             
             return (
               <Link 
