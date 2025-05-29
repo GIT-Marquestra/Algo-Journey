@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import toast from "react-hot-toast";
 import axios from "axios";
+import useStore from "@/store/store";
 
 interface HintsComponentProps {
   questionId: string;
@@ -22,6 +23,7 @@ interface HintsComponentProps {
   isAdmin?: boolean;
   children?: ReactNode;
   onSave?: () => void;
+  isDarkMode?: boolean;
 }
 
 interface TagOption {
@@ -52,7 +54,7 @@ export default function HintsComponent({
   primaryTagName,
   isAdmin = false,
   children,
-  onSave
+  onSave,
 }: HintsComponentProps) {
   const [open, setOpen] = useState(false);
   const [hint, setHint] = useState<Hint>({
@@ -62,6 +64,7 @@ export default function HintsComponent({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { isDarkMode } = useStore()
   const [activeTab, setActiveTab] = useState("hint1");
   const [isEditMode, setIsEditMode] = useState(false);
   const [originalHint, setOriginalHint] = useState<Hint>({
@@ -296,17 +299,25 @@ export default function HintsComponent({
   const renderEditableTabs = () => (
     <div className="space-y-6">
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 items-center">
+        <label className={`block text-sm font-medium mb-2 items-center ${
+          isDarkMode ? 'text-gray-300' : 'text-gray-700'
+        }`}>
           <TagIcon className="h-4 w-4 mr-2 text-indigo-500" />
           Tag for these hints:
         </label>
         <Select value={selectedTagId} onValueChange={handleTagChange}>
-          <SelectTrigger className="w-full bg-white border-gray-200 hover:border-indigo-300 transition-colors">
+          <SelectTrigger className={`w-full border-gray-200 hover:border-indigo-300 transition-colors ${
+            isDarkMode ? 'bg-gray-800 border-gray-600 text-gray-100 hover:border-indigo-400' : 'bg-white'
+          }`}>
             <SelectValue placeholder="Select a tag" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className={isDarkMode ? 'bg-gray-800 border-gray-600' : ''}>
             {availableTags.map((tag) => (
-              <SelectItem key={tag.id} value={tag.id}>
+              <SelectItem 
+                key={tag.id} 
+                value={tag.id}
+                className={isDarkMode ? 'text-gray-100 hover:bg-gray-700 focus:bg-gray-700' : ''}
+              >
                 {tag.name}
               </SelectItem>
             ))}
@@ -315,19 +326,44 @@ export default function HintsComponent({
       </div>
     
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4 bg-gray-100">
-          <TabsTrigger value="hint1" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+        <TabsList className={`grid grid-cols-3 mb-4 ${
+          isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+        }`}>
+          <TabsTrigger 
+            value="hint1" 
+            className={`${
+              isDarkMode 
+                ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-300' 
+                : 'data-[state=active]:bg-indigo-500 data-[state=active]:text-white'
+            }`}
+          >
             Hint 1
           </TabsTrigger>
-          <TabsTrigger value="hint2" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+          <TabsTrigger 
+            value="hint2" 
+            className={`${
+              isDarkMode 
+                ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-300' 
+                : 'data-[state=active]:bg-indigo-500 data-[state=active]:text-white'
+            }`}
+          >
             Hint 2
           </TabsTrigger>
-          <TabsTrigger value="hint3" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+          <TabsTrigger 
+            value="hint3" 
+            className={`${
+              isDarkMode 
+                ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-300' 
+                : 'data-[state=active]:bg-indigo-500 data-[state=active]:text-white'
+            }`}
+          >
             Solution Approach
           </TabsTrigger>
         </TabsList>
         
-        <Card className="border-gray-100 shadow-sm">
+        <Card className={`shadow-sm ${
+          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-100'
+        }`}>
           <CardContent className="p-6">
             <TabsContent value="hint1">
               <Textarea
@@ -335,7 +371,11 @@ export default function HintsComponent({
                 placeholder="Enter the first hint (basic direction)"
                 value={hint.hint1}
                 onChange={(e) => handleInputChange("hint1", e.target.value)}
-                className="min-h-32 h-64 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                className={`min-h-32 h-64 whitespace-pre-wrap focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-indigo-400' 
+                    : 'border-gray-200 focus:border-indigo-300'
+                }`}
               />
             </TabsContent>
             
@@ -345,7 +385,11 @@ export default function HintsComponent({
                 placeholder="Enter the second hint (more specific approach)"
                 value={hint.hint2}
                 onChange={(e) => handleInputChange("hint2", e.target.value)}
-                className="min-h-32 h-64 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                className={`min-h-32 h-64 whitespace-pre-wrap focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-indigo-400' 
+                    : 'border-gray-200 focus:border-indigo-300'
+                }`}
               />
             </TabsContent>
             
@@ -355,7 +399,11 @@ export default function HintsComponent({
                 placeholder="Enter the third hint (almost solution)"
                 value={hint.hint3}
                 onChange={(e) => handleInputChange("hint3", e.target.value)}
-                className="min-h-32 h-64 whitespace-pre-wrap border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                className={`min-h-32 h-64 whitespace-pre-wrap focus:ring focus:ring-indigo-200 focus:ring-opacity-50 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 border-gray-600 text-gray-100 placeholder-gray-400 focus:border-indigo-400' 
+                    : 'border-gray-200 focus:border-indigo-300'
+                }`}
               />
             </TabsContent>
           </CardContent>
@@ -367,10 +415,14 @@ export default function HintsComponent({
   const renderReadOnlyTabs = () => (
     <div className="space-y-4">
       {isAdmin && availableTags.length > 0 && (
-        <div className="mb-4 bg-gray-50 p-3 rounded-lg">
+        <div className={`mb-4 p-3 rounded-lg ${
+          isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+        }`}>
           <div className="flex items-center">
             <TagIcon className="h-4 w-4 mr-2 text-indigo-500" />
-            <span className="text-sm font-medium text-gray-700">
+            <span className={`text-sm font-medium ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>
               Tag: {availableTags.find(tag => tag.id === primaryTagId)?.name || "N/A"}
             </span>
           </div>
@@ -378,28 +430,65 @@ export default function HintsComponent({
       )}
     
       <Tabs defaultValue="hint1" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4 bg-gray-100">
-          <TabsTrigger value="hint1" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+        <TabsList className={`grid grid-cols-3 mb-4 ${
+          isDarkMode ? 'bg-gray-700' : 'bg-gray-100'
+        }`}>
+          <TabsTrigger 
+            value="hint1" 
+            className={`${
+              isDarkMode 
+                ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-300' 
+                : 'data-[state=active]:bg-indigo-500 data-[state=active]:text-white'
+            }`}
+          >
             Hint 1
           </TabsTrigger>
-          <TabsTrigger value="hint2" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+          <TabsTrigger 
+            value="hint2" 
+            className={`${
+              isDarkMode 
+                ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-300' 
+                : 'data-[state=active]:bg-indigo-500 data-[state=active]:text-white'
+            }`}
+          >
             Hint 2
           </TabsTrigger>
-          <TabsTrigger value="hint3" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+          <TabsTrigger 
+            value="hint3" 
+            className={`${
+              isDarkMode 
+                ? 'data-[state=active]:bg-indigo-600 data-[state=active]:text-white text-gray-300' 
+                : 'data-[state=active]:bg-indigo-500 data-[state=active]:text-white'
+            }`}
+          >
             Solution Approach
           </TabsTrigger>
         </TabsList>
         
-        <Card className="border-amber-100 shadow-sm">
+        <Card className={`shadow-sm ${
+          isDarkMode ? 'border-gray-600' : 'border-amber-100'
+        }`}>
           <CardContent className="p-0">
-            <TabsContent value="hint1" className="p-6 bg-amber-50 rounded-md m-0 max-h-64 overflow-y-auto">
-              <p className="whitespace-pre-wrap text-gray-800">{hint.hint1 || "No hint available."}</p>
+            <TabsContent value="hint1" className={`p-6 rounded-md m-0 max-h-64 overflow-y-auto ${
+              isDarkMode ? 'bg-gray-700' : 'bg-amber-50'
+            }`}>
+              <p className={`whitespace-pre-wrap ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-800'
+              }`}>{hint.hint1 || "No hint available."}</p>
             </TabsContent>
-            <TabsContent value="hint2" className="p-6 bg-amber-50 rounded-md m-0 max-h-64 overflow-y-auto">
-              <p className="whitespace-pre-wrap text-gray-800">{hint.hint2 || "No hint available."}</p>
+            <TabsContent value="hint2" className={`p-6 rounded-md m-0 max-h-64 overflow-y-auto ${
+              isDarkMode ? 'bg-gray-700' : 'bg-amber-50'
+            }`}>
+              <p className={`whitespace-pre-wrap ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-800'
+              }`}>{hint.hint2 || "No hint available."}</p>
             </TabsContent>
-            <TabsContent value="hint3" className="p-6 bg-amber-50 rounded-md m-0 max-h-64 overflow-y-auto">
-              <p className="whitespace-pre-wrap text-gray-800">{hint.hint3 || "No hint available."}</p>
+            <TabsContent value="hint3" className={`p-6 rounded-md m-0 max-h-64 overflow-y-auto ${
+              isDarkMode ? 'bg-gray-700' : 'bg-amber-50'
+            }`}>
+              <p className={`whitespace-pre-wrap ${
+                isDarkMode ? 'text-gray-200' : 'text-gray-800'
+              }`}>{hint.hint3 || "No hint available."}</p>
             </TabsContent>
           </CardContent>
         </Card>
@@ -425,7 +514,11 @@ export default function HintsComponent({
     <Button
       variant="outline"
       size="sm"
-      className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors"
+      className={`transition-colors ${
+        isDarkMode 
+          ? 'border-amber-600 bg-amber-900/20 text-amber-400 hover:bg-amber-800/30' 
+          : 'border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+      }`}
     >
       <Sparkles className="mr-2 h-4 w-4" />
       Hints
@@ -460,10 +553,18 @@ export default function HintsComponent({
           </DialogTrigger>
         )}
         
-        <DialogContent className="sm:max-w-2xl bg-white/95 backdrop-blur-sm border-gray-100 shadow-lg max-h-[90vh] flex flex-col">
-          <DialogHeader className="border-b border-gray-100 pb-4">
+        <DialogContent className={`sm:max-w-2xl backdrop-blur-sm shadow-lg max-h-[90vh] flex flex-col ${
+          isDarkMode 
+            ? 'bg-gray-800/95 border-gray-600 text-gray-100' 
+            : 'bg-white/95 border-gray-100'
+        }`}>
+          <DialogHeader className={`border-b pb-4 ${
+            isDarkMode ? 'border-gray-600' : 'border-gray-100'
+          }`}>
             <div className="flex justify-between items-center">
-              <DialogTitle className="text-xl font-bold text-gray-800 flex items-center gap-2">
+              <DialogTitle className={`text-xl font-bold flex items-center gap-2 ${
+                isDarkMode ? 'text-gray-100' : 'text-gray-800'
+              }`}>
                 {isEditMode ? (
                   <>
                     <Edit className="h-5 w-5 text-indigo-500" />
@@ -481,7 +582,11 @@ export default function HintsComponent({
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setIsEditMode(true)}
-                  className="text-indigo-600 hover:bg-indigo-50"
+                  className={`${
+                    isDarkMode 
+                      ? 'text-indigo-400 hover:bg-indigo-900/20' 
+                      : 'text-indigo-600 hover:bg-indigo-50'
+                  }`}
                 >
                   <Edit className="mr-2 h-4 w-4" />
                   Edit
@@ -493,25 +598,37 @@ export default function HintsComponent({
           {isLoading ? (
             <div className="flex justify-center items-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-              <span className="ml-2 text-gray-600">Loading hints...</span>
+              <span className={`ml-2 ${
+                isDarkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}>Loading hints...</span>
             </div>
           ) : (
             <div className="py-4 overflow-y-auto flex-1">
               {isEditMode ? renderEditableTabs() : renderReadOnlyTabs()}
               
               {isEditMode && (
-                <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                <div className={`flex justify-end gap-3 mt-6 pt-4 border-t ${
+                  isDarkMode ? 'border-gray-600' : 'border-gray-100'
+                }`}>
                   <Button 
                     variant="outline" 
                     onClick={handleCancel}
-                    className="border-gray-200 hover:bg-gray-50 text-gray-700"
+                    className={`${
+                      isDarkMode 
+                        ? 'border-gray-600 hover:bg-gray-700 text-gray-300' 
+                        : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                    }`}
                   >
                     Cancel
                   </Button>
                   <Button 
                     onClick={handleSubmit} 
                     disabled={isSaving}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className={`text-white ${
+                      isDarkMode 
+                        ? 'bg-indigo-600 hover:bg-indigo-700' 
+                        : 'bg-indigo-600 hover:bg-indigo-700'
+                    }`}
                   >
                     {isSaving ? (
                       <>
