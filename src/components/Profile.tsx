@@ -124,25 +124,8 @@ type ApiResponse = {
 };
 
 // Utility functions
-const getDifficultyColor = (difficulty: Difficulty) => {
-  const colors = {
-    BEGINNER: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
-    EASY: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
-    MEDIUM: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
-    HARD: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
-    VERYHARD: 'bg-red-700/10 text-red-700 hover:bg-red-700/20'
-  };
-  return colors[difficulty] || 'bg-slate-100 text-slate-700';
-};
 
-const getStatusColor = (status: SubmissionStatus) => {
-  const colors = {
-    COMPLETED: 'text-green-600',
-    PENDING: 'text-blue-600',
-    FAILED: 'text-red-600'
-  };//@ts-expect-error: it is important here i dont know the types
-  return colors[status] || 'text-slate-600';
-};
+
 
 const formatDate = (date: Date): string => {
   return new Date(date).toLocaleDateString(undefined, {
@@ -152,11 +135,41 @@ const formatDate = (date: Date): string => {
   });
 };
 
-const Profile = () => {
+const Profile = ({ isDarkMode = false }) => {
   const params = useParams();
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+ const getStatusColor = (status: SubmissionStatus) => {
+    const colors = {
+      COMPLETED: isDarkMode ? 'text-green-400' : 'text-green-600',
+      PENDING: isDarkMode ? 'text-blue-400' : 'text-blue-600',
+      FAILED: isDarkMode ? 'text-red-400' : 'text-red-600'
+    };
+    //@ts-expect-error: no need here...
+    return colors[status] || (isDarkMode ? 'text-slate-400' : 'text-slate-600');
+  };
+  const getDifficultyColor = (difficulty: Difficulty) => {
+    const colors = {
+      BEGINNER: isDarkMode 
+        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+        : 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+      EASY: isDarkMode 
+        ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+        : 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+      MEDIUM: isDarkMode 
+        ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' 
+        : 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
+      HARD: isDarkMode 
+        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' 
+        : 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
+      VERYHARD: isDarkMode 
+        ? 'bg-red-700/20 text-red-300 hover:bg-red-700/30' 
+        : 'bg-red-700/10 text-red-700 hover:bg-red-700/20'
+    };
+    return colors[difficulty] || (isDarkMode ? 'bg-slate-700 text-slate-300' : 'bg-slate-100 text-slate-700');
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -185,96 +198,108 @@ const Profile = () => {
 
   const { user, contests, summary } = profileData;
 
-  return (
-    <div className="container mx-auto mt-10 px-4 py-8 max-w-7xl">
+ return (
+    <div className={`container mx-auto px-4 py-8 max-w-7xl ${isDarkMode ? 'dark' : ''}`}>
       <div className="flex flex-col">
         {/* Profile Overview */}
-        <Card className="lg:col-span-1">
+        <Card className={`lg:col-span-1 ${isDarkMode ? 'bg-slate-800 border-slate-700' : ''}`}>
           <CardHeader>
             <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center">
-                <User className="h-8 w-8 text-slate-600" />
+              <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                isDarkMode ? 'bg-slate-700' : 'bg-slate-100'
+              }`}>
+                <User className={`h-8 w-8 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`} />
               </div>
               <div>
-                <CardTitle>{user.username}</CardTitle>
-                <CardDescription>{user.email}</CardDescription>
+                <CardTitle className={isDarkMode ? 'text-white' : ''}>{user.username}</CardTitle>
+                <CardDescription className={isDarkMode ? 'text-slate-400' : ''}>{user.email}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             <div>
-              <h3 className="text-sm font-medium mb-2">Profile Info</h3>
+              <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-200' : ''}`}>Profile Info</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span className="text-sm">{user.section} • {user.enrollmentNum}</span>
+                  <Calendar className={`h-4 w-4 ${isDarkMode ? 'text-slate-400' : ''}`} />
+                  <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>{user.section} • {user.enrollmentNum}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Trophy className="h-4 w-4 text-amber-500" />
-                  <span className="text-sm">Points: {user.individualPoints}</span>
+                  <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>Points: {user.individualPoints}</span>
                 </div>
               </div>
             </div>
 
             {user.group && (
               <div>
-                <h3 className="text-sm font-medium mb-2">Group Information</h3>
+                <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-200' : ''}`}>Group Information</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm">{user.group.name}</span>
+                    <Users className={`h-4 w-4 ${isDarkMode ? 'text-slate-400' : ''}`} />
+                    <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>{user.group.name}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Medal className="h-4 w-4" />
-                    <span className="text-sm">Group Points: {user.group.groupPoints}</span>
+                    <Medal className={`h-4 w-4 ${isDarkMode ? 'text-slate-400' : ''}`} />
+                    <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>Group Points: {user.group.groupPoints}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span className="text-sm">Coordinator: {user.group.coordinator.username}</span>
+                    <User className={`h-4 w-4 ${isDarkMode ? 'text-slate-400' : ''}`} />
+                    <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>Coordinator: {user.group.coordinator.username}</span>
                   </div>
                 </div>
               </div>
             )}
 
             <div>
-              <h3 className="text-sm font-medium mb-2">Problem Statistics</h3>
+              <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-200' : ''}`}>Problem Statistics</h3>
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-green-50 p-2 rounded-lg text-center">
-                  <div className="text-xs text-green-500">Beginner</div>
-                  <div className="font-medium">{summary.problemsByDifficulty.BEGINNER}</div>
+                <div className={`p-2 rounded-lg text-center ${
+                  isDarkMode ? 'bg-green-900/30' : 'bg-green-50'
+                }`}>
+                  <div className={`text-xs ${isDarkMode ? 'text-green-400' : 'text-green-500'}`}>Beginner</div>
+                  <div className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{summary.problemsByDifficulty.BEGINNER}</div>
                 </div>
-                <div className="bg-green-100 p-2 rounded-lg text-center">
-                  <div className="text-xs text-green-600">Easy</div>
-                  <div className="font-medium">{summary.problemsByDifficulty.EASY}</div>
+                <div className={`p-2 rounded-lg text-center ${
+                  isDarkMode ? 'bg-green-800/30' : 'bg-green-100'
+                }`}>
+                  <div className={`text-xs ${isDarkMode ? 'text-green-300' : 'text-green-600'}`}>Easy</div>
+                  <div className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{summary.problemsByDifficulty.EASY}</div>
                 </div>
-                <div className="bg-yellow-50 p-2 rounded-lg text-center">
-                  <div className="text-xs text-yellow-600">Medium</div>
-                  <div className="font-medium">{summary.problemsByDifficulty.MEDIUM}</div>
+                <div className={`p-2 rounded-lg text-center ${
+                  isDarkMode ? 'bg-yellow-900/30' : 'bg-yellow-50'
+                }`}>
+                  <div className={`text-xs ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Medium</div>
+                  <div className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{summary.problemsByDifficulty.MEDIUM}</div>
                 </div>
-                <div className="bg-red-50 p-2 rounded-lg text-center">
-                  <div className="text-xs text-red-600">Hard</div>
-                  <div className="font-medium">{summary.problemsByDifficulty.HARD}</div>
+                <div className={`p-2 rounded-lg text-center ${
+                  isDarkMode ? 'bg-red-900/30' : 'bg-red-50'
+                }`}>
+                  <div className={`text-xs ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>Hard</div>
+                  <div className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{summary.problemsByDifficulty.HARD}</div>
                 </div>
-                <div className="bg-red-100 p-2 rounded-lg text-center">
-                  <div className="text-xs text-red-700">Very Hard</div>
-                  <div className="font-medium">{summary.problemsByDifficulty.VERYHARD}</div>
+                <div className={`p-2 rounded-lg text-center ${
+                  isDarkMode ? 'bg-red-800/30' : 'bg-red-100'
+                }`}>
+                  <div className={`text-xs ${isDarkMode ? 'text-red-300' : 'text-red-700'}`}>Very Hard</div>
+                  <div className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{summary.problemsByDifficulty.VERYHARD}</div>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-medium mb-2">Platform Links</h3>
+              <h3 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-200' : ''}`}>Platform Links</h3>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Image src={Leetcode} alt='leetcodeImage' className='size-4'/>
                   <Link href={`https://leetcode.com/u/${user.leetcodeUsername}/`} target='_blank'>
-                    <span className="text-sm text-blue-700">{user.leetcodeUsername}</span>
+                    <span className={`text-sm ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{user.leetcodeUsername}</span>
                   </Link>
                 </div>
                 <div className="flex items-center gap-2">
                 <Image src={Codeforces} alt='codeforcesImage' className='size-4'/>
                   <Link href={`https://codeforces.com/profile/${user.codeforcesUsername}`} target='_blank'>
-                    <span className="text-sm text-blue-700">{user.codeforcesUsername}</span>
+                    <span className={`text-sm ${isDarkMode ? 'text-blue-400' : 'text-blue-700'}`}>{user.codeforcesUsername}</span>
                   </Link>
                 </div>
               </div>
@@ -285,18 +310,18 @@ const Profile = () => {
         {/* Main Content */}
         <div className='mt-2'>
           <Tabs defaultValue="submissions">
-            <TabsList>
-              <TabsTrigger value="submissions">Submissions</TabsTrigger>
-              <TabsTrigger value="contests">Contests</TabsTrigger>
+            <TabsList className={isDarkMode ? 'bg-slate-800 border-slate-700' : ''}>
+              <TabsTrigger value="submissions" className={isDarkMode ? 'data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-400' : ''}>Submissions</TabsTrigger>
+              <TabsTrigger value="contests" className={isDarkMode ? 'data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-400' : ''}>Contests</TabsTrigger>
             </TabsList>
 
             <TabsContent value="submissions" className="space-y-4">
               {user.submissions.map((submission) => (
-                <Card key={submission.id}>
+                <Card key={submission.id} className={isDarkMode ? 'bg-slate-800 border-slate-700' : ''}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <CardTitle className="text-base">{submission.question.slug}</CardTitle>
+                        <CardTitle className={`text-base ${isDarkMode ? 'text-white' : ''}`}>{submission.question.slug}</CardTitle>
                         <Badge variant="secondary" className={getDifficultyColor(submission.question.difficulty)}>
                           {submission.question.difficulty}
                         </Badge>
@@ -310,12 +335,12 @@ const Profile = () => {
                         <span className={getStatusColor(submission.status)}>{submission.status}</span>
                       </div>
                     </div>
-                    <CardDescription>
+                    <CardDescription className={isDarkMode ? 'text-slate-400' : ''}>
                       Score: {submission.score} • {formatDate(submission.createdAt)}
                       {submission.question.questionTags.length > 0 && (
                         <div className="flex gap-2 mt-2">
                           {submission.question.questionTags.map(tag => (
-                            <Badge key={tag.name} variant="outline">{tag.name}</Badge>
+                            <Badge key={tag.name} variant="outline" className={isDarkMode ? 'border-slate-600 text-slate-300' : ''}>{tag.name}</Badge>
                           ))}
                         </div>
                       )}
@@ -327,25 +352,25 @@ const Profile = () => {
 
             <TabsContent value="contests" className="space-y-4">
               {contests.map((contest) => (
-                <Card key={contest.id}>
+                <Card key={contest.id} className={isDarkMode ? 'bg-slate-800 border-slate-700' : ''}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">{contest.name}</CardTitle>
-                      <Badge variant="secondary">
+                      <CardTitle className={`text-base ${isDarkMode ? 'text-white' : ''}`}>{contest.name}</CardTitle>
+                      <Badge variant="secondary" className={isDarkMode ? 'bg-slate-700 text-slate-300' : ''}>
                         {contest.status}
                       </Badge>
                     </div>
-                    <CardDescription>
+                    <CardDescription className={isDarkMode ? 'text-slate-400' : ''}>
                       {formatDate(contest.startTime)} - {formatDate(contest.endTime)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <h4 className="text-sm font-medium mb-2">Submissions</h4>
+                        <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-200' : ''}`}>Submissions</h4>
                         {contest.submissions.map((sub) => (
                           <div key={sub.id} className="flex items-center justify-between py-1">
-                            <span className="text-sm">{sub.question.slug}</span>
+                            <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>{sub.question.slug}</span>
                             <Badge variant="secondary" className={getDifficultyColor(sub.question.difficulty)}>
                               {sub.score}/{sub.question.points}
                             </Badge>
@@ -354,16 +379,16 @@ const Profile = () => {
                       </div>
                       {contest.groupPerformance && (
                         <div>
-                          <h4 className="text-sm font-medium mb-2">Group Performance</h4>
+                          <h4 className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-200' : ''}`}>Group Performance</h4>
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <span className="text-sm">Score</span>
-                              <span className="font-medium">{contest.groupPerformance.score}</span>
+                              <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>Score</span>
+                              <span className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>{contest.groupPerformance.score}</span>
                             </div>
                             {contest.groupPerformance.rank && (
                               <div className="flex items-center justify-between">
-                                <span className="text-sm">Rank</span>
-                                <span className="font-medium">#{contest.groupPerformance.rank}</span>
+                                <span className={`text-sm ${isDarkMode ? 'text-slate-300' : ''}`}>Rank</span>
+                                <span className={`font-medium ${isDarkMode ? 'text-white' : ''}`}>#{contest.groupPerformance.rank}</span>
                               </div>
                             )}
                           </div>
@@ -380,5 +405,6 @@ const Profile = () => {
     </div>
   );
 };
+
 
 export default Profile;
