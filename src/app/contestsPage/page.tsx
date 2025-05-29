@@ -424,7 +424,7 @@ const ContestsPage = () => {
 
   if (isLoading) {
   return (
-    <div className={`container mx-auto p-8 pt-20 space-y-8 ${isDarkMode ? 'bg-gray-900' : ''}`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
       <DashboardSkeleton isDarkMode={isDarkMode} />
     </div>
   );
@@ -446,7 +446,7 @@ const ContestsPage = () => {
 
   return (
   <div className={`min-h-screen ${isDarkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
-    <div className={`container p-20 mx-auto p-8 space-y-8 ${isDarkMode ? 'bg-gray-900 min-h-screen' : ''}`}>
+    <div className={`container p-20 mx-auto space-y-8 ${isDarkMode ? 'bg-gray-900 min-h-screen' : ''}`}>
     <div className="flex items-center justify-between mb-8">
       <div>
         <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>Contest History</h1>
