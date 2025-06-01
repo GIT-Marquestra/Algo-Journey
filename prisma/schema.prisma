@@ -25,21 +25,20 @@ model User {
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   applications        GroupApplication[]  @relation("GroupApplications")
-  bookmarks        Bookmark[]
+  bookmarks           Bookmark[]
   coordinatedGroup    Group?              @relation("GroupCoordinator") 
   contestPermissions  ContestPermission[]
   contestTime         TempContestTime[]
+  // NEW: Rating relationship
+  ratings             TagHintRating[]
   @@index([groupId]) 
 }
-
 
 model TempContestQuestion {
   id                  String              @id @default(uuid())
   contestId           Int              
   questions           Question[]          @relation("QuestionToTemp")
-
 }
-
 
 model Group {
   id                String              @id @default(uuid())
@@ -99,7 +98,6 @@ model TempContestTime {
   endTime            DateTime     
   userId             String               
   user               User                 @relation(fields: [userId], references: [id])                
-
 }
 
 model GroupOnContest {
@@ -117,7 +115,6 @@ model GroupOnContest {
   @@index([contestId, score]) 
 }
 
-
 model Question {
   id                String               @id @default(uuid())
   leetcodeUrl       String?              @unique       
@@ -133,7 +130,7 @@ model Question {
   submissions       Submission[]          @relation("QuestionToSubmission")
   createdAt         DateTime              @default(now())
   temporary         TempContestQuestion[] @relation("QuestionToTemp")
-  bookmarks        Bookmark[]
+  bookmarks         Bookmark[]
   updatedAt         DateTime              @updatedAt
   tagHints          TagHint[]                       
   hint              Hint?      
@@ -199,20 +196,39 @@ model QuestionOnContest {
   @@unique([contestId, questionId])
 }
 
-
 model TagHint {
-  id          String        @id @default(uuid())
+  id          String              @id @default(uuid())
   questionId  String
-  question    Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  question    Question            @relation(fields: [questionId], references: [id], onDelete: Cascade)
   tagId       String
-  tag         QuestionTag   @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tag         QuestionTag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
   hints       Hintnew[]     
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  // NEW: Rating relationship
+  ratings     TagHintRating[]
 
   @@unique([questionId, tagId])
   @@index([questionId])
   @@index([tagId])
+}
+
+// NEW MODEL: Tag-based Rating System
+model TagHintRating {
+  id          String        @id @default(uuid())
+  userId      String
+  tagHintId   String
+  isHelpful   Boolean       // true for like/helpful, false for dislike/not helpful
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tagHint     TagHint       @relation(fields: [tagHintId], references: [id], onDelete: Cascade)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Ensure one rating per user per tag-hint combination
+  @@unique([userId, tagHintId])
+  @@index([tagHintId])
+  @@index([userId])
+  @@index([tagHintId, isHelpful]) // For efficient counting
 }
 
 model Hint{
@@ -223,7 +239,6 @@ model Hint{
   hint2             String
   hint3             String
 }
-
 
 model ContestPermission{
   id                String              @id @default(uuid())
@@ -249,7 +264,6 @@ model Submission {
   @@index([userId, contestId]) 
   @@index([contestId, score]) 
 }
-
 
 enum SubmissionStatus {
   PENDING

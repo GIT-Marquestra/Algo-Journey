@@ -31,6 +31,34 @@ interface TagOption {
   name: string;
 }
 
+// Add these interfaces at the top of your file, after the existing interfaces
+
+interface RatingData {
+  likes: number;
+  dislikes: number;
+  userRating: boolean | null; // true for like, false for dislike, null for no rating
+}
+
+interface RatingsState {
+  [tagHintId: string]: RatingData;
+}
+
+// Replace your existing TagHint interface with this updated version
+interface TagHint {
+  id: string;
+  tagId: string;
+  tagName: string;
+  hints: {
+    id: string;
+    content: string;
+    sequence: number;
+  }[];
+  ratings?: RatingData; // Optional since it might not always be included
+}
+
+
+
+
 interface Hint {
   hint1: string;
   hint2: string;
@@ -66,6 +94,8 @@ export default function HintsComponent({
   const [isSaving, setIsSaving] = useState(false);
   const { isDarkMode } = useStore()
   const [activeTab, setActiveTab] = useState("hint1");
+  const [ratings, setRatings] = useState<RatingsState>({});
+  const [isRatingLoading, setIsRatingLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [originalHint, setOriginalHint] = useState<Hint>({
     hint1: "",
@@ -77,114 +107,121 @@ export default function HintsComponent({
   const [primaryTagId, setPrimaryTagId] = useState<string>("");
   const [tagHints, setTagHints] = useState<TagHint[]>([]);
   
-  useEffect(() => {
-    if (!open) return;
-    
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const tagsResponse = await axios.get(`/api/questions/${questionId}/tags`);
-        if (tagsResponse.data) {
-          setAvailableTags(tagsResponse.data);
-          
-          let tagToUse = null;
-          
-          if (primaryTagName) {
-            tagToUse = tagsResponse.data.find((tag: TagOption) => 
-              tag.name.toLowerCase() === primaryTagName.toLowerCase()
-            );
-          }
-          
-          if (!tagToUse) {
-            tagToUse = tagsResponse.data.find((tag: TagOption) => 
-              tag.name === "Two Pointers"
-            ) || (tagsResponse.data.length > 0 ? tagsResponse.data[0] : null);
-          }
-          
-          if (tagToUse) {
-            setPrimaryTagId(tagToUse.id);
-            setSelectedTagId(tagToUse.id);
-          }
+  // Replace your existing useEffect with this fixed version:
+
+useEffect(() => {
+  if (!open) return;
+  
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const tagsResponse = await axios.get(`/api/questions/${questionId}/tags`);
+      if (tagsResponse.data) {
+        setAvailableTags(tagsResponse.data);
+        
+        let tagToUse = null;
+        
+        if (primaryTagName) {
+          tagToUse = tagsResponse.data.find((tag: TagOption) => 
+            tag.name.toLowerCase() === primaryTagName.toLowerCase()
+          );
         }
         
-        const hintsResponse = await axios.get(`/api/tag-hints/${questionId}`);
-        if (hintsResponse.data) {
-          setTagHints(hintsResponse.data);
-          const tagHintForPrimary = hintsResponse.data.find((th: TagHint) => 
-            primaryTagName ? 
-              th.tagName.toLowerCase() === primaryTagName.toLowerCase() :
-              th.tagName === "Two Pointers"
-          );
-          
-          if (tagHintForPrimary) {
-            setPrimaryTagId(tagHintForPrimary.tagId);
-            setSelectedTagId(tagHintForPrimary.tagId);
-            
-            const hintData = {
-              //@ts-expect-error: not needed here.
-              hint1: tagHintForPrimary.hints.find(h => h.sequence === 1)?.content || "",
-              //@ts-expect-error: not needed here.
-              hint2: tagHintForPrimary.hints.find(h => h.sequence === 2)?.content || "",
-              //@ts-expect-error: not needed here.
-              hint3: tagHintForPrimary.hints.find(h => h.sequence === 3)?.content || "",
-            };
-            setHint(hintData);
-            setOriginalHint(JSON.parse(JSON.stringify(hintData)));
-          } else if (hintsResponse.data.length > 0) {
-            const fallbackHint = hintsResponse.data[0];
-            setPrimaryTagId(fallbackHint.tagId);
-            setSelectedTagId(fallbackHint.tagId);
-            
-            const hintData = {
-              //@ts-expect-error: not needed here.
-              hint1: fallbackHint.hints.find(h => h.sequence === 1)?.content || "",
-              //@ts-expect-error: not needed here.
-              hint2: fallbackHint.hints.find(h => h.sequence === 2)?.content || "",
-              //@ts-expect-error: not needed here.
-              hint3: fallbackHint.hints.find(h => h.sequence === 3)?.content || "",
-            };
-            setHint(hintData);
-            setOriginalHint(JSON.parse(JSON.stringify(hintData)));
-          } else {
-            // If no tag hints at all, fall back to legacy hints
-            fetchLegacyHints();
-          }
-        } else {
-          fetchLegacyHints();
+        if (!tagToUse) {
+          tagToUse = tagsResponse.data.find((tag: TagOption) => 
+            tag.name === "Two Pointers"
+          ) || (tagsResponse.data.length > 0 ? tagsResponse.data[0] : null);
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-        toast.error("Failed to load hints data");
-        fetchLegacyHints();
-      } finally {
-        setIsLoading(false);
+        
+        if (tagToUse) {
+          setPrimaryTagId(tagToUse.id);
+          setSelectedTagId(tagToUse.tagId);
+        }
       }
-    };
-    
-    const fetchLegacyHints = async () => {
-      try {
-        // Fetch legacy hints (non-tag specific)
-        const response = await axios.get(`/api/hints/${questionId}`);
-        if (response.data) {
+      
+      const hintsResponse = await axios.get(`/api/tag-hints/${questionId}`);
+      
+      if (hintsResponse.data && hintsResponse.data.length > 0) {
+        setTagHints(hintsResponse.data);
+        
+        // FIXED: Extract ratings data properly - only one extraction block
+        const ratingsData: RatingsState = {};
+        let primaryTagHintId = '';
+        
+        hintsResponse.data.forEach((tagHint: any) => {
+          ratingsData[tagHint.id] = tagHint.ratings;
+          
+          // Find the primary tag hint ID
+          if (primaryTagName && tagHint.tagName.toLowerCase() === primaryTagName.toLowerCase()) {
+            primaryTagHintId = tagHint.id;
+          } else if (!primaryTagName && tagHint.tagName === "Two Pointers") {
+            primaryTagHintId = tagHint.id;
+          }
+        });
+        
+        // If no specific match found, use the first one
+        if (!primaryTagHintId && hintsResponse.data.length > 0) {
+          primaryTagHintId = hintsResponse.data[0].id;
+        }
+        
+        setRatings(ratingsData);
+        
+        // Find the correct tag hint to display
+        const tagHintForPrimary = hintsResponse.data.find((th: any) => 
+          primaryTagName ? 
+            th.tagName.toLowerCase() === primaryTagName.toLowerCase() :
+            th.tagName === "Two Pointers"
+        ) || hintsResponse.data[0]; // Fallback to first if no match
+        
+        if (tagHintForPrimary) {
+          // FIXED: Store the tagHint.id as primaryTagId for rating access
+          setPrimaryTagId(tagHintForPrimary.id); // This should be tagHint.id for ratings
+          setSelectedTagId(tagHintForPrimary.tagId); // This should be actual tagId for tag selection
+          
           const hintData = {
-            hint1: response.data.hint1 || "",
-            hint2: response.data.hint2 || "",
-            hint3: response.data.hint3 || "",
+            hint1: tagHintForPrimary.hints.find((h: any) => h.sequence === 1)?.content || "",
+            hint2: tagHintForPrimary.hints.find((h: any) => h.sequence === 2)?.content || "",
+            hint3: tagHintForPrimary.hints.find((h: any) => h.sequence === 3)?.content || "",
           };
           setHint(hintData);
           setOriginalHint(JSON.parse(JSON.stringify(hintData)));
         }
-      } catch (error) {
-        console.error("Error fetching legacy hints:", error);
+      } else {
+        // If no tag hints exist, fall back to legacy hints
+        await fetchLegacyHints();
       }
-    };
-    
-    fetchData();
-  }, [questionId, open, primaryTagName]);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load hints data");
+      await fetchLegacyHints();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchLegacyHints = async () => {
+    try {
+      const response = await axios.get(`/api/hints/${questionId}`);
+      if (response.data) {
+        const hintData = {
+          hint1: response.data.hint1 || "",
+          hint2: response.data.hint2 || "",
+          hint3: response.data.hint3 || "",
+        };
+        setHint(hintData);
+        setOriginalHint(JSON.parse(JSON.stringify(hintData)));
+      }
+    } catch (error) {
+      console.error("Error fetching legacy hints:", error);
+    }
+  };
+  
+  fetchData();
+}, [questionId, open, primaryTagName]);
   
   // Update hints when tag selection changes (only for admin in edit mode)
   useEffect(() => {
-    if (!selectedTagId || !open || tagHints.length === 0 || !isEditMode) return;
+    if (!selectedTagId || !open || tagHints.length === 0) return;
     
     const selectedTagHint = tagHints.find(th => th.tagId === selectedTagId);
     
@@ -295,6 +332,62 @@ export default function HintsComponent({
       setIsSaving(false);
     }
   };
+
+  const handleRating = async (tagHintId: string, isHelpful: boolean) => {
+  if (!tagHintId) return;
+  
+  setIsRatingLoading(true);
+  try {
+    const response = await axios.post('/api/tag-hints/rating', {
+      tagHintId,
+      isHelpful
+    });
+    
+    if (response.data.success) {
+      // Update local state with new counts and user rating
+      setRatings(prev => ({
+        ...prev,
+        [tagHintId]: {
+          likes: response.data.counts.likes,
+          dislikes: response.data.counts.dislikes,
+          userRating: response.data.userRating
+        }
+      }));
+      
+      toast.success(response.data.userRating === null ? 'Rating removed' : 
+                   response.data.userRating ? 'Marked as helpful!' : 'Feedback received');
+    }
+  } catch (error) {
+    console.error('Rating error:', error);
+    toast.error('Failed to submit rating');
+  } finally {
+    setIsRatingLoading(false);
+  }
+};
+
+const renderTagRatings = () => (
+  <div className={`mb-6 space-y-3 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'} p-4 rounded-lg`}>
+    <h3 className={`text-sm font-medium flex items-center ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+      <TagIcon className="h-4 w-4 mr-2 text-indigo-500" />
+      Ratings by Tag
+    </h3>
+    {tagHints.map(tagHint => (
+      <div key={tagHint.id} className={`flex items-center justify-between p-3 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-white'} border ${isDarkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+        <span className={`font-medium ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+          {tagHint.tagName}
+        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-green-600 flex items-center text-sm">
+            👍 {ratings[tagHint.id]?.likes || 0}
+          </span>
+          <span className="text-red-600 flex items-center text-sm">
+            👎 {ratings[tagHint.id]?.dislikes || 0}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
   const renderEditableTabs = () => (
     <div className="space-y-6">
@@ -414,20 +507,31 @@ export default function HintsComponent({
 
   const renderReadOnlyTabs = () => (
     <div className="space-y-4">
-      {isAdmin && availableTags.length > 0 && (
-        <div className={`mb-4 p-3 rounded-lg ${
-          isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+      {isAdmin && tagHints.length > 0 && renderTagRatings()}
+      {isAdmin && ratings[primaryTagId] && (
+  <div className={`mb-4 p-3 rounded-lg ${
+    isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
+  }`}>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center">
+        <TagIcon className="h-4 w-4 mr-2 text-indigo-500" />
+        <span className={`text-sm font-medium ${
+          isDarkMode ? 'text-gray-300' : 'text-gray-700'
         }`}>
-          <div className="flex items-center">
-            <TagIcon className="h-4 w-4 mr-2 text-indigo-500" />
-            <span className={`text-sm font-medium ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-700'
-            }`}>
-              Tag: {availableTags.find(tag => tag.id === primaryTagId)?.name || "N/A"}
-            </span>
-          </div>
-        </div>
-      )}
+          Tag: {availableTags.find(tag => tag.id === primaryTagId)?.name || "N/A"}
+        </span>
+      </div>
+      <div className="flex items-center gap-4 text-sm">
+        <span className="text-green-600 flex items-center">
+          👍 {ratings[primaryTagId]?.likes || 0}
+        </span>
+        <span className="text-red-600 flex items-center">
+          👎 {ratings[primaryTagId]?.dislikes || 0}
+        </span>
+      </div>
+    </div>
+  </div>
+)}
     
       <Tabs defaultValue="hint1" className="w-full">
         <TabsList className={`grid grid-cols-3 mb-4 ${
@@ -489,6 +593,44 @@ export default function HintsComponent({
               <p className={`whitespace-pre-wrap ${
                 isDarkMode ? 'text-gray-200' : 'text-gray-800'
               }`}>{hint.hint3 || "No hint available."}</p>
+              {/* Add this after the hint text in each TabsContent */}
+{!isAdmin && (
+  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
+    <div className="flex items-center gap-2">
+      <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+        Was this helpful?
+      </span>
+    </div>
+    <div className="flex items-center gap-4">
+      <button
+        onClick={() => handleRating(primaryTagId, true)}
+        disabled={isRatingLoading}
+        className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
+          ratings[primaryTagId]?.userRating === true
+            ? 'bg-green-100 text-green-700 border border-green-300'
+            : isDarkMode 
+              ? 'text-gray-400 hover:text-green-400 hover:bg-gray-700' 
+              : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+        }`}
+      >
+        👍 {ratings[primaryTagId]?.likes || 0}
+      </button>
+      <button
+        onClick={() => handleRating(primaryTagId, false)}
+        disabled={isRatingLoading}
+        className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm transition-colors ${
+          ratings[primaryTagId]?.userRating === false
+            ? 'bg-red-100 text-red-700 border border-red-300'
+            : isDarkMode 
+              ? 'text-gray-400 hover:text-red-400 hover:bg-gray-700' 
+              : 'text-gray-600 hover:text-red-600 hover:bg-red-50'
+        }`}
+      >
+        👎 {ratings[primaryTagId]?.dislikes || 0}
+      </button>
+    </div>
+  </div>
+)}
             </TabsContent>
           </CardContent>
         </Card>
@@ -497,7 +639,7 @@ export default function HintsComponent({
   );
 
   const handleAdminOpen = () => {
-    setIsEditMode(true);
+    setIsEditMode(false);
     setOpen(true);
   };
 
@@ -595,7 +737,7 @@ export default function HintsComponent({
             </div>
           </DialogHeader>
 
-          {isLoading ? (
+          {(isLoading || isRatingLoading) ? (
             <div className="flex justify-center items-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
               <span className={`ml-2 ${
