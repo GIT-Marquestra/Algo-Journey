@@ -205,7 +205,6 @@ model TagHint {
   hints       Hintnew[]     
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
-  // NEW: Rating relationship
   ratings     TagHintRating[]
 
   @@unique([questionId, tagId])
@@ -213,7 +212,6 @@ model TagHint {
   @@index([tagId])
 }
 
-// NEW MODEL: Tag-based Rating System
 model TagHintRating {
   id          String        @id @default(uuid())
   userId      String

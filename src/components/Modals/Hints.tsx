@@ -144,14 +144,15 @@ useEffect(() => {
       if (hintsResponse.data && hintsResponse.data.length > 0) {
         setTagHints(hintsResponse.data);
         
-        // FIXED: Extract ratings data properly - only one extraction block
+        
         const ratingsData: RatingsState = {};
         let primaryTagHintId = '';
         
-        hintsResponse.data.forEach((tagHint: any) => {
+        //@ts-expect-error: no need here 
+        hintsResponse.data.forEach((tagHint) => {
           ratingsData[tagHint.id] = tagHint.ratings;
           
-          // Find the primary tag hint ID
+         
           if (primaryTagName && tagHint.tagName.toLowerCase() === primaryTagName.toLowerCase()) {
             primaryTagHintId = tagHint.id;
           } else if (!primaryTagName && tagHint.tagName === "Two Pointers") {
@@ -159,34 +160,38 @@ useEffect(() => {
           }
         });
         
-        // If no specific match found, use the first one
+        
         if (!primaryTagHintId && hintsResponse.data.length > 0) {
           primaryTagHintId = hintsResponse.data[0].id;
         }
         
         setRatings(ratingsData);
         
-        // Find the correct tag hint to display
-        const tagHintForPrimary = hintsResponse.data.find((th: any) => 
+        //@ts-expect-error: no need here
+        const tagHintForPrimary = hintsResponse.data.find((th) => 
           primaryTagName ? 
             th.tagName.toLowerCase() === primaryTagName.toLowerCase() :
             th.tagName === "Two Pointers"
-        ) || hintsResponse.data[0]; // Fallback to first if no match
+        ) || hintsResponse.data[0];
         
         if (tagHintForPrimary) {
-          // FIXED: Store the tagHint.id as primaryTagId for rating access
-          setPrimaryTagId(tagHintForPrimary.id); // This should be tagHint.id for ratings
-          setSelectedTagId(tagHintForPrimary.tagId); // This should be actual tagId for tag selection
+         
+          setPrimaryTagId(primaryTagHintId); 
+          setSelectedTagId(tagHintForPrimary.tagId); 
           
           const hintData = {
-            hint1: tagHintForPrimary.hints.find((h: any) => h.sequence === 1)?.content || "",
-            hint2: tagHintForPrimary.hints.find((h: any) => h.sequence === 2)?.content || "",
-            hint3: tagHintForPrimary.hints.find((h: any) => h.sequence === 3)?.content || "",
+            //@ts-expect-error: no need here 
+            hint1: tagHintForPrimary.hints.find((h) => h.sequence === 1)?.content || "",
+            //@ts-expect-error: no need here 
+            hint2: tagHintForPrimary.hints.find((h) => h.sequence === 2)?.content || "",
+            //@ts-expect-error: no need here 
+            hint3: tagHintForPrimary.hints.find((h) => h.sequence === 3)?.content || "",
           };
           setHint(hintData);
           setOriginalHint(JSON.parse(JSON.stringify(hintData)));
         }
-      } else {
+      } 
+      else {
         // If no tag hints exist, fall back to legacy hints
         await fetchLegacyHints();
       }
@@ -593,8 +598,12 @@ const renderTagRatings = () => (
               <p className={`whitespace-pre-wrap ${
                 isDarkMode ? 'text-gray-200' : 'text-gray-800'
               }`}>{hint.hint3 || "No hint available."}</p>
-              {/* Add this after the hint text in each TabsContent */}
-{!isAdmin && (
+
+            </TabsContent>
+          </CardContent>
+          
+        </Card>
+        {!isAdmin && (
   <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
     <div className="flex items-center gap-2">
       <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -631,9 +640,6 @@ const renderTagRatings = () => (
     </div>
   </div>
 )}
-            </TabsContent>
-          </CardContent>
-        </Card>
       </Tabs>
     </div>
   );
