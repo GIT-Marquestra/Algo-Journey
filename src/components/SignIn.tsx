@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,51 @@ import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import img3 from '@/images/signin.png';
+import useDemo from '@/store/demoCreds';
 
 export default function SignIn() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { creds, setCreds } = useDemo()
   const [isLoading, setIsLoading] = useState(false);
   const Router = useRouter();
+
+  useEffect(() => {
+    setTimeout(async () => {
+      setIsLoading(true);
+    
+    try {
+      const result = await signIn('credentials', {
+        username: creds.username,
+        password: creds.password,
+        redirect: false
+      });
+      
+      if (!result) {
+        toast.error('Please check credentials, and try again.');
+        return;
+      }
+      
+      if (result.error) {
+        toast.error('Please check credentials, and try again.');
+        return;
+      }
+
+      if(result.url) {
+        toast.success('Signed In Successfully');
+        setTimeout(()=>{
+          Router.push('/user/dashboard');
+        }, 1000)
+      }
+      
+    } catch (error) {
+      console.error(error);
+      toast.error("An error occurred during sign-in.");
+    } finally {
+      setIsLoading(false);
+    }
+    }, 500)
+  }, [setCreds])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +134,7 @@ export default function SignIn() {
                 <Input
                   id="username"
                   type="text"
-                  value={username}
+                  value={creds.username ? creds.username : username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter username"
                   disabled={isLoading}
@@ -112,7 +151,7 @@ export default function SignIn() {
                 <Input
                   id="password"
                   type="password"
-                  value={password}
+                  value={creds.password ? creds.password : password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
                   disabled={isLoading}
