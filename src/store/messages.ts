@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from 'uuid'; 
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AiResponse, Message } from "../../types/comm";
+import { AiResponse, Message } from "../../types/comm"
 
 
 interface MessageState {
