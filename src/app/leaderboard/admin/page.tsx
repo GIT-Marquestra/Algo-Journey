@@ -24,6 +24,7 @@ import axios from "axios";
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import useStore from '@/store/store';
+import useTagStore from '@/store/tagsStore';
 
 interface QuestionTag {
   id: string;
@@ -105,25 +106,10 @@ const ArenaLeaderboardPage = () => {
   const [teams, setTeams] = useState<Team[]>([]);
   const [hasAppliedFilters, setHasAppliedFilters] = useState(false);
   const { isAdmin } = useStore()
+  const { tags } = useTagStore()
 
   // Predefined topics
-  const availableTopics = [
-    { id: "PrefixSum", name: "Prefix Sum" },
-    { id: "TwoPointers", name: "Two Pointers" },
-    { id: "1DArrays", name: "1D Arrays" },
-    { id: "Graph", name: "Graph" },
-    { id: "2DArrays", name: "2D Arrays" },
-    { id: "TimeComplexity", name: "Time Complexity" },
-    { id: "BasicMaths", name: "Basic Maths" },
-    { id: "SpaceComplexity", name: "Space Complexity" },
-    { id: "BinarySearch", name: "Binary Search" },
-    { id: "DP", name: "Dynamic Programming" },
-    { id: "Sorting", name: "Sorting" },
-    { id: "LinearSearch", name: "Linear Search" },
-    { id: "Exponentiation", name: "Exponentiation" },
-    { id: "Recursion", name: "Recursion" },
-    { id: "String", name: "String" }
-  ];
+  const availableTopics = tags;
 
   // Predefined difficulties
   const availableDifficulties = [
@@ -293,17 +279,17 @@ const ArenaLeaderboardPage = () => {
                 <PopoverContent className="w-64 p-2 max-h-64 overflow-y-auto" align="start">
                   <div className="space-y-2">
                     {availableTopics.map(topic => (
-                      <div key={topic.id} className="flex items-center space-x-2">
+                      <div key={topic} className="flex items-center space-x-2">
                         <Checkbox 
-                          id={`topic-${topic.id}`}
-                          checked={filters.topics.includes(topic.id)}
-                          onCheckedChange={() => toggleTopic(topic.id)}
+                          id={`topic-${topic}`}
+                          checked={filters.topics.includes(topic)}
+                          onCheckedChange={() => toggleTopic(topic)}
                         />
                         <label 
-                          htmlFor={`topic-${topic.id}`}
+                          htmlFor={`topic-${topic}`}
                           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
-                          {topic.name}
+                          {topic}
                         </label>
                       </div>
                     ))}
@@ -317,11 +303,7 @@ const ArenaLeaderboardPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Teams</label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-indigo-500" />
-                      <div>
-                        <p className="text-sm text-gray-700" onClick={async() => {
+                  <div onClick={async() => {
                             try{
                                 if(teams.length !== 0) return;  
                                 const response = await axios.post('/api/getGroups');
@@ -332,7 +314,11 @@ const ArenaLeaderboardPage = () => {
                             } catch(error){
                                 console.error('Error fetching teams:', error);
                             }
-                        }}>
+                        }} className="flex items-center justify-between p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-5 w-5 text-indigo-500" />
+                      <div>
+                        <p className="text-sm text-gray-700">
                           {filters.teams.length !== 0 ? `${filters.teams.length} selected` : 'Select teams'}
                         </p>
                       </div>

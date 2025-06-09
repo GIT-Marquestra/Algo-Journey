@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
           question: { connect: { id: questionId } },
           tag: { connect: { id: tagId } },
           hints: {
-            //@ts-expect-error: not imp here elemented yet
+            // @ts-expect-error: not imp here elemented yet
             create: hints.map(hint => ({
               content: hint.content,
               sequence: hint.sequence

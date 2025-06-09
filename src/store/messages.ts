@@ -68,7 +68,7 @@ const useMessageStore = create<MessageState>((set, get) => ({
 }
       const genAI = new GoogleGenerativeAI(userApiKey || '');
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-      let instruction = `
+      const instruction = `
 You are an assistant named Rogue.
 You are a friendly, respectful, and intelligent assistant. Always respond with warmth, empathy, and clarity—like a supportive teammate. Avoid sounding robotic or overly formal; instead, be natural, helpful, and calm.
 Prioritize being concise but thoughtful, even when the user is frustrated or vague.
