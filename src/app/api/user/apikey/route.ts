@@ -7,7 +7,11 @@ import prisma from '@/lib/prisma';
 // Encryption
 const ALGORITHM = 'aes-256-cbc';
 // Ensure the key is exactly 32 bytes for AES-256
-const ENCRYPTION_KEY = crypto.scryptSync(process.env.API_KEY_ENCRYPTION_KEY!, 'salt', 32);
+let rawKey = process.env.API_KEY_ENCRYPTION_KEY;
+if (!rawKey) {
+  rawKey = 'something'
+}
+const ENCRYPTION_KEY = crypto.scryptSync(rawKey, 'salt', 32);
 
 function encrypt(text: string): string {
   const iv = crypto.randomBytes(16);
