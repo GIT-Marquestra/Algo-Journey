@@ -27,17 +27,20 @@ import {
   UserCog, 
   LucideSword
 } from 'lucide-react';
-import useStore from '@/store/store';
 import useTagStore from '@/store/tagsStore';
+import useStore from '@/store/store';
+import useMessageStore from '@/store/messages';
+import useDemo from '@/store/demoCreds';
 
 const Navbar = () => {
   const router = useRouter();
   const { status } = useSession();
   const { isAdmin, setIsAdmin, setDarkMode } = useStore();
-  const [username, setUsername] = useState('');
+  const { username, setUsername } = useMessageStore();
   const [token, setToken] = useState<string | null>(null);
   const { setTags } = useTagStore()
   const { isDarkMode } = useStore();
+  const { setCreds } = useDemo()
 
   
   useEffect(() => {
@@ -61,7 +64,6 @@ const Navbar = () => {
   }, [status, setIsAdmin]);
   const fn = async () => {
     const res = await axios.get('/api/getTags')
-    console.log(res)
     //@ts-expect-error: not needed here.
     const tags = res.data.map((p) => p.name)
     setTags(tags)
@@ -86,6 +88,7 @@ const Navbar = () => {
 
   const handleSignOut = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setCreds({ username: "", password: "" })
     try {
       await signOut({ redirect: false });
       router.push('/');
