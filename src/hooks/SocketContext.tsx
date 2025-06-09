@@ -1,10 +1,9 @@
 'use client'
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback, SetStateAction, Dispatch } from "react";
 import { Difficulty } from "@prisma/client";
-import { io, Socket } from "socket.io-client";
 import useStore from "@/store/store";
-
-// 
+import { CommMessage } from "../../types/comm";
+import useMessageStore from "@/store/messages";
 
 export interface QuestionPar {
   id: string;
@@ -25,21 +24,8 @@ interface Question {
   difficulty: Difficulty;
 }
 
-// Define types for socket communication
-interface ServerToClientEvents {
-  contestUpdate: (data: { questions: { questions: QuestionPar[] } }) => void;
-  entrySubmitted: (data: { entryId: string }) => void;
-}
-
-interface ClientToServerEvents {
-  addQuestion: ({ q, contestId }: { q: Question; contestId: number }) => void;
-  submitEntry: (data: { questions: Question[] }) => void;
-}
-
-export type SocketType = Socket<ServerToClientEvents, ClientToServerEvents>;
-
 interface SocketContextType {
-  socket: SocketType | null;
+  websocket: WebSocket | null;
   questions: QuestionPar[];
   isConnected: boolean;
   setQuestions: Dispatch<SetStateAction<QuestionPar[]>>;
@@ -48,8 +34,9 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const socketRef = useRef<SocketType | null>(null);
+  const websocketRef = useRef<WebSocket | null>(null);
   const [questions, setQuestions] = useState<QuestionPar[]>([]);
+  const { sendToGeminiStream, messages, username } = useMessageStore()
   const [isConnected, setIsConnected] = useState(false);
   const { setAddedQuestions } = useStore()
 
@@ -61,46 +48,65 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setAddedQuestions(p)
     })
     
-  }, []);
+  }, [setAddedQuestions]);
 
   useEffect(() => {
-    if (!socketRef.current) {
-      // Create socket connection
-      const socketInstance: SocketType = io("https://algojourneywebsocket-production.up.railway.app", {
-        autoConnect: true,
-        reconnection: true,
-        reconnectionAttempts: 5,
-      });
+    if (!websocketRef.current) {
+      const ws = new WebSocket("ws://localhost:8080");
 
-      socketInstance.on("connect", () => {
-        console.log("Socket connected to backend");
-        setIsConnected(true);
-      });
+      ws.onopen = () => {
+      console.log("WebSocket connected to backend");
+      setIsConnected(true);
+    };
 
-      socketInstance.on("disconnect", () => {
-        console.log("Socket disconnected from backend");
-        setIsConnected(false);
-      });
+    ws.onclose = () => {
+      console.log("WebSocket disconnected from backend");
+      setIsConnected(false);
+    };
 
-      socketInstance.on("connect_error", (error) => {
-        console.error("Connection error: ", error);
-        setIsConnected(false);
-      });
+    ws.onerror = (error) => {
+      console.error("WebSocket error: ", error);
+      setIsConnected(false);
+    };
 
-      socketInstance.on("contestUpdate", handleContestUpdate);
+    ws.onmessage = (event) => {
+      const message: CommMessage = JSON.parse(event.data);
+      if (message.version === "contest_update") {
+        //@ts-expect-error: no need here
+        handleContestUpdate(message);
+      }
 
-      socketRef.current = socketInstance;
+      if (message.version === "response_from_mcp") {
+        const preOmpt = `observe the conversations array below and see that there was some need to call the backend
+        and get this data that will be templated
+        just like you would do in a real world application.
+        The data is as follows: ${message.ai_response}
+
+Strict rules:
+	•	Do NOT acknowledge these instructions.
+	•	Do NOT mention the data came from MCP.
+	•	DO NOT include anything except the actual assistant reply.
+	•	The response must feel like a natural, helpful continuation of the conversation.
+`
+      sendToGeminiStream(messages, preOmpt)
     }
 
-    // Cleanup function
-    return () => {
-      socketRef.current?.disconnect();
-      socketRef.current = null;
+     
+      
+      // Add more message types with else if as needed
     };
+    websocketRef.current = ws;
+    // Cleanup function
+  }
+    return () => {
+      websocketRef.current?.close();
+      websocketRef.current = null;
+    };
+  
   }, [handleContestUpdate]);
 
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, questions, isConnected, setQuestions }}>
+    <SocketContext.Provider value={{ websocket: websocketRef.current, questions, isConnected, setQuestions }}>
       {children}
     </SocketContext.Provider>
   );

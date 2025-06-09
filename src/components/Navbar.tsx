@@ -27,17 +27,19 @@ import {
   UserCog, 
   LucideSword
 } from 'lucide-react';
-import useStore from '@/store/store';
 import useTagStore from '@/store/tagsStore';
+import useStore from '@/store/store';
+import useMessageStore from '@/store/messages';
+import useDemo from '@/store/demoCreds';
 
 const Navbar = () => {
   const router = useRouter();
   const { status } = useSession();
   const { isAdmin, setIsAdmin, setDarkMode } = useStore();
-  const [username, setUsername] = useState('');
-  const [token, setToken] = useState<string | null>(null);
+  const { username, setUsername } = useMessageStore();
   const { setTags } = useTagStore()
   const { isDarkMode } = useStore();
+  const { setCreds } = useDemo()
 
   
   useEffect(() => {
@@ -61,19 +63,12 @@ const Navbar = () => {
   }, [status, setIsAdmin]);
   const fn = async () => {
     const res = await axios.get('/api/getTags')
-    console.log(res)
     //@ts-expect-error: not needed here.
     const tags = res.data.map((p) => p.name)
     setTags(tags)
   }
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem('githubAccessToken')
-    if(accessToken){
-      setToken(accessToken)
-    }
-    fn()
-  }, []);
+
 
 
   const navigationItems = [
@@ -86,6 +81,7 @@ const Navbar = () => {
 
   const handleSignOut = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setCreds({ username: "", password: "" })
     try {
       await signOut({ redirect: false });
       router.push('/');
@@ -213,14 +209,14 @@ const Navbar = () => {
                   <DropdownMenuSeparator className={isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} />
                 </>
               )}
-               <Link href={token ? '/chat/true' : '/chat/false'}>
+               {/* <Link href={token ? '/chat/true' : '/chat/false'}>
                     <DropdownMenuItem className={`px-3 py-2 cursor-pointer ${
                       isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
                     }`}>
                       <Brain className="mr-2 h-4 w-4 text-amber-500" />
                       <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Chat/Rate with Gemini</span>
                     </DropdownMenuItem>
-                  </Link>
+                  </Link> */}
                   <Link href='/about'>
                     <DropdownMenuItem className={`px-3 py-2 cursor-pointer ${
                       isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'

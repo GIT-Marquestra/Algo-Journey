@@ -79,7 +79,7 @@ export default function UpdateContestPage({ dbQuestions }: { dbQuestions: Questi
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [groupSearchTerm, setGroupSearchTerm] = useState('');
   const [filteredGroups, setFilteredGroups] = useState<Group[]>([]);
-  const { socket } = useSocket();
+  const { websocket } = useSocket();
   const [difficultyFilter, setDifficultyFilter] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState('questions');
 
@@ -163,7 +163,12 @@ export default function UpdateContestPage({ dbQuestions }: { dbQuestions: Questi
 
   const handleAddinRealTime = (q: Question) => {
     const contestID = parseInt(contestId);
-    socket?.emit('addQuestion', {q, contestId: contestID});
+    const message = JSON.stringify({
+      type: "addQuestion",
+      data: { contest_id: contestID.toString(), q }
+    })
+    console.log("sent")
+    websocket?.send(message);
   };
 
   const confirmAdd = (q: Question) => {

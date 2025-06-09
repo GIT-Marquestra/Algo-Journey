@@ -243,11 +243,6 @@ export default function Dashboard() {
       ranking: responseTotal?.matchedUser?.profile.ranking
   
     }
-
-
-    console.log(leetData)
-
-  
     return {
       //@ts-expect-error: dont know what to do here
       leetcodeData: leetcodeData || null,

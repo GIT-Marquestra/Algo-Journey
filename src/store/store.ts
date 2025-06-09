@@ -13,7 +13,7 @@ interface StoreState {
     leetcodeUsername: string;
     codeforcesUsername: string; 
   },
-  setDarkMode: (value: boolean) => void; 
+  setDarkMode: (value: boolean) => void;  
   setPUsernames: (v: {leetcodeUsername: string, codeforcesUsername: string}) => void;
   setIsAdmin: (value: boolean) => void; 
   addedQuestions: QuestionPar[];

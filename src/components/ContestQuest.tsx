@@ -52,6 +52,7 @@ interface CodeForcesSubmission {
 
 const ContestQuest: React.FC = () => {
   const router = useRouter();
+  const { websocket } = useSocket();
   const { data: session } = useSession();
   const [show, setShow] = useState<boolean>(false);
   const [showModal, setShowModal] = useState(false);
@@ -70,11 +71,7 @@ const ContestQuest: React.FC = () => {
   const [cusername, setCUsername] = useState('')
   const [isVerifying, setIsVerifying] = useState<Record<string, boolean>>({});
   const { isAdmin } = useStore()
-  
-
   const { questions, setQuestions } = useSocket()
-  
-
 
   const animateScoreUpdate = (oldScore: number, newScore: number) => {
     setIsScoreUpdating(true);
@@ -284,11 +281,22 @@ const ContestQuest: React.FC = () => {
 
       
       toast.dismiss(loader);
+
+      console.log(response.data.contest.remainingTime)
+
+      
+      
       
       if (response.status === 200) {
         if(response.data.contest.remainingTime > 0){
           setTimeLeft(response.data.contest.remainingTime*60 + 10)
         } 
+        
+
+        else {
+          toast.error("Your time has ended, cannot start test")
+          return 
+        }
         
         if (response.data.questions) {
           setShow(true);
@@ -306,6 +314,11 @@ const ContestQuest: React.FC = () => {
             duration: 5000,
             icon: '🚀'
           });
+          const message = JSON.stringify({
+            type: "joinContest",
+            data: { contest_id: id }
+          })
+          websocket?.send(message)
         }
       }  
       else {

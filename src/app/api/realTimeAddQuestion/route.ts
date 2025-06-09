@@ -5,11 +5,15 @@ interface QuestionItem {
   questionId: string;
 }
 
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { contestId, questions } = body;
+    console.log(body)
+    const { contest_id: contestId, questions: questions2 } = body;
 
+//@ts-expect-error: no need here 
+    const questions = questions2.map((q) => ({ questionId: q.question_id, question: q.question }))
     // Validate required input
     if (!contestId) {
       return NextResponse.json({ error: "Contest ID is required" }, { status: 400 });
