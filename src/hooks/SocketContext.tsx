@@ -36,7 +36,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const websocketRef = useRef<WebSocket | null>(null);
   const [questions, setQuestions] = useState<QuestionPar[]>([]);
-  const { sendToGeminiStream, messages, username } = useMessageStore()
+  const { sendToGeminiStream, messages } = useMessageStore()
   const [isConnected, setIsConnected] = useState(false);
   const { setAddedQuestions } = useStore()
 
