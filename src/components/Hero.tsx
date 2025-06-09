@@ -169,7 +169,7 @@ const ModernLandingPage = () => {
             className="text-xl md:text-2xl text-slate-600 max-w-4xl mx-auto mb-12 leading-relaxed"
           >
             Master algorithms and data structures through interactive learning. 
-            <span className="text-blue-600 font-semibold"> Join 10,000+ developers</span> who've accelerated their careers.
+            <span className="text-blue-600 font-semibold"> Join 10,000+ developers</span> who have accelerated their careers.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -252,7 +252,7 @@ const ModernLandingPage = () => {
               Everything you need to <span className="text-blue-600">excel</span>
             </h2>
             <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-              From interactive challenges to comprehensive analytics, we've built the complete learning ecosystem.
+              From interactive challenges to comprehensive analytics, we have built the complete learning ecosystem.
             </p>
           </motion.div>
 
@@ -350,7 +350,7 @@ const ModernLandingPage = () => {
                 </div>
 
                 <blockquote className="text-slate-700 mb-6 italic">
-                  "{testimonial.quote}"
+                  &quot;{testimonial.quote}&quot;
                 </blockquote>
 
                 <div className="flex items-center">
