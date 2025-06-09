@@ -193,20 +193,3 @@ export async function DELETE() {
   }
 }
 
-// Utility function to get decrypted API key for internal use
-export async function getDecryptedApiKey(userId: string): Promise<string | null> {
-  try {
-    const userApiKey = await prisma.userApiKey.findUnique({
-      where: { userId }
-    });
-
-    if (!userApiKey) {
-      return null;
-    }
-
-    return decrypt(userApiKey.key);
-  } catch (error) {
-    console.error('Error decrypting API key:', error);
-    return null;
-  }
-}
