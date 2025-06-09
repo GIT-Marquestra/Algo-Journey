@@ -3,11 +3,11 @@ import React, { useRef, useEffect, useState } from 'react';
 import { Check, Clipboard, User, Send, X, Brain, Settings } from 'lucide-react';
 import useMessageStore from '@/store/messages';
 import toast from 'react-hot-toast';
-import { v4 as uuidv4 } from 'uuid'; 
+// import { v4 as uuidv4 } from 'uuid'; 
 import useStore from '@/store/store';
 import { useSession } from 'next-auth/react';
 import { useSocket } from '@/hooks/SocketContext';
-import { AiResponse, CommMessage, Message } from '../../types/comm';
+import { AiResponse, CommMessage } from '../../types/comm';
 
 const ChatComponent: React.FC = () => {
   const { 
@@ -453,7 +453,8 @@ const closeApiKeyModal = () => {
         )}
 
         {/* Text area container */}
-        <form onSubmit={(e) => { e.preventDefault(); () => {
+        <form onSubmit={(e) => { 
+          e.preventDefault();
           if(!textAreaRef.current?.value) return 
            sendMessage(textAreaRef.current?.value, () => {
                 if(textAreaRef?.current?.value){
@@ -474,7 +475,7 @@ const closeApiKeyModal = () => {
             console.error("WebSocket not ready");
             }
         })
-        }; }} className="w-full">
+         }} className="w-full">
           <div className="relative">
             <textarea
               ref={textAreaRef}

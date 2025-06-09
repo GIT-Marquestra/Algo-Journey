@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signIn, signOut, useSession } from 'next-auth/react';
@@ -17,7 +17,6 @@ import {
   Home, 
   Users, 
   Trophy, 
-  Brain,
   Swords, 
   Info,
   LogOut, 
@@ -30,7 +29,6 @@ import {
 import useTagStore from '@/store/tagsStore';
 import useStore from '@/store/store';
 import useMessageStore from '@/store/messages';
-import useDemo from '@/store/demoCreds';
 
 const Navbar = () => {
   const router = useRouter();
@@ -39,7 +37,6 @@ const Navbar = () => {
   const { username, setUsername } = useMessageStore();
   const { setTags } = useTagStore()
   const { isDarkMode } = useStore();
-  const { setCreds } = useDemo()
 
   
   useEffect(() => {
@@ -68,7 +65,9 @@ const Navbar = () => {
     setTags(tags)
   }
 
-
+  useEffect(() => {
+    fn()
+  }, []);
 
 
   const navigationItems = [
@@ -81,7 +80,6 @@ const Navbar = () => {
 
   const handleSignOut = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    setCreds({ username: "", password: "" })
     try {
       await signOut({ redirect: false });
       router.push('/');
@@ -209,14 +207,7 @@ const Navbar = () => {
                   <DropdownMenuSeparator className={isDarkMode ? 'bg-gray-700' : 'bg-gray-100'} />
                 </>
               )}
-               {/* <Link href={token ? '/chat/true' : '/chat/false'}>
-                    <DropdownMenuItem className={`px-3 py-2 cursor-pointer ${
-                      isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
-                    }`}>
-                      <Brain className="mr-2 h-4 w-4 text-amber-500" />
-                      <span className={isDarkMode ? 'text-gray-200' : 'text-gray-700'}>Chat/Rate with Gemini</span>
-                    </DropdownMenuItem>
-                  </Link> */}
+               
                   <Link href='/about'>
                     <DropdownMenuItem className={`px-3 py-2 cursor-pointer ${
                       isDarkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
