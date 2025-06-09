@@ -303,8 +303,7 @@ const ArenaLeaderboardPage = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">Teams</label>
               <Popover>
                 <PopoverTrigger asChild>
-                  <div className="flex items-center justify-between p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center gap-2" onClick={async() => {
+                  <div onClick={async() => {
                             try{
                                 if(teams.length !== 0) return;  
                                 const response = await axios.post('/api/getGroups');
@@ -315,7 +314,8 @@ const ArenaLeaderboardPage = () => {
                             } catch(error){
                                 console.error('Error fetching teams:', error);
                             }
-                        }}>
+                        }} className="flex items-center justify-between p-3 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-indigo-500" />
                       <div>
                         <p className="text-sm text-gray-700">
