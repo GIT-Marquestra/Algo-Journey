@@ -15,11 +15,12 @@ import useDemo from '@/store/demoCreds';
 export default function SignIn() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { creds, setCreds } = useDemo()
+  const { creds } = useDemo()
   const [isLoading, setIsLoading] = useState(false);
   const Router = useRouter();
 
   useEffect(() => {
+    if(!creds.username) return 
     setTimeout(async () => {
       setIsLoading(true);
     
@@ -54,7 +55,7 @@ export default function SignIn() {
       setIsLoading(false);
     }
     }, 500)
-  }, [setCreds])
+  }, [creds])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
