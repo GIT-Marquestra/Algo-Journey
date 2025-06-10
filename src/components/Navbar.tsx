@@ -29,6 +29,7 @@ import {
 import useTagStore from '@/store/tagsStore';
 import useStore from '@/store/store';
 import useMessageStore from '@/store/messages';
+import useDemo from '@/store/demoCreds';
 
 const Navbar = () => {
   const router = useRouter();
@@ -36,6 +37,7 @@ const Navbar = () => {
   const { isAdmin, setIsAdmin, setDarkMode } = useStore();
   const { username, setUsername } = useMessageStore();
   const { setTags } = useTagStore()
+  const { setCreds } = useDemo()
   const { isDarkMode } = useStore();
 
   
@@ -80,6 +82,7 @@ const Navbar = () => {
 
   const handleSignOut = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setCreds({ username: "", password: "" })
     try {
       await signOut({ redirect: false });
       router.push('/');
